@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Viet Nam Cuisine - Customer View</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <script src="../js/components/common.js"></script>
+  <script src="/js/pages/customer.js"></script>
+  <style>
+    :root {
+      --primary-color: #a83232;
+      --secondary-color: #f8eac7;
+      --accent-color: #588157;
+      --text-color: #33272a;
+      --light-text: #f8eac7;
+      --border-color: #d9d9d9;
+      --shadow-color: rgba(0, 0, 0, 0.1);
+      --card-bg: #ffffff;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background-color: #f5f3e8;
+      color: var(--text-color);
+      line-height: 1.6;
+      background-image: url('/api/placeholder/1200/800');
+      background-size: 200px;
+      background-position: center;
+      background-blend-mode: overlay;
+      background-attachment: fixed;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    
+    header {
+      background-color: var(--primary-color);
+      color: var(--light-text);
+      padding: 1rem 0;
+      box-shadow: 0 2px 10px var(--shadow-color);
+      margin-bottom: 2rem;
+      position: relative;
+    }
+    
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .header-brand img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 2px solid var(--light-text);
+    }
+    
+    h1, h2, h3 {
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+    
+    h1 {
+      font-size: 1.5rem;
+      color: var(--light-text);
+    }
+    
+    h2 {
+      font-size: 1.75rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+      display: inline-block;
+      padding-bottom: 0.5rem;
+    }
+    
+    h2::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background-color: var(--primary-color);
+      opacity: 0.7;
+    }
+    
+    h3 {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    
+    main {
+      padding: 1rem 0 3rem;
+    }
+    
+    .customer-view {
+      margin-top: 1rem;
+    }
+    /* Staff View Toggle Styles (from previous artifact) */
+    .staff-view-toggle {
+      margin-left: 1rem;
+    }
+
+    .staff-view-button {
+      background-color: var(--accent-color);
+      color: white;
+      border: none;
+      padding: 0.6rem 1rem;
+      border-radius: 4px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(88, 129, 87, 0.25);
+    }
+
+    .staff-view-button:hover {
+      background-color: #4a6d49;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(88, 129, 87, 0.25);
+    }
+
+    .staff-view-button i {
+      margin-right: 0.5rem;
+    }
+    
+    .flex-container {
+      display: flex;
+      gap: 2rem;
+    }
+    
+    .menu-section {
+      flex: 1.75;
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px var(--shadow-color);
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .menu-section::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 6px;
+      background-color: var(--primary-color);
+    }
+    
+    .menu-type-selector {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .menu-type-selector label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    
+    .menu-type-selector input[type="radio"] {
+      accent-color: var(--primary-color);
+    }
+    
+    .search-bar {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+    
+    .search-bar input {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 2.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+    
+    .search-bar input:focus {
+      outline: none;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 2px rgba(88, 129, 87, 0.1);
+    }
+    
+    .search-bar i {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #999;
+    }
+    
+    .category-nav {
+      display: flex;
+      gap: 0.75rem;
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .category-nav button {
+      white-space: nowrap;
+      padding: 0.5rem 1rem;
+      background-color: #f5f3e8;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-weight: 500;
+      color: var(--text-color);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .category-nav button:hover,
+    .category-nav button.primary {
+      background-color: var(--primary-color);
+      color: var(--light-text);
+      border-color: var(--primary-color);
+    }
+    
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .menu-item {
+      background-color: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px var(--shadow-color);
+      transition: transform 0.3s, box-shadow 0.3s;
+      cursor: pointer;
+      border: 1px solid var(--border-color);
+      position: relative; /* Add this */
+    }
+    
+    .menu-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 16px var(--shadow-color);
+    }
+    
+    .menu-item img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+    }
+    /* New styles for Staff View button */
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .new-order-button {
+      background-color: var(--accent-color);
+      color: white;
+      border: none;
+      padding: 0.6rem 1rem;
+      border-radius: 4px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(88, 129, 87, 0.25);
+    }
+    
+    .new-order-button:hover {
+      background-color: #4a6d49;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(88, 129, 87, 0.25);
+    }
+    
+    .badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: var(--primary-color);
+      color: white;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    
+    .menu-item-details {
+      padding: 1rem;
+    }
+    
+    .menu-item-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    
+    .menu-item-description {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 1rem;
+      height: 40px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+    
+    .menu-item-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .prep-time {
+      font-size: 0.8rem;
+      color: #777;
+    }
+    
+    .menu-item-add, .add-to-cart {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .menu-item-add:hover, .add-to-cart:hover {
+      background-color: #8a2929;
+    }
+    
+    .order-section {
+      flex: 1;
+    }
+    
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px var(--shadow-color);
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+    }
+    
+    .card-header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      background-color: #f9f9f9;
+    }
+    
+    .card-title {
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--primary-color);
+      font-size: 1.1rem;
+    }
+    
+    .card-description {
+      font-size: 0.9rem;
+      color: #666;
+      margin-top: 0.25rem;
+    }
+    
+    .card-content {
+      padding: 1rem;
+    }
+    
+    .customer-tables-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+      gap: 0.75rem;
+    }
+    
+    .customer-tables-grid button {
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #f5f3e8;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-weight: 600;
+      color: var(--text-color);
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    
+    .customer-tables-grid button:hover,
+    .customer-tables-grid button.primary {
+      background-color: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+    }
+    
+    .text-center {
+      text-align: center;
+      color: #777;
+      padding: 1.5rem 0;
+    }
+    
+    .cart-items {
+      margin-bottom: 1rem;
+    }
+    
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .cart-item:last-child {
+      border-bottom: none;
+    }
+    
+    .cart-item-details {
+      flex: 1;
+    }
+    
+    .cart-item-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.25rem;
+    }
+    
+    .cart-item-name {
+      font-weight: 500;
+    }
+    
+    .cart-item-price {
+      font-weight: 600;
+    }
+    
+    .cart-item-quantity {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .cart-item-notes {
+      font-size: 0.8rem;
+      color: #888;
+      font-style: italic;
+      margin-top: 0.25rem;
+    }
+    
+    .item-notes {
+      width: 100%;
+      border: 1px solid #eee;
+      border-radius: 4px;
+      padding: 0.5rem;
+      font-size: 0.8rem;
+      margin-top: 0.5rem;
+    }
+    
+    .cart-item-quantity button {
+      background-color: #f0f0f0;
+      border: 1px solid #ddd;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+    
+    .card-footer {
+      padding: 1rem;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .cart-total {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+    
+    button {
+      cursor: pointer;
+      padding: 0.75rem 1rem;
+      border-radius: 4px;
+      font-weight: 600;
+      transition: all 0.2s;
+      border: none;
+    }
+    
+    .primary {
+      background-color: var(--primary-color);
+      color: white;
+      box-shadow: 0 2px 4px rgba(168, 50, 50, 0.25);
+    }
+    
+    .secondary {
+      background-color: #f5f3e8;
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+    }
+    
+    .primary:hover {
+      background-color: #8a2929;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(168, 50, 50, 0.25);
+    }
+    
+    .primary:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    #customer-order-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .order-card {
+      background-color: white;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+    
+    .order-header {
+      padding: 0.75rem 1rem;
+      background-color: #f9f9f9;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .order-number {
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+    
+    .badge {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-weight: 600;
+      color: white;
+    }
+    
+    .yellow {
+      background-color: #f59e0b;
+    }
+    
+    .blue {
+      background-color: #3b82f6;
+    }
+    
+    .green {
+      background-color: #10b981;
+    }
+    
+    .gray {
+      background-color: #6b7280;
+    }
+    
+    .order-items {
+      padding: 0.75rem 1rem;
+    }
+    
+    .order-item {
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .order-total {
+      padding: 0.75rem 1rem;
+      border-top: 1px solid var(--border-color);
+      background-color: #f9f9f9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    /* Traditional Vietnamese pattern overlay */
+    .vietnamese-pattern {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 30px;
+      background-image: url('/api/placeholder/400/30');
+      opacity: 0.5;
+      z-index: 10;
+    }
+    
+    @media (max-width: 1024px) {
+      .flex-container {
+        flex-direction: column;
+      }
+      
+      .menu-section,
+      .order-section {
+        flex: 1;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .menu-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      }
+    }
+    
+    @media (max-width: 576px) {
+      .menu-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header will be loaded here -->
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <div class="header-brand">
+          <img src="/images/logo.jpg" alt="Viet Nam Cuisine Logo">
+          <h1>Viet Nam Cuisine</h1>
+        </div>
+        <div class="header-controls">
+          <div class="user-info">
+            <span>Customer View</span>
+          </div>
+          <div class="nav-controls">
+            <button id="staff-view-btn" class="new-order-button" style="display: none;">
+              <i class="fas fa-utensils"></i> Staff View
+            </button>
+          </div>
+      </div>
+    </div>
+  </header>
+  
+  <main>
+    <div class="container">
+      <div class="customer-view">
+        <div class="flex-container">
+          <div class="menu-section">
+            <div class="search-bar">
+              <i class="fas fa-search"></i>
+              <input type="text" id="menu-search" placeholder="Search menu items...">
+            </div>
+            
+            <div class="category-nav">
+              <!-- Categories will be populated by JavaScript -->
+            </div>
+            
+            <div class="menu-grid" id="menu-grid">
+              <!-- Menu items will be populated by JavaScript -->
+            </div>
+          </div>
+
+          <div class="order-section">
+            <!-- Table Selection Card -->
+            <div class="card table-selection-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <i class="fas fa-chair"></i> Select Table
+                </div>
+              </div>
+              <div class="card-content">
+                <div class="tables-grid customer-tables-grid">
+                  <button data-table="1">1</button>
+                  <button data-table="2">2</button>
+                  <button data-table="3">3</button>
+                  <button data-table="4">4</button>
+                  <button data-table="5">5</button>
+                  <button data-table="6">6</button>
+                  <button data-table="7">7</button>
+                  <button data-table="8">8</button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Order Card -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">
+                  <i class="fas fa-shopping-cart"></i> Your Order
+                </div>
+                <div class="card-description">
+                  Table #<span id="customer-table-number">1</span>
+                </div>
+              </div>
+              <div class="card-content">
+                <div id="empty-cart-message" class="text-center">
+                  Your cart is empty
+                </div>
+                <div id="cart-items" class="cart-items hidden">
+                  <!-- Cart items will be populated by JavaScript -->
+                </div>
+              </div>
+              <div class="card-footer">
+                <div class="cart-total">
+                  <span>Total:</span>
+                  <span id="cart-total">0 ₫</span>
+                </div>
+                <button id="place-order-btn" class="primary" disabled>Place Order</button>
+              </div>
+            </div>
+            
+            <!-- Orders Card -->
+            <div id="customer-orders" class="customer-orders">
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title">Your Orders</div>
+                </div>
+                <div class="card-content">
+                  <div id="no-customer-orders" class="text-center">
+                    You have no orders yet
+                  </div>
+                  <div id="customer-order-cards" class="hidden">
+                    <!-- Order items will be populated by JavaScript -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <div class="vietnamese-pattern"></div>
+  
+</body>
+</html>

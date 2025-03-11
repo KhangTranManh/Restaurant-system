@@ -1,0 +1,785 @@
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viet Nam Cuisine - Staff Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="/js/pages/staff.js"></script>
+    <style>
+      :root {
+        --primary-color: #a83232;
+        --secondary-color: #f8eac7;
+        --accent-color: #588157;
+        --text-color: #33272a;
+        --light-text: #f8eac7;
+        --border-color: #d9d9d9;
+        --shadow-color: rgba(0, 0, 0, 0.1);
+        --card-bg: #ffffff;
+      }
+      
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+      
+      body {
+        background-color: #f5f3e8;
+        color: var(--text-color);
+        line-height: 1.6;
+        background-image: url('/api/placeholder/1200/800');
+        background-size: 200px;
+        background-position: center;
+        background-blend-mode: overlay;
+        background-attachment: fixed;
+      }
+      
+      .container {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+      }
+      
+      header {
+        background-color: var(--primary-color);
+        color: var(--light-text);
+        padding: 1rem 0;
+        box-shadow: 0 2px 10px var(--shadow-color);
+        margin-bottom: 2rem;
+        position: relative;
+      }
+      
+      .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .header-brand {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+      
+      .header-brand img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 2px solid var(--light-text);
+      }
+      
+      .header-controls {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+      }
+      
+      .user-controls {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+      
+      .nav-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+      
+      h1, h2, h3 {
+        font-weight: 700;
+        color: var(--primary-color);
+      }
+      
+      h1 {
+        font-size: 1.5rem;
+        color: var(--light-text);
+      }
+      
+      h2 {
+        font-size: 1.75rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        display: inline-block;
+        padding-bottom: 0.5rem;
+      }
+      
+      h2::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background-color: var(--primary-color);
+        opacity: 0.7;
+      }
+      
+      h3 {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+      }
+      
+      main {
+        padding: 1rem 0 3rem;
+      }
+      
+      .staff-dashboard {
+        margin-top: 1rem;
+      }
+      
+      .staff-view-container {
+        display: grid;
+        grid-template-columns: 1fr 1.5fr;
+        gap: 2rem;
+      }
+      
+      .tables-section {
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px var(--shadow-color);
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+        height: max-content;
+      }
+      
+      .tables-section::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 6px;
+        background-color: var(--primary-color);
+      }
+      
+      .tables-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+      
+      .tables-grid button {
+        height: 80px;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #fff;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-weight: 600;
+        color: var(--text-color);
+        transition: all 0.2s;
+        cursor: pointer;
+        position: relative;
+      }
+      
+      .tables-grid button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px var(--shadow-color);
+      }
+      
+      .tables-grid button.active {
+        border: 2px solid var(--primary-color);
+        color: var(--primary-color);
+      }
+      
+      .tables-grid button.occupied {
+        background-color: #fef2f2;
+        border-color: var(--primary-color);
+      }
+      
+      .tables-grid button.occupied::after {
+        content: "•";
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        color: var(--primary-color);
+        font-size: 20px;
+      }
+      
+      .tables-grid button.reserved {
+        background-color: #fff7ed;
+        border-color: #f59e0b;
+      }
+      
+      .tables-grid button.reserved::after {
+        content: "•";
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        color: #f59e0b;
+        font-size: 20px;
+      }
+      
+      .selected-table {
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px var(--shadow-color);
+        overflow: hidden;
+      }
+      
+      .card {
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px var(--shadow-color);
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+      }
+      
+      .card-header {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        background-color: #f9f9f9;
+      }
+      
+      .card-title {
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--primary-color);
+        font-size: 1.1rem;
+      }
+      
+      .card-content {
+        padding: 1.5rem;
+      }
+      
+      .orders-section {
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px var(--shadow-color);
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .orders-section::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 6px;
+        background-color: var(--primary-color);
+      }
+      
+      .tabs {
+        display: flex;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 1.5rem;
+      }
+      
+      .tab {
+        padding: 0.75rem 1.5rem;
+        cursor: pointer;
+        font-weight: 500;
+        color: #666;
+        border-bottom: 3px solid transparent;
+        transition: all 0.2s;
+      }
+      
+      .tab:hover {
+        color: var(--primary-color);
+      }
+      
+      .tab.active {
+        color: var(--primary-color);
+        border-bottom-color: var(--primary-color);
+        font-weight: 600;
+      }
+      
+      .tab-content {
+        display: none;
+      }
+      
+      .tab-content.active {
+        display: block;
+      }
+      
+      .staff-order-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+      
+      .staff-order-card {
+        background-color: white;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        box-shadow: 0 2px 8px var(--shadow-color);
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+      
+      .staff-order-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px var(--shadow-color);
+      }
+      
+      .staff-order-header {
+        padding: 1rem;
+        background-color: #f9f9f9;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .staff-order-title {
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      
+      .staff-order-time {
+        color: #666;
+        font-size: 0.9rem;
+      }
+      
+      .badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-weight: 600;
+        color: white;
+      }
+      
+      .yellow {
+        background-color: #f59e0b;
+      }
+      
+      .blue {
+        background-color: #3b82f6;
+      }
+      
+      .green {
+        background-color: #10b981;
+      }
+      
+      .staff-order-content {
+        padding: 1rem;
+      }
+      
+      .staff-order-items {
+        margin-bottom: 1rem;
+      }
+      
+      .staff-order-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px dashed #eee;
+      }
+      
+      .staff-order-item:last-child {
+        border-bottom: none;
+      }
+      
+      .staff-order-item-name {
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .staff-order-item-quantity {
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-right: 0.5rem;
+      }
+      
+      .staff-order-item-notes {
+        font-size: 0.85rem;
+        color: #666;
+        font-style: italic;
+        margin-top: 0.25rem;
+      }
+      
+      .staff-order-footer {
+        padding: 1rem;
+        background-color: #f9f9f9;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .staff-order-total {
+        font-weight: 600;
+      }
+      
+      .staff-order-action {
+        display: flex;
+        gap: 0.75rem;
+      }
+      
+      button {
+        cursor: pointer;
+        padding: 0.75rem 1rem;
+        border-radius: 4px;
+        font-weight: 600;
+        transition: all 0.2s;
+        border: none;
+      }
+      
+      .primary {
+        background-color: var(--primary-color);
+        color: white;
+        box-shadow: 0 2px 4px rgba(168, 50, 50, 0.25);
+      }
+      
+      .primary:hover {
+        background-color: #8a2929;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(168, 50, 50, 0.25);
+      }
+      
+      .primary:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+      
+      .secondary {
+        background-color: white;
+        color: var(--primary-color);
+        border: 1px solid var(--primary-color);
+      }
+      
+      .secondary:hover {
+        background-color: #fff5f5;
+      }
+      
+      .secondary:disabled {
+        color: #999;
+        border-color: #ddd;
+        cursor: not-allowed;
+      }
+      
+      .hidden {
+        display: none !important;
+      }
+      
+      .text-center {
+        text-align: center;
+        color: #777;
+        padding: 2rem 0;
+      }
+      
+      .icon-button {
+        background: none;
+        border: none;
+        color: var(--primary-color);
+        font-size: 1.2rem;
+        cursor: pointer;
+        padding: 0.25rem;
+        transition: color 0.2s;
+      }
+      
+      .icon-button:hover {
+        color: #8a2929;
+      }
+      
+      /* Vietnamese decorative elements */
+      .vietnamese-pattern {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 30px;
+        background-image: url('/api/placeholder/400/30');
+        opacity: 0.5;
+        z-index: 10;
+      }
+      
+      .table-details {
+        padding: 1.5rem;
+      }
+      
+      .table-status {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+      }
+      
+      .table-status-badge {
+        font-weight: 500;
+        padding: 0.35rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.9rem;
+      }
+      
+      .available {
+        color: #10b981;
+        background-color: #ecfdf5;
+      }
+      
+      .occupied {
+        color: var(--primary-color);
+        background-color: #fef2f2;
+      }
+      
+      .reserved {
+        color: #f59e0b;
+        background-color: #fff7ed;
+      }
+      
+      .table-details-content {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      
+      .table-action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+      
+      /* Modal styles */
+      .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        display: none;
+      }
+      
+      .modal {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        width: 90%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+      
+      .modal-header {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .modal-title {
+        font-weight: 600;
+        font-size: 1.2rem;
+        color: var(--primary-color);
+      }
+      
+      .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.25rem;
+        cursor: pointer;
+        color: #666;
+      }
+      
+      .modal-close:hover {
+        color: var(--primary-color);
+      }
+      
+      .modal-body {
+        padding: 1.5rem;
+      }
+      
+      .modal-footer {
+        padding: 1rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+      }
+      
+      /* New Order button styles */
+      .new-order-button {
+        background-color: var(--accent-color);
+        color: white;
+        border: none;
+        padding: 0.6rem 1rem;
+        border-radius: 4px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(88, 129, 87, 0.25);
+      }
+      
+      .new-order-button:hover {
+        background-color: #4a6d49;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(88, 129, 87, 0.25);
+      }
+      
+      @media (max-width: 992px) {
+        .staff-view-container {
+          grid-template-columns: 1fr;
+        }
+        
+        .tables-grid {
+          grid-template-columns: repeat(4, 1fr);
+        }
+      }
+      
+      @media (max-width: 768px) {
+        .tables-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .header-controls {
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 0.75rem;
+        }
+      }
+      
+      @media (max-width: 576px) {
+        .tables-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .table-action-buttons {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header>
+      <div class="container">
+        <div class="header-content">
+          <div class="header-brand">
+            <img src="/images/logo.jpg" alt="Viet Nam Cuisine Logo">
+            <h1>Viet Nam Cuisine</h1>
+          </div>
+          <div class="header-controls">
+            <div class="user-controls">
+              <span id="user-info">Welcome, Staff</span>
+              <button id="logout-btn" class="secondary" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Logout</button>
+            </div>
+            <div class="nav-controls">
+              <button id="customer-view-btn" class="new-order-button">
+                <i class="fas fa-utensils"></i> Customer Ordering View
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+    
+    <main>
+      <div class="container">
+        <div class="staff-dashboard">
+          <div class="staff-view-container">
+            <div class="tables-section">
+              <h2>Tables</h2>
+              <div class="tables-grid">
+                <!-- Tables with data attributes and IDs for better targeting -->
+                <button id="table-1" class="secondary" data-table="1">1</button>
+                <button id="table-2" class="secondary occupied" data-table="2">2</button>
+                <button id="table-3" class="secondary" data-table="3">3</button>
+                <button id="table-4" class="secondary" data-table="4">4</button>
+                <button id="table-5" class="secondary reserved" data-table="5">5</button>
+                <button id="table-6" class="secondary" data-table="6">6</button>
+                <button id="table-7" class="secondary" data-table="7">7</button>
+                <button id="table-8" class="secondary" data-table="8">8</button>
+              </div>
+              
+              <div id="selected-table" class="selected-table">
+                <div class="card">
+                  <div class="card-header">
+                    <div class="card-title">Table <span id="staff-table-number">2</span></div>
+                  </div>
+                  <div class="card-content">
+                    <div class="table-details">
+                      <div class="table-status">
+                        <h3>Status</h3>
+                        <span class="table-status-badge occupied">Occupied</span>
+                      </div>
+                      
+                      <div class="table-details-content">
+                        <div>
+                          <strong>Occupied since:</strong> 12:15 PM
+                        </div>
+                        <div>
+                          <strong>Guests:</strong> 3
+                        </div>
+                        <div>
+                          <strong>Current order:</strong> Order #1003 (Ready for service)
+                        </div>
+                      </div>
+                      
+                      <div class="table-action-buttons">
+                        <button class="primary" id="new-order-btn">New Order</button>
+                        <button class="secondary" id="bill-btn">Bill</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="orders-section">
+              <div class="tabs">
+                <div class="tab active" data-tab="active-orders">Active Orders</div>
+                <div class="tab" data-tab="ready-orders">Ready for Service</div>
+                <div class="tab" data-tab="completed-orders">Completed</div>
+              </div>
+              
+              <div id="active-orders" class="tab-content active">
+                <div id="staff-active-orders" class="staff-order-cards">
+                  <!-- Active orders will be populated by JavaScript -->
+                </div>
+                <div id="no-active-orders" class="text-center hidden">
+                  No active orders
+                </div>
+              </div>
+              
+              <div id="ready-orders" class="tab-content">
+                <div id="staff-ready-orders" class="staff-order-cards">
+                  <!-- Ready orders will be populated by JavaScript -->
+                </div>
+                <div id="no-ready-orders" class="text-center hidden">
+                  No orders ready for service
+                </div>
+              </div>
+              
+              <div id="completed-orders" class="tab-content">
+                <div id="staff-completed-orders" class="staff-order-cards">
+                  <!-- Completed orders will be populated by JavaScript -->
+                </div>
+                <div id="no-completed-orders" class="text-center hidden">
+                  No completed orders
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    
+    <div class="vietnamese-pattern"></div>
+  </body>
+  </html>

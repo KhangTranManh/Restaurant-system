@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Viet Nam Cuisine - Admin Dashboard</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <script src="../js/components/common.js"></script>
+  <script src="../js/pages/admin.js"></script>
+  <style>
+    :root {
+      --primary-color: #a83232;
+      --secondary-color: #f8eac7;
+      --accent-color: #588157;
+      --text-color: #33272a;
+      --light-text: #f8eac7;
+      --border-color: #d9d9d9;
+      --shadow-color: rgba(0, 0, 0, 0.1);
+      --card-bg: #ffffff;
+      --chart-color-1: #a83232;
+      --chart-color-2: #588157;
+      --chart-color-3: #f59e0b;
+      --chart-color-4: #3b82f6;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background-color: #f5f3e8;
+      color: var(--text-color);
+      line-height: 1.6;
+      background-image: url('/api/placeholder/1200/800');
+      background-size: 200px;
+      background-position: center;
+      background-blend-mode: overlay;
+      background-attachment: fixed;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    
+    header {
+      background-color: var(--primary-color);
+      color: var(--light-text);
+      padding: 1rem 0;
+      box-shadow: 0 2px 10px var(--shadow-color);
+      margin-bottom: 2rem;
+      position: relative;
+    }
+    
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .header-brand img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 2px solid var(--light-text);
+    }
+    
+    h1, h2, h3 {
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+    
+    h1 {
+      font-size: 1.5rem;
+      color: var(--light-text);
+    }
+    
+    h2 {
+      font-size: 1.75rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+      display: inline-block;
+      padding-bottom: 0.5rem;
+    }
+    
+    h2::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background-color: var(--primary-color);
+      opacity: 0.7;
+    }
+    
+    h3 {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    
+    main {
+      padding: 1rem 0 3rem;
+    }
+    
+    .admin-dashboard {
+      margin-top: 1rem;
+    }
+    
+    .admin-toggle-container {
+      margin-bottom: 1.5rem;
+    }
+    
+    .toggle-buttons {
+      display: flex;
+      gap: 1rem;
+    }
+    
+    button {
+      cursor: pointer;
+      padding: 0.75rem 1rem;
+      border-radius: 4px;
+      font-weight: 600;
+      transition: all 0.2s;
+      border: none;
+    }
+    
+    .primary {
+      background-color: var(--primary-color);
+      color: white;
+      box-shadow: 0 2px 4px rgba(168, 50, 50, 0.25);
+    }
+    
+    .primary:hover {
+      background-color: #8a2929;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(168, 50, 50, 0.25);
+    }
+    
+    .primary:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .secondary {
+      background-color: white;
+      color: var(--primary-color);
+      border: 1px solid var(--primary-color);
+    }
+    
+    .secondary:hover {
+      background-color: #fff5f5;
+    }
+    
+    .secondary:disabled {
+      color: #999;
+      border-color: #ddd;
+      cursor: not-allowed;
+    }
+    
+    .admin-panel {
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px var(--shadow-color);
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .admin-panel::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 6px;
+      background-color: var(--primary-color);
+    }
+    
+    .admin-panel.hidden {
+      display: none;
+    }
+    
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px var(--shadow-color);
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+    
+    .card-header {
+      padding: 1rem;
+      background-color: #f9f9f9;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .card-title {
+      font-weight: 600;
+      color: var(--primary-color);
+      font-size: 1.1rem;
+    }
+    
+    .card-content {
+      padding: 1.5rem;
+    }
+    
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    
+    .stat-item {
+      text-align: center;
+    }
+    
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-bottom: 0.25rem;
+    }
+    
+    .stat-label {
+      color: #666;
+      font-size: 0.9rem;
+    }
+    
+    .tables-section {
+      margin-bottom: 2rem;
+    }
+    
+    .tables-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 1rem;
+    }
+    
+    .tables-grid button {
+      height: 60px;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-weight: 600;
+      color: var(--text-color);
+      transition: all 0.2s;
+      cursor: pointer;
+      position: relative;
+    }
+    
+    .tables-grid button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px var(--shadow-color);
+    }
+    
+    .tables-grid button.occupied {
+      background-color: #fef2f2;
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+    
+    .tables-grid button.reserved {
+      background-color: #fff7ed;
+      border-color: #f59e0b;
+      color: #f59e0b;
+    }
+    
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .data-table th,
+    .data-table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .data-table th {
+      font-weight: 600;
+      color: #666;
+      background-color: #f9f9f9;
+    }
+    
+    .data-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    .badge {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-weight: 600;
+      color: white;
+      display: inline-block;
+    }
+    
+    .yellow {
+      background-color: #f59e0b;
+    }
+    
+    .blue {
+      background-color: #3b82f6;
+    }
+    
+    .green {
+      background-color: #10b981;
+    }
+    
+    .red {
+      background-color: #ef4444;
+    }
+    
+    .small {
+      font-size: 0.8rem;
+      padding: 0.35rem 0.65rem;
+    }
+    
+    .kitchen-orders {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .kitchen-order-card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px var(--shadow-color);
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+    
+    .kitchen-order-header {
+      padding: 1rem;
+      background-color: #f9f9f9;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .kitchen-order-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    
+    .kitchen-order-subtitle {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    
+    .kitchen-order-content {
+      padding: 1rem;
+    }
+    
+    .kitchen-order-items {
+      margin-bottom: 1rem;
+    }
+    
+    .kitchen-order-items div {
+      padding: 0.5rem 0;
+      border-bottom: 1px dashed #eee;
+    }
+    
+    .kitchen-order-items div:last-child {
+      border-bottom: none;
+    }
+    
+    .kitchen-order-prep-time {
+      font-size: 0.9rem;
+      color: #666;
+      margin-top: 1rem;
+    }
+    
+    .kitchen-order-footer {
+      padding: 1rem;
+      border-top: 1px solid var(--border-color);
+      background-color: #f9f9f9;
+      display: flex;
+      justify-content: flex-end;
+    }
+    
+    .note {
+      display: inline-block;
+      font-size: 0.8rem;
+      font-style: italic;
+      color: #666;
+      margin-left: 0.5rem;
+    }
+    
+    .chart-container {
+      height: 300px;
+      margin-bottom: 2rem;
+    }
+    
+    .performance-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .metric-card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px var(--shadow-color);
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      padding: 1.5rem;
+      text-align: center;
+    }
+    
+    .metric-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-bottom: 0.5rem;
+    }
+    
+    .metric-label {
+      color: #666;
+      font-size: 0.9rem;
+    }
+    
+    /* Vietnamese decorative elements */
+    .vietnamese-pattern {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 30px;
+      background-image: url('/api/placeholder/400/30');
+      opacity: 0.5;
+      z-index: 10;
+    }
+    
+    @media (max-width: 768px) {
+      .dashboard-grid,
+      .kitchen-orders {
+        grid-template-columns: 1fr;
+      }
+      
+      .stat-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .tables-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+      
+      .data-table {
+        display: block;
+        overflow-x: auto;
+      }
+    }
+    
+    @media (max-width: 576px) {
+      .toggle-buttons {
+        flex-direction: column;
+      }
+      
+      .tables-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <div class="header-brand">
+          <img src="/images/logo.jpg" alt="Viet Nam Cuisine Logo">
+          <h1>Viet Nam Cuisine</h1>
+        </div>
+        <div class="header-controls">
+          <div class="user-controls">
+            <span id="user-info">Welcome, Admin</span>
+            <button id="logout-btn" class="secondary" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+  
+  <main>
+    <div class="container">
+      <div class="admin-dashboard">
+        <h2>Admin Dashboard</h2>
+        
+        <div class="admin-toggle-container">
+          <div class="toggle-buttons">
+            <button id="admin-staff-btn" class="primary">Staff View</button>
+            <button id="admin-kitchen-btn" class="secondary">Kitchen View</button>
+            <button id="admin-analytics-btn" class="secondary">Analytics</button>
+          </div>
+        </div>
+        
+        <!-- Admin Staff View -->
+        <div id="admin-staff-view" class="admin-panel">
+          <div class="dashboard-grid">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Tables Overview</div>
+              </div>
+              <div class="card-content">
+                <div class="stat-grid">
+                  <div class="stat-item">
+                    <div class="stat-number">6</div>
+                    <div class="stat-label">Available</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-number">2</div>
+                    <div class="stat-label">Occupied</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Orders</div>
+              </div>
+              <div class="card-content">
+                <div class="stat-grid">
+                  <div class="stat-item">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">Active</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-number">12</div>
+                    <div class="stat-label">Completed Today</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Revenue</div>
+              </div>
+              <div class="card-content">
+                <div class="stat-grid">
+                  <div class="stat-item">
+                    <div class="stat-number">5.2M₫</div>
+                    <div class="stat-label">Today</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-number">34.8M₫</div>
+                    <div class="stat-label">This Week</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Staff</div>
+              </div>
+              <div class="card-content">
+                <div class="stat-grid">
+                  <div class="stat-item">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">On Duty</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">Kitchen Staff</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tables-section">
+            <h3>Tables</h3>
+            <div class="tables-grid">
+              <!-- Tables with dynamic status -->
+              <button class="secondary">1</button>
+              <button class="secondary occupied">2</button>
+              <button class="secondary">3</button>
+              <button class="secondary">4</button>
+              <button class="secondary reserved">5</button>
+              <button class="secondary">6</button>
+              <button class="secondary">7</button>
+              <button class="secondary">8</button>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Active Orders</div>
+            </div>
+            <div class="card-content">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Order #</th>
+                    <th>Table</th>
+                    <th>Items</th>
+                    <th>Status</th>
+                    <th>Total</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>1001</td>
+                    <td>Table 3</td>
+                    <td>6 items</td>
+                    <td><span class="badge yellow">Pending</span></td>
+                    <td>350,000₫</td>
+                    <td><button class="small secondary">View</button></td>
+                  </tr>
+                  <tr>
+                    <td>1002</td>
+                    <td>Table 5</td>
+                    <td>2 items</td>
+                    <td><span class="badge blue">Preparing</span></td>
+                    <td>150,000₫</td>
+                    <td><button class="small secondary">View</button></td>
+                  </tr>
+                  <tr>
+                    <td>1003</td>
+                    <td>Table 2</td>
+                    <td>3 items</td>
+                    <td><span class="badge green">Ready</span></td>
+                    <td>230,000₫</td>
+                    <td><button class="small primary">Deliver</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Admin Kitchen View -->
+        <div id="admin-kitchen-view" class="admin-panel hidden">
+          <div class="dashboard-grid">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Orders Overview</div>
+              </div>
+              <div class="card-content">
+                <div class="stat-grid">
+                  <div class="stat-item">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">Pending</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-number">2</div>
+                    <div class="stat-label">Preparing</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Performance</div>
+              </div>
+              <div class="card-content">
+                <div class="stat-grid">
+                  <div class="stat-item">
+                    <div class="stat-number">18</div>
+                    <div class="stat-label">Avg. Prep Time (min)</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-number">15</div>
+                    <div class="stat-label">Today's Orders</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Staff Status</div>
+              </div>
+              <div class="card-content">
+                <div class="stat-grid">
+                  <div class="stat-item">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">Active Chefs</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-number">1</div>
+                    <div class="stat-label">On Break</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Popular Dishes</div>
+              </div>
+              <div class="card-content">
+                <div class="stat-grid">
+                  <div class="stat-item">
+                    <div class="stat-number">24</div>
+                    <div class="stat-label">Phở Bò</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-number">18</div>
+                    <div class="stat-label">Bánh Xèo</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="kitchen-orders">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Pending Orders</div>
+              </div>
+              <div class="card-content">
+                <div class="kitchen-order-card">
+                  <div class="kitchen-order-header">
+                    <div class="kitchen-order-title">
+                      <span>Order #1001</span>
+                      <span class="badge yellow">New Order</span>
+                    </div>
+                    <div class="kitchen-order-subtitle">
+                      <span>Table 3</span>
+                      <span>12:45 PM</span>
+                    </div>
+                  </div>
+                  <div class="kitchen-order-content">
+                    <div class="kitchen-order-items">
+                      <div><strong>2x</strong> Phở Bò <span class="note">Extra bean sprouts</span></div>
+                      <div><strong>1x</strong> Bún Chả</div>
+                      <div><strong>3x</strong> Cà Phê Sữa Đá</div>
+                    </div>
+                  </div>
+                  <div class="kitchen-order-footer">
+                    <button class="primary">Start Preparing</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">In Preparation</div>
+              </div>
+              <div class="card-content">
+                <div class="kitchen-order-card">
+                  <div class="kitchen-order-header">
+                    <div class="kitchen-order-title">
+                      <span>Order #1002</span>
+                      <span class="badge blue">In Preparation</span>
+                    </div>
+                    <div class="kitchen-order-subtitle">
+                      <span>Table 5</span>
+                      <span>12:30 PM</span>
+                    </div>
+                  </div>
+                  <div class="kitchen-order-content">
+                    <div class="kitchen-order-items">
+                      <div><strong>1x</strong> Gỏi Cuốn</div>
+                      <div><strong>1x</strong> Bánh Xèo <span class="note">No shrimp, extra vegetables</span></div>
+                    </div>
+                    <div class="kitchen-order-prep-time">
+                      <span class="font-medium">Est. prep time:</span> 15 minutes
+                    </div>
+                  </div>
+                  <div class="kitchen-order-footer">
+                    <button class="primary">Mark as Ready</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Kitchen Staff Schedule</div>
+            </div>
+            <div class="card-content">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Position</th>
+                    <th>Shift</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Nguyen Van A</td>
+                    <td>Head Chef</td>
+                    <td>07:00 - 15:00</td>
+                    <td><span class="badge green small">On Duty</span></td>
+                  </tr>
+                  <tr>
+                    <td>Tran Thi B</td>
+                    <td>Sous Chef</td>
+                    <td>08:00 - 16:00</td>
+                    <td><span class="badge green small">On Duty</span></td>
+                  </tr>
+                  <tr>
+                    <td>Le Van C</td>
+                    <td>Line Cook</td>
+                    <td>Le Van C</td>
+                    <td>Line Cook</td>
+                    <td>09:00 - 17:00</td>
+                    <td><span class="badge green small">On Duty</span></td>
+                  </tr>
+                  <tr>
+                    <td>Pham Thi D</td>
+                    <td>Line Cook</td>
+                    <td>11:00 - 19:00</td>
+                    <td><span class="badge red small">On Break</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Admin Analytics View -->
+        <div id="admin-analytics-view" class="admin-panel hidden">
+          <div class="dashboard-grid">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Daily Revenue</div>
+              </div>
+              <div class="card-content">
+                <div class="stat-grid">
+                  <div class="stat-item">
+                    <div class="stat-number">5.2M₫</div>
+                    <div class="stat-label">Today</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-number">4.8M₫</div>
+                    <div class="stat-label">Yesterday</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Weekly Comparison</div>
+              </div>
+              <div class="card-content">
+                <div class="stat-grid">
+                  <div class="stat-item">
+                    <div class="stat-number">34.8M₫</div>
+                    <div class="stat-label">This Week</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-number">31.5M₫</div>
+                    <div class="stat-label">Last Week</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Customer Satisfaction</div>
+              </div>
+              <div class="card-content">
+                <div class="stat-grid">
+                  <div class="stat-item">
+                    <div class="stat-number">4.7</div>
+                    <div class="stat-label">Average Rating</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-number">94%</div>
+                    <div class="stat-label">Satisfied Customers</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Operations</div>
+              </div>
+              <div class="card-content">
+                <div class="stat-grid">
+                  <div class="stat-item">
+                    <div class="stat-number">25</div>
+                    <div class="stat-label">Avg. Order Value (in 1000₫)</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-number">18</div>
+                    <div class="stat-label">Avg. Preparation Time (min)</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Revenue Trends</div>
+            </div>
+            <div class="card-content">
+              <div class="chart-container">
+                <!-- Placeholder for chart - would be implemented with a library like Chart.js -->
+                <div style="width: 100%; height: 100%; background-color: #f9f9f9; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
+                  <span style="color: #666;">Revenue Chart Visualization</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="performance-metrics">
+            <div class="metric-card">
+              <div class="metric-value">24</div>
+              <div class="metric-label">Phở Bò</div>
+            </div>
+            
+            <div class="metric-card">
+              <div class="metric-value">18</div>
+              <div class="metric-label">Bánh Xèo</div>
+            </div>
+            
+            <div class="metric-card">
+              <div class="metric-value">17</div>
+              <div class="metric-label">Bún Chả</div>
+            </div>
+            
+            <div class="metric-card">
+              <div class="metric-value">15</div>
+              <div class="metric-label">Gỏi Cuốn</div>
+            </div>
+            
+            <div class="metric-card">
+              <div class="metric-value">14</div>
+              <div class="metric-label">Cà Phê Sữa Đá</div>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Sales by Time of Day</div>
+            </div>
+            <div class="card-content">
+              <div class="chart-container">
+                <!-- Placeholder for chart - would be implemented with a library like Chart.js -->
+                <div style="width: 100%; height: 100%; background-color: #f9f9f9; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
+                  <span style="color: #666;">Sales by Hour Chart Visualization</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Monthly Revenue (Last 6 Months)</div>
+            </div>
+            <div class="card-content">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Month</th>
+                    <th>Revenue</th>
+                    <th>Orders</th>
+                    <th>Avg. Order Value</th>
+                    <th>YoY Growth</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>March</td>
+                    <td>154.2M₫</td>
+                    <td>612</td>
+                    <td>252,000₫</td>
+                    <td>+8.4%</td>
+                  </tr>
+                  <tr>
+                    <td>February</td>
+                    <td>142.5M₫</td>
+                    <td>587</td>
+                    <td>242,700₫</td>
+                    <td>+7.2%</td>
+                  </tr>
+                  <tr>
+                    <td>January</td>
+                    <td>165.8M₫</td>
+                    <td>685</td>
+                    <td>242,000₫</td>
+                    <td>+12.5%</td>
+                  </tr>
+                  <tr>
+                    <td>December</td>
+                    <td>192.6M₫</td>
+                    <td>789</td>
+                    <td>244,100₫</td>
+                    <td>+15.2%</td>
+                  </tr>
+                  <tr>
+                    <td>November</td>
+                    <td>148.3M₫</td>
+                    <td>602</td>
+                    <td>246,300₫</td>
+                    <td>+6.8%</td>
+                  </tr>
+                  <tr>
+                    <td>October</td>
+                    <td>139.5M₫</td>
+                    <td>574</td>
+                    <td>243,000₫</td>
+                    <td>+5.4%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <div class="vietnamese-pattern"></div>
+  
+  <script>
+    // Tab switching for admin dashboard
+    document.getElementById('admin-staff-btn').addEventListener('click', function() {
+      document.getElementById('admin-staff-btn').classList.add('primary');
+      document.getElementById('admin-staff-btn').classList.remove('secondary');
+      document.getElementById('admin-kitchen-btn').classList.add('secondary');
+      document.getElementById('admin-kitchen-btn').classList.remove('primary');
+      document.getElementById('admin-analytics-btn').classList.add('secondary');
+      document.getElementById('admin-analytics-btn').classList.remove('primary');
+      
+      document.getElementById('admin-staff-view').classList.remove('hidden');
+      document.getElementById('admin-kitchen-view').classList.add('hidden');
+      document.getElementById('admin-analytics-view').classList.add('hidden');
+    });
+    
+    document.getElementById('admin-kitchen-btn').addEventListener('click', function() {
+      document.getElementById('admin-kitchen-btn').classList.add('primary');
+      document.getElementById('admin-kitchen-btn').classList.remove('secondary');
+      document.getElementById('admin-staff-btn').classList.add('secondary');
+      document.getElementById('admin-staff-btn').classList.remove('primary');
+      document.getElementById('admin-analytics-btn').classList.add('secondary');
+      document.getElementById('admin-analytics-btn').classList.remove('primary');
+      
+      document.getElementById('admin-kitchen-view').classList.remove('hidden');
+      document.getElementById('admin-staff-view').classList.add('hidden');
+      document.getElementById('admin-analytics-view').classList.add('hidden');
+    });
+    
+    document.getElementById('admin-analytics-btn').addEventListener('click', function() {
+      document.getElementById('admin-analytics-btn').classList.add('primary');
+      document.getElementById('admin-analytics-btn').classList.remove('secondary');
+      document.getElementById('admin-staff-btn').classList.add('secondary');
+      document.getElementById('admin-staff-btn').classList.remove('primary');
+      document.getElementById('admin-kitchen-btn').classList.add('secondary');
+      document.getElementById('admin-kitchen-btn').classList.remove('primary');
+      
+      document.getElementById('admin-analytics-view').classList.remove('hidden');
+      document.getElementById('admin-staff-view').classList.add('hidden');
+      document.getElementById('admin-kitchen-view').classList.add('hidden');
+    });
+    
+    // Logout functionality
+    document.getElementById('logout-btn').addEventListener('click', function() {
+      window.location.href = 'login.html';
+    });
+    
+    // Table click functionality
+    document.querySelectorAll('.tables-grid button').forEach(button => {
+      button.addEventListener('click', function() {
+        // In a real app, this would display table details
+        alert(`Table ${this.textContent} details would be shown here`);
+      });
+    });
+  </script>
+</body>
+</html>

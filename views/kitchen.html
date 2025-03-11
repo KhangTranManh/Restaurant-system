@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Viet Nam Cuisine - Kitchen Dashboard</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <script src="/js/pages/kitchen.js"></script>
+  <style>
+    :root {
+      --primary-color: #a83232;
+      --secondary-color: #f8eac7;
+      --accent-color: #588157;
+      --text-color: #33272a;
+      --light-text: #f8eac7;
+      --border-color: #d9d9d9;
+      --shadow-color: rgba(0, 0, 0, 0.1);
+      --card-bg: #ffffff;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background-color: #f5f3e8;
+      color: var(--text-color);
+      line-height: 1.6;
+      background-image: url('/api/placeholder/1200/800');
+      background-size: 200px;
+      background-position: center;
+      background-blend-mode: overlay;
+      background-attachment: fixed;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    
+    header {
+      background-color: var(--primary-color);
+      color: var(--light-text);
+      padding: 1rem 0;
+      box-shadow: 0 2px 10px var(--shadow-color);
+      margin-bottom: 2rem;
+      position: relative;
+    }
+    
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .header-brand img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 2px solid var(--light-text);
+    }
+    
+    h1, h2, h3 {
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+    
+    h1 {
+      font-size: 1.5rem;
+      color: var(--light-text);
+    }
+    
+    h2 {
+      font-size: 1.75rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+      display: inline-block;
+      padding-bottom: 0.5rem;
+    }
+    
+    h2::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background-color: var(--primary-color);
+      opacity: 0.7;
+    }
+    
+    h3 {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    
+    main {
+      padding: 1rem 0 3rem;
+    }
+    
+    .kitchen-dashboard {
+      margin-top: 1rem;
+    }
+    
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 1.5rem;
+    }
+    
+    .tab {
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      font-weight: 500;
+      color: #666;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+    
+    .tab:hover {
+      color: var(--primary-color);
+    }
+    
+    .tab.active {
+      color: var(--primary-color);
+      border-bottom-color: var(--primary-color);
+      font-weight: 600;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .kitchen-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .kitchen-order-card {
+      background-color: white;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      box-shadow: 0 4px 12px var(--shadow-color);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .kitchen-order-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px var(--shadow-color);
+    }
+    
+    .kitchen-order-card.pending {
+      border-left: 4px solid #f59e0b;
+    }
+    
+    .kitchen-order-card.preparing {
+      border-left: 4px solid #3b82f6;
+    }
+    
+    .kitchen-order-card.completed {
+      border-left: 4px solid #10b981;
+    }
+    
+    .kitchen-order-header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      background-color: #f9f9f9;
+    }
+    
+    .kitchen-order-header.pending {
+      background-color: #fff7ed;
+    }
+    
+    .kitchen-order-header.preparing {
+      background-color: #eff6ff;
+    }
+    
+    .kitchen-order-header.completed {
+      background-color: #ecfdf5;
+    }
+    
+    .kitchen-order-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .kitchen-order-subtitle {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    
+    .badge {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-weight: 600;
+      color: white;
+    }
+    
+    .yellow {
+      background-color: #f59e0b;
+    }
+    
+    .blue {
+      background-color: #3b82f6;
+    }
+    
+    .green {
+      background-color: #10b981;
+    }
+    
+    .kitchen-order-content {
+      padding: 1rem;
+    }
+    
+    .kitchen-order-items {
+      margin-bottom: 1rem;
+    }
+    
+    .kitchen-order-item {
+      padding: 0.5rem 0;
+      border-bottom: 1px dashed #eee;
+    }
+    
+    .kitchen-order-item:last-child {
+      border-bottom: none;
+    }
+    
+    .kitchen-order-item-name {
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+    
+    .kitchen-order-item-notes {
+      font-size: 0.85rem;
+      color: #666;
+      font-style: italic;
+    }
+    
+    .kitchen-order-timer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-top: 1px solid #eee;
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+    }
+    
+    .kitchen-order-timer span {
+      font-weight: 500;
+    }
+    
+    .kitchen-order-timer.urgent {
+      color: var(--primary-color);
+    }
+    
+    .kitchen-order-footer {
+      padding: 1rem;
+      border-top: 1px solid var(--border-color);
+      background-color: #f9f9f9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    button {
+      cursor: pointer;
+      padding: 0.75rem 1rem;
+      border-radius: 4px;
+      font-weight: 600;
+      transition: all 0.2s;
+      border: none;
+    }
+    
+    .primary {
+      background-color: var(--primary-color);
+      color: white;
+      box-shadow: 0 2px 4px rgba(168, 50, 50, 0.25);
+    }
+    
+    .primary:hover {
+      background-color: #8a2929;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(168, 50, 50, 0.25);
+    }
+    
+    .primary:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .secondary {
+      background-color: white;
+      color: var(--primary-color);
+      border: 1px solid var(--primary-color);
+    }
+    
+    .secondary:hover {
+      background-color: #fff5f5;
+    }
+    
+    .secondary:disabled {
+      color: #999;
+      border-color: #ddd;
+      cursor: not-allowed;
+    }
+    
+    .status-label {
+      font-size: 0.85rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    
+    .status-label.preparing {
+      color: #3b82f6;
+      background-color: #eff6ff;
+    }
+    
+    .status-label.completed {
+      color: #10b981;
+      background-color: #ecfdf5;
+    }
+    
+    .note {
+      background-color: #fff7ed;
+      color: #f59e0b;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      display: inline-block;
+      margin-left: 0.5rem;
+    }
+    
+    .font-medium {
+      font-weight: 500;
+    }
+    
+    .text-center {
+      text-align: center;
+      color: #777;
+      padding: 2rem 0;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+    
+    /* Traditional Vietnamese design elements */
+    .vietnamese-pattern {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 30px;
+      background-image: url('/api/placeholder/400/30');
+      opacity: 0.5;
+      z-index: 10;
+    }
+    
+    /* Dashboard stats */
+    .dashboard-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px var(--shadow-color);
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+    
+    .stat-card-header {
+      padding: 1rem;
+      background-color: #f9f9f9;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .stat-card-title {
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+    
+    .stat-card-content {
+      padding: 1.5rem;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--primary-color);
+    }
+    
+    .stat-label {
+      color: #666;
+      font-size: 0.9rem;
+    }
+    
+    @media (max-width: 768px) {
+      .kitchen-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .dashboard-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    @media (max-width: 576px) {
+      .dashboard-stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <div class="header-brand">
+          <img src="/images/logo.jpg" alt="Viet Nam Cuisine Logo">
+          <h1>Viet Nam Cuisine</h1>
+        </div>
+        <div class="header-controls">
+          <div class="user-controls">
+            <span id="user-info">Welcome, Kitchen Staff</span>
+            <button id="logout-btn" class="secondary" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+  
+  <main>
+    <div class="container">
+      <div class="kitchen-dashboard">
+        <h2>Kitchen Dashboard</h2>
+        
+        <div class="dashboard-stats">
+          <div class="stat-card">
+            <div class="stat-card-header">
+              <div class="stat-card-title">Pending Orders</div>
+            </div>
+            <div class="stat-card-content">
+              <div class="stat-value">3</div>
+              <div class="stat-label">Waiting to be prepared</div>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-card-header">
+              <div class="stat-card-title">In Preparation</div>
+            </div>
+            <div class="stat-card-content">
+              <div class="stat-value">2</div>
+              <div class="stat-label">Currently being prepared</div>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-card-header">
+              <div class="stat-card-title">Completed Today</div>
+            </div>
+            <div class="stat-card-content">
+              <div class="stat-value">15</div>
+              <div class="stat-label">Orders completed today</div>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-card-header">
+              <div class="stat-card-title">Avg. Preparation Time</div>
+            </div>
+            <div class="stat-card-content">
+              <div class="stat-value">18m</div>
+              <div class="stat-label">Average time per order</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="tabs">
+          <div class="tab active" data-tab="pending-orders">New Orders</div>
+          <div class="tab" data-tab="preparing-orders">In Preparation</div>
+          <div class="tab" data-tab="completed-today">Completed Today</div>
+        </div>
+
+        <div id="pending-orders" class="tab-content active">
+          <div id="kitchen-pending-orders" class="kitchen-grid">
+            <!-- Pending orders -->
+            <div class="kitchen-order-card pending">
+              <div class="kitchen-order-header pending">
+                <div class="kitchen-order-title">
+                  <span>Order #1001</span>
+                  <span class="badge yellow">New Order</span>
+                </div>
+                <div class="kitchen-order-subtitle">
+                  <span>Table 3</span>
+                  <span>12:45 PM</span>
+                </div>
+              </div>
+              <div class="kitchen-order-content">
+                <div class="kitchen-order-items">
+                  <div class="kitchen-order-item">
+                    <div class="kitchen-order-item-name">2x Phở Bò</div>
+                    <div class="kitchen-order-item-notes">Extra bean sprouts</div>
+                  </div>
+                  <div class="kitchen-order-item">
+                    <div class="kitchen-order-item-name">1x Bún Chả</div>
+                  </div>
+                  <div class="kitchen-order-item">
+                    <div class="kitchen-order-item-name">3x Cà Phê Sữa Đá</div>
+                  </div>
+                </div>
+                <div class="kitchen-order-timer">
+                  <span>Waiting for:</span>
+                  <span>5 minutes</span>
+                </div>
+              </div>
+              <div class="kitchen-order-footer">
+                <button class="primary start-cooking" data-id="1001">Start Preparing</button>
+              </div>
+            </div>
+            
+            <div class="kitchen-order-card pending">
+              <div class="kitchen-order-header pending">
+                <div class="kitchen-order-title">
+                  <span>Order #1004</span>
+                  <span class="badge yellow">New Order</span>
+                </div>
+                <div class="kitchen-order-subtitle">
+                  <span>Table 6</span>
+                  <span>12:50 PM</span>
+                </div>
+              </div>
+              <div class="kitchen-order-content">
+                <div class="kitchen-order-items">
+                  <div class="kitchen-order-item">
+                    <div class="kitchen-order-item-name">1x Gỏi Cuốn</div>
+                  </div>
+                  <div class="kitchen-order-item">
+                    <div class="kitchen-order-item-name">1x Bánh Xèo</div>
+                    <div class="kitchen-order-item-notes">No shrimp, extra vegetables</div>
+                  </div>
+                  <div class="kitchen-order-item">
+                    <div class="kitchen-order-item-name">2x Chanh Muối</div>
+                  </div>
+                </div>
+                <div class="kitchen-order-timer">
+                  <span>Waiting for:</span>
+                  <span>1 minute</span>
+                </div>
+              </div>
+              <div class="kitchen-order-footer">
+                <button class="primary start-cooking" data-id="1004">Start Preparing</button>
+              </div>
+            </div>
+            
+            <div class="kitchen-order-card pending">
+              <div class="kitchen-order-header pending">
+                <div class="kitchen-order-title">
+                  <span>Order #1005</span>
+                  <span class="badge yellow">New Order</span>
+                </div>
+                <div class="kitchen-order-subtitle">
+                  <span>Table 4</span>
+                  <span>12:55 PM</span>
+                </div>
+              </div>
+              <div class="kitchen-order-content">
+                <div class="kitchen-order-items">
+                  <div class="kitchen-order-item">
+                    <div class="kitchen-order-item-name">2x Chả Giò</div>
+                  </div>
+                  <div class="kitchen-order-item">
+                    <div class="kitchen-order-item-name">1x Cơm Tấm</div>
+                    <div class="kitchen-order-item-notes">Extra scallion oil</div>
+                  </div>
+                  <div class="kitchen-order-item">
+                    <div class="kitchen-order-item-name">1x Canh Chua</div>
+                  </div>
+                </div>
+                <div class="kitchen-order-timer">
+                  <span>Just arrived</span>
+                </div>
+              </div>
+              <div class="kitchen-order-footer">
+                <button class="primary start-cooking" data-id="1005">Start Preparing</button>
+              </div>
+            </div>
+          </div>
+          <div id="no-pending-orders" class="text-center hidden">
+            No new orders waiting to be prepared
+          </div>
+        </div>
+        
+        <div id="preparing-orders" class="tab-content">
+          <div id="kitchen-preparing-orders" class="kitchen-grid">
+            <!-- Preparing orders -->
+            <div class="kitchen-order-card preparing">
+              <div class="kitchen-order-header preparing">
+                <div class="kitchen-order-title">
+                  <span>Order #1002</span>
+                  <span class="badge blue">In Preparation</span>
+                </div>
+                <div class="kitchen-order-subtitle">
+                  <span>Table 5</span>
+                  <span>12:30 PM</span>
+                </div>
+              </div>
+              <div class="kitchen-order-content">
+                <div class="kitchen-order-items">
+                  <div class="kitchen-order-item">
+                    <div class="kitchen-order-item-name">1x Gỏi Cuốn</div>
+                    <div class="status-label preparing">Preparing</div>
+                  </div>
+                  <div class="kitchen-order-item">
+                    <div class="kitchen-order-item-name">1x Bánh Xèo</div>
+                    <div class="kitchen-order-item-notes">No shrimp, extra vegetables</div>
+                    <div class="status-label preparing">Preparing</div>
+                  </div>
+                </div>
+                <div class="kitchen-order-timer">
+                  <span>Preparing for:</span>
+                  <span>15 minutes</span>
+                </div>
+              </div>
+              <div class="kitchen-order-footer">
+                <div>
+                  <span class="font-medium">Est. completion:</span> 12:50 PM
+                </div>
+                <button class="primary complete-cooking" data-id="1002">Mark as Ready</button>
+              </div>
+            </div>
+            
+            <div class="kitchen-order-card preparing">
+              <div class="kitchen-order-header preparing">
+                <div class="kitchen-order-title">
+                  <span>Order #1003</span>
+                  <span class="badge blue">In Preparation</span>
+                </div>
+                <div class="kitchen-order-subtitle">
+                  <span>Table 2</span>
+                  <span>12:20 PM</span>
+                </div>
+              </div>
+              <div class="kitchen-order-content">
+                <div class="kitchen-order-items">
+                  <div class="kitchen-order-item">
+                    <div class="kitchen-order-item-name">1x Chả Giò</div>
+                    <div class="status-label completed">Ready</div>
+                  </div>
+                  <div class="kitchen-order-item">
+                    <div class="kitchen-order-item-name">1x Bún Bò Huế</div>
+                    <div class="kitchen-order-item-notes">Extra spicy</div>
+                    <div class="status-label preparing">Preparing</div>
+                  </div>
+                  <div class="kitchen-order-item">
+                    <div class="kitchen-order-item-name">1x Nước Chanh Muối</div>
+                    <div class="status-label completed">Ready</div>
+                  </div>
+                </div>
+                <div class="kitchen-order-timer urgent">
+                  <span>Preparing for:</span>
+                  <span>25 minutes</span>
+                </div>
+              </div>
+              <div class="kitchen-order-footer">
+                <div>
+                  <span class="font-medium">Est. completion:</span> 12:45 PM
+                </div>
+                <button class="primary complete-cooking" data-id="1003">Mark as Ready</button>
+              </div>
+            </div>
+          </div>
+          <div id="no-preparing-orders" class="text-center hidden">
+            No orders currently being prepared
+          </div>
+        </div>
+        
+        <div id="completed-today" class="tab-content">
+          <div id="kitchen-completed-orders" class="kitchen-grid">
+            <!-- Completed orders -->
+            <div class="kitchen-order-card completed">
+              <div class="kitchen-order-header">
+                <div class="kitchen-order-title">
+                  <span>Order #1000</span>
+                  <span class="badge green">Completed</span>
+                </div>
+                <div class="kitchen-order-subtitle">
+                  <span>Table 7</span>
+                  <span>Delivered: 12:05 PM</span>
+                </div>
+              </div>
+              <div class="kitchen-order-content">
+                <div class="kitchen-order-items">
+                  <div class="kitchen-order-item">
+                    <div class="kitchen-order-item-name">2x Cà Phê Sữa Đá</div>
+                  </div>
+                  <div class="kitchen-order-item">
+                    <div class="kitchen-order-item-name">1x Bánh Mì Thịt</div>
+                  </div>
+                </div>
+                <div class="kitchen-order-timer">
+                  <span>Preparation time:</span>
+                  <span>15 minutes</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="kitchen-order-card completed">
+              <div class="kitchen-order-header">
+                <div class="kitchen-order-title">
+                  <span>Order #999</span>
+                  <span class="badge green">Completed</span>
+                </div>
+                <div class="kitchen-order-subtitle">
+                  <span>Table 1</span>
+                  <span>Delivered: 11:35 AM</span>
+                </div>
+              </div>
+              <div class="kitchen-order-content">
+                <div class="kitchen-order-items">
+                  <div class="kitchen-order-item">
+                    <div class="kitchen-order-item-name">1x Canh Chua Cá</div>
+                  </div>
+                  <div class="kitchen-order-item">
+                    <div class="kitchen-order-item-name">2x Gỏi Ngo Sen</div>
+                  </div>
+                  <div class="kitchen-order-item">
+                    <div class="kitchen-order-item-name">1x Cơm Chiên Hải Sản</div>
+                  </div>
+                </div>
+                <div class="kitchen-order-timer">
+                  <span>Preparation time:</span>
+                  <span>22 minutes</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="kitchen-order-card completed">
+              <div class="kitchen-order-header">
+                <div class="kitchen-order-title">
+                  <span>Order #998</span>
+                  <span class="badge green">Completed</span>
+                </div>
+                <div class="kitchen-order-subtitle">
+                  <span>Table 3</span>
+                  <span>Delivered: 11:20 AM</span>
+                </div>
+              </div>
+              <div class="kitchen-order-content">
+                <div class="kitchen-order-items">
+                  <div class="kitchen-order-item">
+                    <div class="kitchen-order-item-name">1x Phở Gà</div>
+                  </div>
+                  <div class="kitchen-order-item">
+                    <div class="kitchen-order-item-name">1x Phở Bò</div>
+                  </div>
+                  <div class="kitchen-order-item">
+                    <div class="kitchen-order-item-name">2x Trà Đá</div>
+                  </div>
+                </div>
+                <div class="kitchen-order-timer">
+                  <span>Preparation time:</span>
+                  <span>18 minutes</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="no-completed-orders" class="text-center hidden">
+            No orders completed today
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <div class="vietnamese-pattern"></div>
+</body>
+</html>
