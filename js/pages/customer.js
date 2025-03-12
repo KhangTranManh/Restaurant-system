@@ -10,36 +10,38 @@ let staffViewBtn = null;
 
 // Sample menu categories data
 const sampleMenuCategories = [
-  { category_id: 1, name: 'Soups', description: 'Hearty Vietnamese soups' },
-  { category_id: 2, name: 'Rice & Noodles', description: 'Traditional rice and noodle dishes' },
+  { category_id: 1, name: 'Noodles', description: 'Hearty Vietnamese soups' },
+  { category_id: 2, name: 'Rice', description: 'Traditional rice dishes' },
   { category_id: 3, name: 'Desserts', description: 'Sweet treats to finish your meal' },
-  { category_id: 4, name: 'Drinks', description: 'Refreshing beverages' }
+  { category_id: 4, name: 'Additional foods', description: 'Extra dishes to complement your meal ' },
+  { category_id: 5, name: 'Drinks', description: 'Refreshing beverages' }
 ];
 
 // Sample menu items data
 const sampleMenuItems = [
   // Soups (category_id: 1)
-  { item_id: 101, category_id: 1, name: 'Phở Bò', price: 90000, image_path: '/images/pho-bo.jpg', description: 'Traditional beef noodle soup with herbs and bean sprouts', preparation_time: 18 },
-  { item_id: 102, category_id: 1, name: 'Bún Bò Huế', price: 120000, image_path: '/images/bun-bo-hue.jpg', description: 'Spicy beef noodle soup from central Vietnam', preparation_time: 20 },
-  { item_id: 103, category_id: 1, name: 'Canh Chua Cá', price: 110000, image_path: '/images/canh-chua.jpg', description: 'Sweet and sour fish soup with vegetables', preparation_time: 15 },
-  
+  { item_id: 101, category_id: 1, name: 'Phở', price: 60000, image_path: '/images/Pho.jpg', description: 'Traditional beef noodle soup with herbs and bean sprouts', preparation_time: 18 },
+  { item_id: 102, category_id: 1, name: 'Bún Bò Huế', price: 60000, image_path: '/images/bun-bo-hue.jpg', description: 'Spicy beef noodle soup from central Vietnam', preparation_time: 15 },
+  { item_id: 103, category_id: 1, name: 'Bún Chả', price: 45000, image_path: '/images/bun-cha.jpg', description: 'Grilled pork with rice noodles and herbs', preparation_time: 10 },
+
   // Rice & Noodles (category_id: 2)
-  { item_id: 201, category_id: 2, name: 'Cơm Chiên Hải Sản', price: 110000, image_path: '/images/com-chien.jpg', description: 'Seafood fried rice', preparation_time: 15 },
-  { item_id: 202, category_id: 2, name: 'Bánh Mì Thịt', price: 85000, image_path: '/images/banh-mi.jpg', description: 'Vietnamese sandwich with various meats and vegetables', preparation_time: 10 },
-  { item_id: 203, category_id: 2, name: 'Bún Chả', price: 95000, image_path: '/images/bun-cha.jpg', description: 'Grilled pork with rice noodles and herbs', preparation_time: 20 },
-  { item_id: 204, category_id: 2, name: 'Cơm Tấm', price: 105000, image_path: '/images/com-tam.jpg', description: 'Broken rice with grilled pork, egg, and vegetables', preparation_time: 15 },
-  { item_id: 205, category_id: 2, name: 'Bánh Xèo', price: 85000, image_path: '/images/banh-xeo.jpg', description: 'Vietnamese crispy pancake with shrimp and bean sprouts', preparation_time: 18 },
-  
+  { item_id: 201, category_id: 2, name: 'Cơm Chiên Hải Sản', price: 60000, image_path: '/images/com-chien.jpg', description: 'Seafood fried rice', preparation_time: 20 },
+  { item_id: 202, category_id: 2, name: 'Cơm Tấm', price: 60000, image_path: '/images/com-tam.jpg', description: 'Broken rice with grilled pork, egg, and vegetables', preparation_time: 15 },
+    
   // Desserts (category_id: 3)
-  { item_id: 301, category_id: 3, name: 'Chè Ba Màu', price: 45000, image_path: '/images/che-ba-mau.jpg', description: 'Three-color dessert with beans, jelly, and coconut milk', preparation_time: 8 },
-  { item_id: 302, category_id: 3, name: 'Bánh Flan', price: 35000, image_path: '/images/banh-flan.jpg', description: 'Vietnamese caramel custard', preparation_time: 5 },
-  { item_id: 303, category_id: 3, name: 'Chè Đậu Xanh', price: 40000, image_path: '/images/che-dau-xanh.jpg', description: 'Mung bean pudding with coconut cream', preparation_time: 6 },
+  { item_id: 301, category_id: 3, name: 'Chè Ba Màu', price: 20000, image_path: '/images/che-ba-mau.jpg', description: 'Three-color dessert with beans, jelly, and coconut milk', preparation_time: 8 },
+  { item_id: 302, category_id: 3, name: 'Bánh Flan', price: 18000, image_path: '/images/banh-flan.jpg', description: 'Vietnamese caramel custard', preparation_time: 5 },
+  { item_id: 303, category_id: 3, name: 'Chè Đậu Xanh', price: 25000, image_path: '/images/che-dau-xanh.jpg', description: 'Mung bean pudding with coconut cream', preparation_time: 6 },
   
-  // Drinks (category_id: 4)
-  { item_id: 401, category_id: 4, name: 'Cà Phê Sữa Đá', price: 25000, image_path: '/images/ca-phe-sua-da.jpg', description: 'Vietnamese iced coffee with condensed milk', preparation_time: 5 },
-  { item_id: 402, category_id: 4, name: 'Nước Chanh Muối', price: 35000, image_path: '/images/nuoc-chanh-muoi.jpg', description: 'Salted preserved lime juice', preparation_time: 3 },
-  { item_id: 403, category_id: 4, name: 'Trà Đá', price: 15000, image_path: '/images/tra-da.jpg', description: 'Vietnamese iced tea', preparation_time: 3 },
-  { item_id: 404, category_id: 4, name: 'Sinh Tố Bơ', price: 45000, image_path: '/images/sinh-to-bo.jpg', description: 'Avocado smoothie with condensed milk', preparation_time: 5 }
+  // Addtional Foods (category_id: 4)
+  { item_id: 401, category_id: 4, name: 'Bánh Xèo', price: 30000, image_path: '/images/banh-xeo.jpg', description: 'Vietnamese crispy pancake with shrimp and bean sprouts', preparation_time: 15 },
+  { item_id: 402, category_id: 4, name: 'Chả giò', price: 25000, image_path: '/images/spring-rolls.jpg', description: 'Vietnamese crispy pancake with shrimp and bean sprouts', preparation_time: 15 },
+
+
+  // Drinks (category_id: 5)
+  { item_id: 501, category_id: 5, name: 'Cà Phê Sữa Đá', price: 15000, image_path: '/images/ca-phe-sua-da.jpg', description: 'Vietnamese iced coffee with condensed milk', preparation_time: 5 },
+  { item_id: 502, category_id: 5, name: 'Trà Lipton', price: 10000, image_path: '/images/iced-tea.jpg', description: 'Salted preserved lime juice', preparation_time: 3 },
+  { item_id: 503, category_id: 5, name: 'Sinh Tố Bơ', price: 25000, image_path: '/images/sinh-to-bo.jpg', description: 'Avocado smoothie with condensed milk', preparation_time: 8 }
 ];
 // Sample orders data
 let sampleOrders = [];
@@ -55,6 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const menuTypeRadios = document.querySelectorAll('input[name="menu-type"]');
   const emptyCartMessage = document.getElementById('empty-cart-message');
   const cartItemsContainer = document.getElementById('cart-items');
+  console.log("Cart container found:", cartItemsContainer);
   const placeOrderBtn = document.getElementById('place-order-btn');
   const cartTotal = document.getElementById('cart-total');
   const customerTableNumber = document.getElementById('customer-table-number');
@@ -137,15 +140,17 @@ strayBadges.forEach(badge => {
     customerTableNumber.textContent = selectedTable;
   }
   
-  // Set up logout button (if in staff mode)
-  if (isStaffMode) {
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', function() {
-        localStorage.removeItem('currentUser');
-        window.location.href = 'login.html';
-      });
-    }
+  // Set up logout button
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', function() {
+      // Clear user data and local storage
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('selectedTable');
+      
+      // Force redirect to login page with a clean slate
+      window.location.replace('login.html');
+    });
   }
   
   // Function definitions
@@ -382,69 +387,61 @@ strayBadges.forEach(badge => {
     return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
   }
 
-  // Render cart
-  function renderCart() {
-    console.log("Rendering cart");
-    
-    if (!emptyCartMessage || !cartItemsContainer || !placeOrderBtn || !cartTotal) {
-      console.error("Some cart elements not found");
-      return;
-    }
-    
-    if (cart.length === 0) {
-      emptyCartMessage.style.display = 'block';
-      cartItemsContainer.style.display = 'none';
-      placeOrderBtn.disabled = true;
-    } else {
-      emptyCartMessage.style.display = 'none';
-      cartItemsContainer.style.display = 'block';
-      placeOrderBtn.disabled = false;
-      
-      cartItemsContainer.innerHTML = '';
-      
-      cart.forEach(item => {
-        const cartItem = document.createElement('div');
-        cartItem.className = 'cart-item';
-        cartItem.innerHTML = `
-          <div class="cart-item-details">
-            <div class="cart-item-name">
-              <span class="cart-item-quantity">${item.quantity}x</span>
-              ${item.name}
-              ${item.notes ? `<span class="cart-item-notes">${item.notes}</span>` : ''}
-            </div>
-          </div>
-          <div class="cart-item-price">${formatCurrency(item.price * item.quantity)}</div>
-          <div class="cart-item-actions">
-            <button><i class="fas fa-minus"></i></button>
-            <button><i class="fas fa-plus"></i></button>
-            <button><i class="fas fa-trash"></i></button>
-          </div>
-        `;
-        
-        cartItemsContainer.appendChild(cartItem);
-        
-        // Add event listeners
-        const buttons = cartItem.querySelectorAll('.cart-item-actions button');
-        if (buttons.length === 3) {
-          // Minus button
-          buttons[0].addEventListener('click', () => removeFromCart(item.item_id));
-          
-          // Plus button
-          buttons[1].addEventListener('click', () => addToCart(item));
-          
-          // Trash button
-          buttons[2].addEventListener('click', () => {
-            cart = cart.filter(cartItem => cartItem.item_id !== item.item_id);
-            renderCart();
-          });
-        }
-      });
-    }
-    
-    // Update total
-    cartTotal.textContent = formatCurrency(calculateTotal());
-    console.log("Cart rendered successfully");
+// Render cart
+function renderCart() {
+  console.log("Rendering cart");
+  
+  if (!emptyCartMessage || !cartItemsContainer || !placeOrderBtn || !cartTotal) {
+    console.error("Some cart elements not found");
+    return;
   }
+  
+  if (cart.length === 0) {
+    emptyCartMessage.classList.remove('hidden');
+    cartItemsContainer.classList.add('hidden');
+    placeOrderBtn.disabled = true;
+  } else {
+    emptyCartMessage.classList.add('hidden');
+    cartItemsContainer.classList.remove('hidden');
+    placeOrderBtn.disabled = false;
+    
+    cartItemsContainer.innerHTML = '';
+    
+    cart.forEach(item => {
+      const cartItem = document.createElement('div');
+      cartItem.className = 'cart-item';
+      cartItem.innerHTML = `
+        <div class="cart-item-details">
+          <div class="cart-item-header">
+            <span class="cart-item-name">${item.name}</span>
+            <span class="cart-item-price">${formatCurrency(item.price * item.quantity)}</span>
+          </div>
+          ${item.notes ? `<div class="cart-item-notes">${item.notes}</div>` : ''}
+        </div>
+        <div class="cart-item-quantity">
+          <button class="decrease-quantity" data-id="${item.item_id}"><i class="fas fa-minus"></i></button>
+          <span>${item.quantity}</span>
+          <button class="increase-quantity" data-id="${item.item_id}"><i class="fas fa-plus"></i></button>
+          <button class="remove-item" data-id="${item.item_id}"><i class="fas fa-trash"></i></button>
+        </div>
+      `;
+      
+      cartItemsContainer.appendChild(cartItem);
+      
+      // Add event listeners for quantity buttons
+      cartItem.querySelector('.decrease-quantity').addEventListener('click', () => removeFromCart(item.item_id));
+      cartItem.querySelector('.increase-quantity').addEventListener('click', () => addToCart(item));
+      cartItem.querySelector('.remove-item').addEventListener('click', () => {
+        cart = cart.filter(cartItem => cartItem.item_id !== item.item_id);
+        renderCart();
+      });
+    });
+  }
+  
+  // Update total
+  cartTotal.textContent = formatCurrency(calculateTotal());
+  console.log("Cart rendered successfully");
+}
 
   // Place order
   function placeOrder() {
@@ -662,6 +659,20 @@ function loadOrders() {
     }
   }
 });
+
+// Set up category listeners
+function setupCategoryListeners() {
+  // This function is called but not defined
+  console.log("Setting up category listeners");
+  // You can implement this if needed
+}
+
+// Set up search listener
+function setupSearchListener() {
+  // This function is called but not defined
+  console.log("Setting up search listener");
+  // You can implement this if needed
+}
 
 // Format currency in Vietnamese Dong
 function formatCurrency(amount) {
