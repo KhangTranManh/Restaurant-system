@@ -271,6 +271,28 @@ function initializeRealTimeUpdates() {
     }
   });
 }
+// Listen for admin updates
+window.addEventListener('storage', function(event) {
+  if (event.key === 'adminKitchenUpdate') {
+    try {
+      const update = JSON.parse(event.newValue);
+      console.log('Received order update from admin:', update);
+      
+      // Find and update the order in kitchen view
+      // This will depend on how your kitchen.js handles orders
+      // For example:
+      updateKitchenOrderStatus(update.orderId, update.status);
+    } catch (error) {
+      console.error('Error processing admin update:', error);
+    }
+  }
+});
+
+// Function to update order status in kitchen view
+function updateKitchenOrderStatus(orderId, newStatus) {
+  // Implement based on your kitchen.js logic
+  // This will vary depending on how your kitchen tracks orders
+}
 
 // Add a new order to the kitchen view
 function addOrderToKitchenView(order) {

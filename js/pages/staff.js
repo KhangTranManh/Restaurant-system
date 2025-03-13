@@ -122,6 +122,7 @@ document.addEventListener('DOMContentLoaded', function() {
   orders = sampleOrders;
   
   // Set up UI components
+  setTimeout(shareOrdersWithAdmin, 1000);
   setupTabs();
   setupTableSelection();
   setupEventListeners();
@@ -161,6 +162,8 @@ window.addEventListener('storage', function(event) {
     // Remove the item from local storage
     localStorage.removeItem(event.key);
   }
+  shareAllOrders();
+
 });
 
 // Direct table selection function
@@ -399,47 +402,158 @@ function updateTableDetails(tableNumber) {
 
 // Fetch orders for a specific table
 function fetchOrdersForTable(tableNumber) {
-  // Convert to integer for comparison
-  const tableNum = parseInt(tableNumber);
+  // Ensure tableNumber is treated as a string
+  tableNumber = tableNumber.toString();
   
-  console.log(`Fetching orders for table ${tableNum}`);
+  console.log(`Fetching orders for table ${tableNumber}`);
   
-  // Filter orders for this table
-  const tableOrders = orders.filter(order => order.table_number === tableNum);
-  console.log(`Found ${tableOrders.length} orders for table ${tableNum}`);
+  // Filter orders for this table (using string comparison)
+  const tableOrders = orders.filter(order => order.table_number.toString() === tableNumber);
+  console.log(`Found ${tableOrders.length} orders for table ${tableNumber}`, tableOrders);
 
-  const uniqueOrderIds = new Set();
+  // Get DOM elements
+  const staffActiveOrders = document.getElementById('staff-active-orders');
+  const noActiveOrders = document.getElementById('no-active-orders');
+  const staffReadyOrders = document.getElementById('staff-ready-orders');
+  const noReadyOrders = document.getElementById('no-ready-orders');
+  const staffCompletedOrders = document.getElementById('staff-completed-orders');
+  const noCompletedOrders = document.getElementById('no-completed-orders');
+  
+  // Use Sets to track order IDs and prevent duplicates
+  const processedOrderIds = new Set();
+  
+  // Filter orders by status and deduplicate
+  const activeOrders = tableOrders.filter(order => {
+    if (processedOrderIds.has(order.order_id) || 
+       (order.status !== 'pending' && order.status !== 'preparing')) {
+      return false;
+    }
+    processedOrderIds.add(order.order_id);
+    return true;
+  });
+  
+  // Reset the set for the next category
+  processedOrderIds.clear();
+  
+  const readyOrders = tableOrders.filter(order => {
+    if (processedOrderIds.has(order.order_id) || order.status !== 'ready') {
+      return false;
+    }
+    processedOrderIds.add(order.order_id);
+    return true;
+  });
+  
+  // Reset again
+  processedOrderIds.clear();
+  
+  const completedOrders = tableOrders.filter(order => {
+    if (processedOrderIds.has(order.order_id) || order.status !== 'delivered') {
+      return false;
+    }
+    processedOrderIds.add(order.order_id);
+    return true;
+  });
+  
+  // Update Active Orders tab
+  if (staffActiveOrders && noActiveOrders) {
+    staffActiveOrders.innerHTML = '';
+    
+    if (activeOrders.length === 0) {
+      noActiveOrders.classList.remove('hidden');
+    } else {
+      noActiveOrders.classList.add('hidden');
+      activeOrders.forEach(order => {
+        renderActiveOrder(order, staffActiveOrders);
+      });
+    }
+  }
+  
+  // Update Ready Orders tab
+  if (staffReadyOrders && noReadyOrders) {
+    staffReadyOrders.innerHTML = '';
+    
+    if (readyOrders.length === 0) {
+      noReadyOrders.classList.remove('hidden');
+    } else {
+      noReadyOrders.classList.add('hidden');
+      readyOrders.forEach(order => {
+        renderReadyOrder(order, staffReadyOrders);
+      });
+    }
+  }
+  
+  // Update Completed Orders tab
+  if (staffCompletedOrders && noCompletedOrders) {
+    staffCompletedOrders.innerHTML = '';
+    
+    if (completedOrders.length === 0) {
+      noCompletedOrders.classList.remove('hidden');
+    } else {
+      noCompletedOrders.classList.add('hidden');
+      completedOrders.forEach(order => {
+        renderCompletedOrder(order, staffCompletedOrders);
+      });
+    }
+  }
+  
+  // Notify other views that a table has been selected
+  localStorage.setItem('selectedTable', tableNumber);
+  localStorage.setItem('lastUpdated', new Date().toISOString());
+  shareAllOrders();
 
-  
-  // Update tabs with the orders, ensuring no duplicates
-  updateActiveOrdersTab(tableOrders.filter(order => {
-    if (uniqueOrderIds.has(order.order_id)) {
-      return false;
-    }
-    uniqueOrderIds.add(order.order_id);
-    return true;
-  }));
-  
-  uniqueOrderIds.clear();
-  updateReadyOrdersTab(tableOrders.filter(order => {
-    if (uniqueOrderIds.has(order.order_id)) {
-      return false;
-    }
-    uniqueOrderIds.add(order.order_id);
-    return true;
-  }));
-  
-  uniqueOrderIds.clear();
-  updateCompletedOrdersTab(tableOrders.filter(order => {
-    if (uniqueOrderIds.has(order.order_id)) {
-      return false;
-    }
-    uniqueOrderIds.add(order.order_id);
-    return true;
-  }));
-  
+}
+// Add this near the end of your staff.js file
+// Share orders data with admin view
+// Add this function to staff.js
+function shareAllOrders() {
+  try {
+    // Save all orders to localStorage for admin to access
+    localStorage.setItem('allOrders', JSON.stringify(orders));
+    console.log("Shared all orders with admin view:", orders.length);
+  } catch (error) {
+    console.error("Error sharing orders:", error);
+  }
 }
 
+// Call this whenever orders change
+document.addEventListener('DOMContentLoaded', function() {
+  // Add to your existing initialization
+ 
+
+  
+  // Listen for admin updates
+window.addEventListener('storage', function(event) {
+  if (event.key === 'adminOrderUpdate') {
+    try {
+      const update = JSON.parse(event.newValue);
+      console.log('Received order update from admin:', update);
+      
+      // Find and update the order
+      const orderIndex = orders.findIndex(o => o.order_id.toString() === update.orderId.toString());
+      if (orderIndex >= 0) {
+        // Update status
+        orders[orderIndex].status = update.status;
+        
+        // Add timestamp if delivered
+        if (update.status === 'delivered') {
+          orders[orderIndex].delivered_at = update.timestamp;
+        }
+        
+        // Refresh view if this is for the selected table
+        if (selectedTable && selectedTable.toString() === orders[orderIndex].table_number.toString()) {
+          fetchOrdersForTable(selectedTable);
+        }
+        
+        // Update table status
+        updateTableStatus();
+      }
+    } catch (error) {
+      console.error('Error processing admin update:', error);
+    }
+  }
+});
+  shareAllOrders();
+});
 // Update the Active Orders tab
 function updateActiveOrdersTab(tableOrders) {
   const activeOrders = tableOrders.filter(order => 
@@ -625,6 +739,29 @@ function setupKitchenIntegration() {
     }
   });
 }
+// Add this to staff.js at the end of the file
+function shareOrdersWithAdmin() {
+  console.log("Sharing orders with admin view");
+  
+  try {
+    // Store all orders in localStorage
+    localStorage.setItem('allOrders', JSON.stringify(orders));
+    
+    // Also try to update the admin view directly if it's open
+    if (window.opener && !window.opener.closed) {
+      try {
+        window.opener.updateAdminOrders(orders);
+        console.log("Directly updated admin view");
+      } catch (e) {
+        console.log("Could not directly update admin view:", e);
+      }
+    } else {
+      console.log("Admin view not available for direct update");
+    }
+  } catch (error) {
+    console.error("Error sharing orders:", error);
+  }
+}
 
 // Example of creating a new order and sending it to kitchen
 function createOrder(tableNumber, menuItems) {
@@ -662,7 +799,10 @@ function createOrder(tableNumber, menuItems) {
   // Update table status
   updateTableStatus();
   
+  shareAllOrders();
   return orderId;
+
+
 }
 
 // Render a single ready order
@@ -810,6 +950,7 @@ function cancelReservation(tableNumber) {
   alert(`Reservation cancelled for table ${tableNumber}`);
 }
 
+// Also call shareAllOrders() after any order status changes
 function markOrderAsDelivered(orderId) {
   console.log(`Marking order ${orderId} as delivered`);
   
@@ -823,6 +964,9 @@ function markOrderAsDelivered(orderId) {
     if (selectedTable) {
       fetchOrdersForTable(selectedTable);
     }
+    
+    // Share updated orders with admin
+    shareAllOrders();
     
     alert(`Order #${orderId} marked as delivered`);
   }
