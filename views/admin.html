@@ -38,6 +38,8 @@
             <button id="admin-staff-btn" class="primary">Staff View</button>
             <button id="admin-kitchen-btn" class="secondary">Kitchen View</button>
             <button id="admin-analytics-btn" class="secondary">Analytics</button>
+            <button id="admin-management-btn" class="secondary">Management</button>
+
           </div>
         </div>
         
@@ -562,63 +564,522 @@
         </div>
       </div>
     </div>
+    !-- Add a new Management View panel -->
+<div id="admin-management-view" class="admin-panel hidden">
+  <div class="dashboard-grid">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Staff Management</div>
+      </div>
+      <div class="card-content">
+        <div class="stat-grid">
+          <div class="stat-item">
+            <div class="stat-number">8</div>
+            <div class="stat-label">Total Staff</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">3</div>
+            <div class="stat-label">Kitchen Staff</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button id="manage-staff-btn" class="primary">Manage Staff</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Menu Management</div>
+      </div>
+      <div class="card-content">
+        <div class="stat-grid">
+          <div class="stat-item">
+            <div class="stat-number">42</div>
+            <div class="stat-label">Menu Items</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">5</div>
+            <div class="stat-label">Categories</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button id="manage-menu-btn" class="primary">Manage Menu</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">User Accounts</div>
+      </div>
+      <div class="card-content">
+        <div class="stat-grid">
+          <div class="stat-item">
+            <div class="stat-number">5</div>
+            <div class="stat-label">Active Users</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">2</div>
+            <div class="stat-label">Admin Users</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button id="manage-users-btn" class="primary">Manage Users</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Restaurant Settings</div>
+      </div>
+      <div class="card-content">
+        <div class="stat-grid">
+          <div class="stat-item">
+            <div class="stat-number">8</div>
+            <div class="stat-label">Tables</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">10%</div>
+            <div class="stat-label">Tax Rate</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button id="manage-settings-btn" class="primary">Settings</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Staff Management Section -->
+  <div id="staff-management-section" class="management-section hidden">
+    <div class="section-header">
+      <h3>Staff Management</h3>
+      <button id="add-staff-btn" class="primary">
+        <i class="fas fa-plus"></i> Add Staff
+      </button>
+    </div>
+    
+    <div class="card">
+      <div class="card-content">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Role</th>
+              <th>Contact</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="staff-table-body">
+            <tr>
+              <td>Nguyen Van A</td>
+              <td>Head Chef</td>
+              <td>0912345678</td>
+              <td><span class="badge green small">Active</span></td>
+              <td>
+                <button class="icon-button edit-staff-btn" data-id="1">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="icon-button delete-staff-btn" data-id="1">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td>Tran Thi B</td>
+              <td>Waiter</td>
+              <td>0923456789</td>
+              <td><span class="badge green small">Active</span></td>
+              <td>
+                <button class="icon-button edit-staff-btn" data-id="2">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="icon-button delete-staff-btn" data-id="2">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td>Le Van C</td>
+              <td>Manager</td>
+              <td>0934567890</td>
+              <td><span class="badge green small">Active</span></td>
+              <td>
+                <button class="icon-button edit-staff-btn" data-id="3">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="icon-button delete-staff-btn" data-id="3">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="section-footer">
+      <button id="back-to-management-btn" class="secondary">Back to Management</button>
+    </div>
+  </div>
+  
+  <!-- Menu Management Section -->
+  <div id="menu-management-section" class="management-section hidden">
+    <div class="section-header">
+      <h3>Menu Management</h3>
+      <button id="add-menu-item-btn" class="primary">
+        <i class="fas fa-plus"></i> Add Menu Item
+      </button>
+    </div>
+    
+    <div class="card">
+      <div class="card-content">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Vietnamese Name</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="menu-table-body">
+            <tr>
+              <td>Beef Pho</td>
+              <td>Phở Bò</td>
+              <td>Soups</td>
+              <td>75,000₫</td>
+              <td><span class="badge green small">Available</span></td>
+              <td>
+                <button class="icon-button edit-menu-btn" data-id="1">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="icon-button delete-menu-btn" data-id="1">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td>Fresh Spring Rolls</td>
+              <td>Gỏi Cuốn</td>
+              <td>Appetizers</td>
+              <td>65,000₫</td>
+              <td><span class="badge green small">Available</span></td>
+              <td>
+                <button class="icon-button edit-menu-btn" data-id="2">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="icon-button delete-menu-btn" data-id="2">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td>Vietnamese Coffee</td>
+              <td>Cà Phê Sữa Đá</td>
+              <td>Beverages</td>
+              <td>35,000₫</td>
+              <td><span class="badge green small">Available</span></td>
+              <td>
+                <button class="icon-button edit-menu-btn" data-id="3">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="icon-button delete-menu-btn" data-id="3">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="section-footer">
+      <button id="back-to-management-from-menu-btn" class="secondary">Back to Management</button>
+    </div>
+  </div>
+  
+  <!-- User Management Section -->
+  <div id="user-management-section" class="management-section hidden">
+    <div class="section-header">
+      <h3>User Management</h3>
+      <button id="add-user-btn" class="primary">
+        <i class="fas fa-plus"></i> Add User
+      </button>
+    </div>
+    
+    <div class="card">
+      <div class="card-content">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Name</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="user-table-body">
+            <tr>
+              <td>admin</td>
+              <td>System Administrator</td>
+              <td>Admin</td>
+              <td><span class="badge green small">Active</span></td>
+              <td>
+                <button class="icon-button edit-user-btn" data-id="1">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="icon-button delete-user-btn" data-id="1" disabled>
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td>manager</td>
+              <td>Le Van C</td>
+              <td>Manager</td>
+              <td><span class="badge green small">Active</span></td>
+              <td>
+                <button class="icon-button edit-user-btn" data-id="2">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="icon-button delete-user-btn" data-id="2">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td>staff1</td>
+              <td>Tran Thi B</td>
+              <td>Staff</td>
+              <td><span class="badge green small">Active</span></td>
+              <td>
+                <button class="icon-button edit-user-btn" data-id="3">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="icon-button delete-user-btn" data-id="3">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="section-footer">
+      <button id="back-to-management-from-users-btn" class="secondary">Back to Management</button>
+    </div>
+  </div>
+  
+  <!-- Settings Section -->
+  <div id="settings-management-section" class="management-section hidden">
+    <div class="section-header">
+      <h3>Restaurant Settings</h3>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Restaurant Information</div>
+      </div>
+      <div class="card-content">
+        <form id="restaurant-info-form">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="restaurant-name">Restaurant Name</label>
+              <input type="text" id="restaurant-name" value="Viet Nam Cuisine">
+            </div>
+            <div class="form-group">
+              <label for="contact-number">Contact Number</label>
+              <input type="text" id="contact-number" value="(+84) 123 456 789">
+            </div>
+            <div class="form-group">
+              <label for="restaurant-email">Email</label>
+              <input type="email" id="restaurant-email" value="info@vietnamcuisine.com">
+            </div>
+            <div class="form-group">
+              <label for="tax-rate">Tax Rate (%)</label>
+              <input type="number" id="tax-rate" value="10">
+            </div>
+          </div>
+          <div class="form-footer">
+            <button type="submit" class="primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Table Configuration</div>
+      </div>
+      <div class="card-content">
+        <form id="table-settings-form">
+          <div class="form-group">
+            <label for="table-count">Number of Tables</label>
+            <input type="number" id="table-count" value="8">
+          </div>
+          <div class="form-group">
+            <label for="reserved-tables">Reserved Tables (comma-separated)</label>
+            <input type="text" id="reserved-tables" value="5">
+          </div>
+          <div class="form-footer">
+            <button type="submit" class="primary">Update Tables</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <div class="section-footer">
+      <button id="back-to-management-from-settings-btn" class="secondary">Back to Management</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Templates -->
+<div id="modal-backdrop" class="modal-backdrop">
+  <div id="staff-modal" class="modal">
+    <div class="modal-header">
+      <h3 id="staff-modal-title">Add New Staff</h3>
+      <button class="modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="staff-form">
+        <div class="form-group">
+          <label for="staff-name">Name</label>
+          <input type="text" id="staff-name" required>
+        </div>
+        <div class="form-group">
+          <label for="staff-role">Role</label>
+          <select id="staff-role" required>
+            <option value="">Select a role</option>
+            <option value="admin">Admin</option>
+            <option value="manager">Manager</option>
+            <option value="waiter">Waiter</option>
+            <option value="chef">Chef</option>
+            <option value="bartender">Bartender</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="staff-contact">Contact Number</label>
+          <input type="text" id="staff-contact" required>
+        </div>
+        <div class="form-group">
+          <label for="staff-status">Status</label>
+          <select id="staff-status" required>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="secondary modal-cancel-btn">Cancel</button>
+      <button class="primary" id="save-staff-btn">Save</button>
+    </div>
+  </div>
+  
+  <div id="menu-item-modal" class="modal">
+    <div class="modal-header">
+      <h3 id="menu-item-modal-title">Add Menu Item</h3>
+      <button class="modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="menu-item-form">
+        <div class="form-group">
+          <label for="menu-item-name">Name (English)</label>
+          <input type="text" id="menu-item-name" required>
+        </div>
+        <div class="form-group">
+          <label for="menu-item-vietnamese">Vietnamese Name</label>
+          <input type="text" id="menu-item-vietnamese" required>
+        </div>
+        <div class="form-group">
+          <label for="menu-item-category">Category</label>
+          <select id="menu-item-category" required>
+            <option value="">Select a category</option>
+            <option value="appetizers">Appetizers</option>
+            <option value="soups">Soups</option>
+            <option value="main-courses">Main Courses</option>
+            <option value="desserts">Desserts</option>
+            <option value="beverages">Beverages</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="menu-item-price">Price (₫)</label>
+          <input type="number" id="menu-item-price" required>
+        </div>
+        <div class="form-group">
+          <label for="menu-item-status">Status</label>
+          <select id="menu-item-status" required>
+            <option value="available">Available</option>
+            <option value="out-of-stock">Out of Stock</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="menu-item-description">Description</label>
+          <textarea id="menu-item-description" rows="3"></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="secondary modal-cancel-btn">Cancel</button>
+      <button class="primary" id="save-menu-item-btn">Save</button>
+    </div>
+  </div>
+  
+  <div id="user-modal" class="modal">
+    <div class="modal-header">
+      <h3 id="user-modal-title">Add User</h3>
+      <button class="modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="user-form">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" required>
+        </div>
+        <div class="form-group">
+          <label for="user-password">Password</label>
+          <input type="password" id="user-password" required>
+        </div>
+        <div class="form-group">
+          <label for="user-name">Full Name</label>
+          <input type="text" id="user-name" required>
+        </div>
+        <div class="form-group">
+          <label for="user-role">Role</label>
+          <select id="user-role" required>
+            <option value="">Select a role</option>
+            <option value="admin">Admin</option>
+            <option value="manager">Manager</option>
+            <option value="staff">Staff</option>
+            <option value="kitchen">Kitchen</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="user-status">Status</label>
+          <select id="user-status" required>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="secondary modal-cancel-btn">Cancel</button>
+      <button class="primary" id="save-user-btn">Save</button>
+    </div>
+  </div>
+</div>
   </main>
   
   <div class="vietnamese-pattern"></div>
-  
-  <script>
-    // Tab switching for admin dashboard
-    document.getElementById('admin-staff-btn').addEventListener('click', function() {
-      document.getElementById('admin-staff-btn').classList.add('primary');
-      document.getElementById('admin-staff-btn').classList.remove('secondary');
-      document.getElementById('admin-kitchen-btn').classList.add('secondary');
-      document.getElementById('admin-kitchen-btn').classList.remove('primary');
-      document.getElementById('admin-analytics-btn').classList.add('secondary');
-      document.getElementById('admin-analytics-btn').classList.remove('primary');
-      
-      document.getElementById('admin-staff-view').classList.remove('hidden');
-      document.getElementById('admin-kitchen-view').classList.add('hidden');
-      document.getElementById('admin-analytics-view').classList.add('hidden');
-    });
-    
-    document.getElementById('admin-kitchen-btn').addEventListener('click', function() {
-      document.getElementById('admin-kitchen-btn').classList.add('primary');
-      document.getElementById('admin-kitchen-btn').classList.remove('secondary');
-      document.getElementById('admin-staff-btn').classList.add('secondary');
-      document.getElementById('admin-staff-btn').classList.remove('primary');
-      document.getElementById('admin-analytics-btn').classList.add('secondary');
-      document.getElementById('admin-analytics-btn').classList.remove('primary');
-      
-      document.getElementById('admin-kitchen-view').classList.remove('hidden');
-      document.getElementById('admin-staff-view').classList.add('hidden');
-      document.getElementById('admin-analytics-view').classList.add('hidden');
-    });
-    
-    document.getElementById('admin-analytics-btn').addEventListener('click', function() {
-      document.getElementById('admin-analytics-btn').classList.add('primary');
-      document.getElementById('admin-analytics-btn').classList.remove('secondary');
-      document.getElementById('admin-staff-btn').classList.add('secondary');
-      document.getElementById('admin-staff-btn').classList.remove('primary');
-      document.getElementById('admin-kitchen-btn').classList.add('secondary');
-      document.getElementById('admin-kitchen-btn').classList.remove('primary');
-      
-      document.getElementById('admin-analytics-view').classList.remove('hidden');
-      document.getElementById('admin-staff-view').classList.add('hidden');
-      document.getElementById('admin-kitchen-view').classList.add('hidden');
-    });
-    
-    // Logout functionality
-    document.getElementById('logout-btn').addEventListener('click', function() {
-      window.location.href = 'login.html';
-    });
-    
-    // Table click functionality
-    document.querySelectorAll('.tables-grid button').forEach(button => {
-      button.addEventListener('click', function() {
-        // In a real app, this would display table details
-        alert(`Table ${this.textContent} details would be shown here`);
-      });
-    });
-  </script>
 </body>
 </html>
