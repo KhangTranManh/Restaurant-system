@@ -163,13 +163,7 @@ window.updateAdminOrders = function(newOrders) {
   }}
 
 
-// First, let's fix the closePopup function
-function closePopup() {
-  const popup = document.getElementById('table-popup');
-  if (popup) popup.remove();
-}
-
-/// Now, let's improve the showTableOrderPopup function to correctly filter active orders
+// Modified function to show table order popup without action buttons
 function showTableOrderPopup(tableNumber, tableOrders) {
   console.log(`Showing popup for Table ${tableNumber}`);
   
@@ -199,78 +193,55 @@ function showTableOrderPopup(tableNumber, tableOrders) {
     const orderTime = new Date(orderData.created_at);
     const formattedTime = orderTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
-    // Create button based on status
-    let actionButton = '';
+    // Get status text with nice formatting
+    let statusText = '';
     if (orderData.status === 'pending') {
-      actionButton = `<button id="start-prep-btn" data-id="${orderData.order_id}" class="primary" style="background-color: #a83232; color: white; border: none; border-radius: 4px; padding: 0.75rem 1.5rem; cursor: pointer; font-weight: 600;">Start Preparing</button>`;
+      statusText = '<span style="color: #f59e0b; font-weight: 500;">Pending</span>';
     } else if (orderData.status === 'preparing') {
-      actionButton = `<button id="mark-ready-btn" data-id="${orderData.order_id}" class="primary" style="background-color: #a83232; color: white; border: none; border-radius: 4px; padding: 0.75rem 1.5rem; cursor: pointer; font-weight: 600;">Mark as Ready</button>`;
+      statusText = '<span style="color: #2563eb; font-weight: 500;">Preparing</span>';
     } else if (orderData.status === 'ready') {
-      actionButton = `<button id="mark-delivered-btn" data-id="${orderData.order_id}" class="primary" style="background-color: #a83232; color: white; border: none; border-radius: 4px; padding: 0.75rem 1.5rem; cursor: pointer; font-weight: 600;">Mark as Delivered</button>`;
+      statusText = '<span style="color: #16a34a; font-weight: 500;">Ready</span>';
     }
     
-    // Create popup HTML
-const popupHTML = `
-<div id="table-popup" data-table="${tableNumber}" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); width: 90%; max-width: 400px; z-index: 1000;">
-  <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid #eee;">
-    <h3 style="margin: 0; font-size: 1.2rem;">Order #${orderData.order_id}</h3>
-    <button id="close-popup" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
-  </div>
-  
-  <div style="padding: 0.75rem 1rem; display: flex; justify-content: space-between; color: #666;">
-    <span>Table ${tableNumber}</span>
-    <span>${formattedTime}</span>
-  </div>
-  
-  <div style="padding: 0 1rem 1rem; border-bottom: 1px solid #eee;">
-    ${orderData.items.map(item => {
-      const specialInstructions = item.special_instructions 
-        ? `<span style="background-color: #fff7ed; color: #f59e0b; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.75rem; font-weight: 500; display: inline-block; margin-left: 0.5rem;">${item.special_instructions}</span>` 
-        : '';
-      return `<div style="padding: 0.5rem 0; border-bottom: 1px dashed #eee;"><strong>${item.quantity}x</strong> ${item.menu_item_name} ${specialInstructions}</div>`;
-    }).join('')}
-  </div>
-  
-  <div style="padding: 1rem; text-align: right;">
-    ${actionButton}
-  </div>
-</div>
-`;
+    // Create popup HTML without action buttons
+    const popupHTML = `
+    <div id="table-popup" data-table="${tableNumber}" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); width: 90%; max-width: 400px; z-index: 1000;">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid #eee;">
+        <h3 style="margin: 0; font-size: 1.2rem;">Order #${orderData.order_id}</h3>
+        <button id="close-popup" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      </div>
+      
+      <div style="padding: 0.75rem 1rem; display: flex; justify-content: space-between; color: #666;">
+        <span>Table ${tableNumber}</span>
+        <span>${formattedTime}</span>
+      </div>
+      
+      <div style="padding: 0.75rem 1rem; display: flex; justify-content: space-between; border-bottom: 1px solid #eee;">
+        <span>Status:</span>
+        <span>${statusText}</span>
+      </div>
+      
+      <div style="padding: 0.75rem 1rem;">
+        <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem;">Order Items:</h4>
+      </div>
+      
+      <div style="padding: 0 1rem 1rem;">
+        ${orderData.items.map(item => {
+          const specialInstructions = item.special_instructions 
+            ? `<span style="background-color: #fff7ed; color: #f59e0b; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.75rem; font-weight: 500; display: inline-block; margin-left: 0.5rem;">${item.special_instructions}</span>` 
+            : '';
+          return `<div style="padding: 0.5rem 0; border-bottom: 1px dashed #eee;"><strong>${item.quantity}x</strong> ${item.menu_item_name} ${specialInstructions}</div>`;
+        }).join('')}
+      </div>
+    </div>
+    `;
     
     // Add popup to document
     document.body.insertAdjacentHTML('beforeend', popupHTML);
     
-    // Add event listeners for all actions
-    document.addEventListener('click', function popupClickHandler(event) {
-      // Close button handler
-      if (event.target && event.target.id === 'close-popup') {
-        closePopup();
-        document.removeEventListener('click', popupClickHandler);
-      }
-      
-      // Start Preparing button handler
-      if (event.target && event.target.id === 'start-prep-btn') {
-        const orderId = event.target.getAttribute('data-id');
-        updateOrderStatusAcrossViews(orderId, 'preparing');
-        closePopup();
-        document.removeEventListener('click', popupClickHandler);
-      }
-      
-      // Mark as Ready button handler
-      if (event.target && event.target.id === 'mark-ready-btn') {
-        const orderId = event.target.getAttribute('data-id');
-        updateOrderStatusAcrossViews(orderId, 'ready');
-        closePopup();
-        document.removeEventListener('click', popupClickHandler);
-      }
-      
-      // Mark as Delivered button handler
-      if (event.target && event.target.id === 'mark-delivered-btn') {
-        const orderId = event.target.getAttribute('data-id');
-        updateOrderStatusAcrossViews(orderId, 'delivered');
-        closePopup();
-        document.removeEventListener('click', popupClickHandler);
-      }
+    // Add event listener for close button - directly on the button for better reliability
+    document.getElementById('close-popup').addEventListener('click', function() {
+      closePopup();
     });
   } else {
     console.log("No active orders for table, showing empty state");
@@ -284,7 +255,6 @@ const popupHTML = `
         
         <div style="padding: 1.5rem; text-align: center;">
           <p style="margin-bottom: 1rem;">No active orders for this table.</p>
-          <button id="create-order-btn" class="primary" style="background-color: #a83232; color: white; border: none; border-radius: 4px; padding: 0.75rem 1.5rem; cursor: pointer; font-weight: 600;">Create New Order</button>
         </div>
       </div>
     `;
@@ -292,20 +262,107 @@ const popupHTML = `
     // Add popup to document
     document.body.insertAdjacentHTML('beforeend', popupHTML);
     
-    // Add event listeners using event delegation
-    document.addEventListener('click', function popupClickHandler(event) {
-      if (event.target && event.target.id === 'close-popup') {
-        closePopup();
-        // Remove this event listener once popup is closed
-        document.removeEventListener('click', popupClickHandler);
-      }
-      
-      if (event.target && event.target.id === 'create-order-btn') {
-        window.location.href = `customer.html?table=${tableNumber}&admin=true`;
-      }
+    // Add event listener for close button - directly on the button for better reliability
+    document.getElementById('close-popup').addEventListener('click', function() {
+      closePopup();
     });
   }
 }
+// Add this to your admin.js file
+
+// Function to set up auto-refresh for table status
+function setupAutoRefresh() {
+  console.log("Setting up auto-refresh for table status");
+  
+  // Check for updates every 5 seconds
+  const refreshInterval = 5000; // 5 seconds
+  
+  // Store the currently open table popup number (if any)
+  let currentOpenTableNumber = null;
+  
+  // Set interval for auto-refresh
+  setInterval(function() {
+    // Update table status indicators
+    updateAdminTableStatus();
+    
+    // If a popup is open, refresh its content
+    const popup = document.getElementById('table-popup');
+    if (popup) {
+      currentOpenTableNumber = popup.getAttribute('data-table');
+      if (currentOpenTableNumber) {
+        // Get updated order data
+        try {
+          const ordersStr = localStorage.getItem('allOrders');
+          if (ordersStr) {
+            const allOrders = JSON.parse(ordersStr);
+            
+            // Filter for this table
+            const tableOrders = allOrders.filter(order => 
+              order.table_number.toString() === currentOpenTableNumber.toString()
+            );
+            
+            // Close and reopen popup with fresh data
+            closePopup();
+            setTimeout(() => showTableOrderPopup(currentOpenTableNumber, tableOrders), 100);
+          }
+        } catch (error) {
+          console.error("Error refreshing popup:", error);
+        }
+      }
+    }
+  }, refreshInterval);
+  
+  // Also listen for storage events from other tabs/windows
+  window.addEventListener('storage', function(event) {
+    if (event.key === 'allOrders' || event.key === 'staffOrders' || 
+        event.key === 'adminOrderUpdate' || event.key === 'adminKitchenUpdate') {
+      console.log("Storage event detected, refreshing data");
+      updateAdminTableStatus();
+      
+      // Refresh popup if open
+      const popup = document.getElementById('table-popup');
+      if (popup) {
+        const tableNum = popup.getAttribute('data-table');
+        try {
+          const ordersStr = localStorage.getItem('allOrders');
+          if (ordersStr) {
+            const allOrders = JSON.parse(ordersStr);
+            const tableOrders = allOrders.filter(order => 
+              order.table_number.toString() === tableNum.toString()
+            );
+            
+            closePopup();
+            setTimeout(() => showTableOrderPopup(tableNum, tableOrders), 100);
+          }
+        } catch (error) {
+          console.error("Error refreshing popup from storage event:", error);
+        }
+      }
+    }
+  });
+}
+
+// Improved closePopup function for better reliability
+function closePopup() {
+  console.log("Closing popup");
+  const popup = document.getElementById('table-popup');
+  if (popup) {
+    // Remove all event listeners by cloning and replacing
+    const newPopup = popup.cloneNode(true);
+    popup.parentNode.replaceChild(newPopup, popup);
+    
+    // Now remove the element
+    newPopup.remove();
+  }
+}
+
+// Make sure to call the setup function when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+  // Your existing initialization code first...
+  
+  // Then set up auto-refresh
+  setupAutoRefresh();
+});
 // Function to update order status across all views (staff, kitchen, admin)
 function updateOrderStatusAcrossViews(orderId, newStatus) {
   console.log(`Updating order ${orderId} to ${newStatus} across all views`);
