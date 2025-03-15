@@ -8,44 +8,6 @@ let selectedTable = localStorage.getItem('selectedTable') || 1;
 let isStaffMode = false;
 let staffViewBtn = null;
 
-// Sample menu categories data
-const sampleMenuCategories = [
-  { category_id: 1, name: 'Noodles', description: 'Hearty Vietnamese soups' },
-  { category_id: 2, name: 'Rice', description: 'Traditional rice dishes' },
-  { category_id: 3, name: 'Desserts', description: 'Sweet treats to finish your meal' },
-  { category_id: 4, name: 'Additional foods', description: 'Extra dishes to complement your meal ' },
-  { category_id: 5, name: 'Drinks', description: 'Refreshing beverages' }
-];
-
-// Sample menu items data
-const sampleMenuItems = [
-  // Soups (category_id: 1)
-  { item_id: 101, category_id: 1, name: 'Phở', price: 60000, image_path: '/images/Pho.jpg', description: 'Traditional beef noodle soup with herbs and bean sprouts', preparation_time: 18 },
-  { item_id: 102, category_id: 1, name: 'Bún Bò Huế', price: 60000, image_path: '/images/bun-bo-hue.jpg', description: 'Spicy beef noodle soup from central Vietnam', preparation_time: 15 },
-  { item_id: 103, category_id: 1, name: 'Bún Chả', price: 45000, image_path: '/images/bun-cha.jpg', description: 'Grilled pork with rice noodles and herbs', preparation_time: 10 },
-
-  // Rice & Noodles (category_id: 2)
-  { item_id: 201, category_id: 2, name: 'Cơm Chiên Hải Sản', price: 60000, image_path: '/images/com-chien.jpg', description: 'Seafood fried rice', preparation_time: 20 },
-  { item_id: 202, category_id: 2, name: 'Cơm Tấm', price: 60000, image_path: '/images/com-tam.jpg', description: 'Broken rice with grilled pork, egg, and vegetables', preparation_time: 15 },
-    
-  // Desserts (category_id: 3)
-  { item_id: 301, category_id: 3, name: 'Chè Ba Màu', price: 20000, image_path: '/images/che-ba-mau.jpg', description: 'Three-color dessert with beans, jelly, and coconut milk', preparation_time: 8 },
-  { item_id: 302, category_id: 3, name: 'Bánh Flan', price: 18000, image_path: '/images/banh-flan.jpg', description: 'Vietnamese caramel custard', preparation_time: 5 },
-  { item_id: 303, category_id: 3, name: 'Chè Đậu Xanh', price: 25000, image_path: '/images/che-dau-xanh.jpg', description: 'Mung bean pudding with coconut cream', preparation_time: 6 },
-  
-  // Addtional Foods (category_id: 4)
-  { item_id: 401, category_id: 4, name: 'Bánh Xèo', price: 30000, image_path: '/images/banh-xeo.jpg', description: 'Vietnamese crispy pancake with shrimp and bean sprouts', preparation_time: 15 },
-  { item_id: 402, category_id: 4, name: 'Chả giò', price: 25000, image_path: '/images/spring-rolls.jpg', description: 'Vietnamese crispy pancake with shrimp and bean sprouts', preparation_time: 15 },
-
-
-  // Drinks (category_id: 5)
-  { item_id: 501, category_id: 5, name: 'Cà Phê Sữa Đá', price: 15000, image_path: '/images/ca-phe-sua-da.jpg', description: 'Vietnamese iced coffee with condensed milk', preparation_time: 5 },
-  { item_id: 502, category_id: 5, name: 'Trà Lipton', price: 10000, image_path: '/images/iced-tea.jpg', description: 'Salted preserved lime juice', preparation_time: 3 },
-  { item_id: 503, category_id: 5, name: 'Sinh Tố Bơ', price: 25000, image_path: '/images/sinh-to-bo.jpg', description: 'Avocado smoothie with condensed milk', preparation_time: 8 }
-];
-// Sample orders data
-let sampleOrders = [];
-
 // Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
   console.log("Customer page loaded");
@@ -65,14 +27,17 @@ document.addEventListener('DOMContentLoaded', function() {
   const customerOrderCards = document.getElementById('customer-order-cards');
   const noCustomerOrders = document.getElementById('no-customer-orders');
   const headerControls = document.querySelector('.header-controls');
+  
   // Remove any stray badges that might appear in the search area
-const searchArea = document.querySelector('.search-bar').parentElement;
-const strayBadges = searchArea.querySelectorAll('.badge');
-strayBadges.forEach(badge => {
-  if (!badge.closest('.menu-item')) {
-    badge.remove();
+  const searchArea = document.querySelector('.search-bar').parentElement;
+  if (searchArea) {
+    const strayBadges = searchArea.querySelectorAll('.badge');
+    strayBadges.forEach(badge => {
+      if (!badge.closest('.menu-item')) {
+        badge.remove();
+      }
+    });
   }
-});
 
   // Verify essential elements are found
   if (!menuGrid || !categoryNav) {
@@ -122,23 +87,22 @@ strayBadges.forEach(badge => {
   // Initialize table selection
   initTableSelection();
 
-  // Load menu categories and set up initial state
-  menuCategories = sampleMenuCategories;
-  renderMenuCategories();
+  // Load menu categories from API
+  loadMenuCategories();
 
-  // Load initial menu items
-  menuItems = sampleMenuItems;
-  renderMenuItems();
+  // Load initial menu items from API
+  loadMenuItems();
 
   // Set up event listeners
   setupEventListeners();
-  setupCategoryListeners();
-  setupSearchListener();
   
   // Set table number
   if (customerTableNumber) {
     customerTableNumber.textContent = selectedTable;
   }
+  
+  // Load orders for the selected table
+  loadOrders();
   
   // Set up logout button
   const logoutBtn = document.getElementById('logout-btn');
@@ -146,6 +110,7 @@ strayBadges.forEach(badge => {
     logoutBtn.addEventListener('click', function() {
       // Clear user data and local storage
       localStorage.removeItem('currentUser');
+      localStorage.removeItem('token');
       localStorage.removeItem('selectedTable');
       
       // Force redirect to login page with a clean slate
@@ -203,14 +168,27 @@ strayBadges.forEach(badge => {
     });
   }
 
-  // Load menu categories
-  function loadMenuCategories() {
-    console.log("Loading menu categories");
+  // Load menu categories from API
+  async function loadMenuCategories() {
+    console.log("Loading menu categories from API");
     
-    // In a real app, fetch categories from the server
-    // For now, use sample data
-    menuCategories = sampleMenuCategories;
-    renderMenuCategories();
+    try {
+      const response = await fetch('/api/menu/categories');
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to load menu categories');
+      }
+      
+      menuCategories = data;
+      renderMenuCategories();
+      
+    } catch (error) {
+      console.error('Error loading menu categories:', error);
+      // Fallback to empty categories
+      menuCategories = [];
+      renderMenuCategories();
+    }
   }
 
   // Render menu categories
@@ -239,62 +217,80 @@ strayBadges.forEach(badge => {
     // Add category buttons
     menuCategories.forEach(category => {
       const btn = document.createElement('button');
-      btn.className = category.category_id === activeCategory ? 'primary' : 'secondary';
-      btn.dataset.category = category.category_id;
+      btn.className = category._id === activeCategory ? 'primary' : 'secondary';
+      btn.dataset.category = category._id;
       btn.textContent = category.name;
       categoryNav.appendChild(btn);
       
       // Add event listener
-      btn.addEventListener('click', () => setActiveCategory(category.category_id));
+      btn.addEventListener('click', () => setActiveCategory(category._id));
     });
   }
 
   // Set active category
   function setActiveCategory(categoryId) {
     console.log(`Setting active category to: ${categoryId}`);
-    activeCategory = parseInt(categoryId);
+    activeCategory = categoryId;
     
     // Update category buttons
     document.querySelectorAll('.category-nav button').forEach(btn => {
-      const btnCategoryId = parseInt(btn.dataset.category);
+      const btnCategoryId = btn.dataset.category;
       btn.className = btnCategoryId === activeCategory ? 'primary' : 'secondary';
     });
     
-    // Filter menu items
+    // Reload menu items with the selected category
     loadMenuItems();
   }
 
-  // Load menu items
-  function loadMenuItems() {
-    console.log("Loading menu items");
+  // Load menu items from API
+  async function loadMenuItems() {
+    console.log("Loading menu items from API");
     
-    // Get the menu type if available
-    let menuType = 'a-la-carte'; // Default value
-    const checkedRadio = document.querySelector('input[name="menu-type"]:checked');
-    if (checkedRadio) {
-      menuType = checkedRadio.value;
+    try {
+      // Build the URL with query parameters
+      let url = '/api/menu/items';
+      
+      const queryParams = [];
+      
+      // Add category filter if not "All"
+      if (activeCategory !== 0) {
+        queryParams.push(`category_id=${activeCategory}`);
+      }
+      
+      // Add search filter if present
+      if (searchQuery) {
+        queryParams.push(`search=${encodeURIComponent(searchQuery)}`);
+      }
+      
+      // Add menu type if available
+      const checkedRadio = document.querySelector('input[name="menu-type"]:checked');
+      if (checkedRadio) {
+        const menuType = checkedRadio.value;
+        queryParams.push(`menu_type=${menuType}`);
+      }
+      
+      // Append query parameters to URL
+      if (queryParams.length > 0) {
+        url += `?${queryParams.join('&')}`;
+      }
+      
+      // Fetch the menu items
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to load menu items');
+      }
+      
+      menuItems = data;
+      renderMenuItems();
+      
+    } catch (error) {
+      console.error('Error loading menu items:', error);
+      // Fallback to empty items
+      menuItems = [];
+      renderMenuItems();
     }
-    
-    console.log(`Menu type: ${menuType}`);
-    
-    // In a real app, fetch menu items from the server
-    // For now, use sample data and filter it
-    menuItems = sampleMenuItems.filter(item => {
-      // Filter by category if needed
-      if (activeCategory !== 0 && item.category_id !== activeCategory) {
-        return false;
-      }
-      
-      // Filter by search query if needed
-      if (searchQuery && !item.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-        return false;
-      }
-      
-      return true;
-    });
-    
-    console.log(`Filtered menu items: ${menuItems.length} items`);
-    renderMenuItems();
   }
 
   // Render menu items
@@ -318,7 +314,7 @@ strayBadges.forEach(badge => {
       menuItem.className = 'card menu-item';
       menuItem.innerHTML = `
         <img src="${item.image_path || 'https://via.placeholder.com/250x150'}" alt="${item.name}">
-        <span class="badge yellow">${(item.price).toLocaleString('vi-VN')} ₫</span>
+        <span class="badge yellow">${formatCurrency(item.price)}</span>
         <div class="menu-item-details">
           <div class="menu-item-title">${item.name}</div>
           <div class="menu-item-description">${item.description}</div>
@@ -326,7 +322,7 @@ strayBadges.forEach(badge => {
             <div class="prep-time">
               <i class="far fa-clock"></i> ${item.preparation_time} min
             </div>
-            <button class="primary small add-to-cart" data-id="${item.item_id}">Add</button>
+            <button class="primary small add-to-cart" data-id="${item._id}">Add</button>
           </div>
         </div>
       `;
@@ -346,7 +342,7 @@ strayBadges.forEach(badge => {
   // Add item to cart
   function addToCart(item) {
     console.log(`Adding item to cart: ${item.name}`);
-    const existingItemIndex = cart.findIndex(cartItem => cartItem.item_id === item.item_id);
+    const existingItemIndex = cart.findIndex(cartItem => cartItem._id === item._id);
     
     if (existingItemIndex >= 0) {
       cart[existingItemIndex].quantity += 1;
@@ -360,7 +356,7 @@ strayBadges.forEach(badge => {
   // Remove item from cart
   function removeFromCart(itemId) {
     console.log(`Removing item from cart: ID ${itemId}`);
-    const existingItemIndex = cart.findIndex(cartItem => cartItem.item_id === itemId);
+    const existingItemIndex = cart.findIndex(cartItem => cartItem._id === itemId);
     
     if (existingItemIndex >= 0) {
       if (cart[existingItemIndex].quantity > 1) {
@@ -375,7 +371,7 @@ strayBadges.forEach(badge => {
 
   // Update item notes in cart
   function updateItemNotes(itemId, notes) {
-    const existingItemIndex = cart.findIndex(cartItem => cartItem.item_id === itemId);
+    const existingItemIndex = cart.findIndex(cartItem => cartItem._id === itemId);
     
     if (existingItemIndex >= 0) {
       cart[existingItemIndex].notes = notes;
@@ -387,178 +383,166 @@ strayBadges.forEach(badge => {
     return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
   }
 
-// Render cart
-function renderCart() {
-  console.log("Rendering cart");
-  
-  if (!emptyCartMessage || !cartItemsContainer || !placeOrderBtn || !cartTotal) {
-    console.error("Some cart elements not found");
-    return;
-  }
-  
-  if (cart.length === 0) {
-    emptyCartMessage.classList.remove('hidden');
-    cartItemsContainer.classList.add('hidden');
-    placeOrderBtn.disabled = true;
-  } else {
-    emptyCartMessage.classList.add('hidden');
-    cartItemsContainer.classList.remove('hidden');
-    placeOrderBtn.disabled = false;
+  // Render cart
+  function renderCart() {
+    console.log("Rendering cart");
     
-    cartItemsContainer.innerHTML = '';
+    if (!emptyCartMessage || !cartItemsContainer || !placeOrderBtn || !cartTotal) {
+      console.error("Some cart elements not found");
+      return;
+    }
     
-    cart.forEach(item => {
-      const cartItem = document.createElement('div');
-      cartItem.className = 'cart-item';
-      cartItem.innerHTML = `
-        <div class="cart-item-details">
-          <div class="cart-item-header">
-            <span class="cart-item-name">${item.name}</span>
-            <span class="cart-item-price">${formatCurrency(item.price * item.quantity)}</span>
+    if (cart.length === 0) {
+      emptyCartMessage.classList.remove('hidden');
+      cartItemsContainer.classList.add('hidden');
+      placeOrderBtn.disabled = true;
+    } else {
+      emptyCartMessage.classList.add('hidden');
+      cartItemsContainer.classList.remove('hidden');
+      placeOrderBtn.disabled = false;
+      
+      cartItemsContainer.innerHTML = '';
+      
+      cart.forEach(item => {
+        const cartItem = document.createElement('div');
+        cartItem.className = 'cart-item';
+        cartItem.innerHTML = `
+          <div class="cart-item-details">
+            <div class="cart-item-header">
+              <span class="cart-item-name">${item.name}</span>
+              <span class="cart-item-price">${formatCurrency(item.price * item.quantity)}</span>
+            </div>
+            ${item.notes ? `<div class="cart-item-notes">${item.notes}</div>` : ''}
           </div>
-          ${item.notes ? `<div class="cart-item-notes">${item.notes}</div>` : ''}
-        </div>
-        <div class="cart-item-quantity">
-          <button class="decrease-quantity" data-id="${item.item_id}"><i class="fas fa-minus"></i></button>
-          <span>${item.quantity}</span>
-          <button class="increase-quantity" data-id="${item.item_id}"><i class="fas fa-plus"></i></button>
-          <button class="remove-item" data-id="${item.item_id}"><i class="fas fa-trash"></i></button>
-        </div>
-      `;
-      
-      cartItemsContainer.appendChild(cartItem);
-      
-      // Add event listeners for quantity buttons
-      cartItem.querySelector('.decrease-quantity').addEventListener('click', () => removeFromCart(item.item_id));
-      cartItem.querySelector('.increase-quantity').addEventListener('click', () => addToCart(item));
-      cartItem.querySelector('.remove-item').addEventListener('click', () => {
-        cart = cart.filter(cartItem => cartItem.item_id !== item.item_id);
-        renderCart();
+          <div class="cart-item-quantity">
+            <button class="decrease-quantity" data-id="${item._id}"><i class="fas fa-minus"></i></button>
+            <span>${item.quantity}</span>
+            <button class="increase-quantity" data-id="${item._id}"><i class="fas fa-plus"></i></button>
+            <button class="remove-item" data-id="${item._id}"><i class="fas fa-trash"></i></button>
+          </div>
+        `;
+        
+        cartItemsContainer.appendChild(cartItem);
+        
+        // Add event listeners for quantity buttons
+        cartItem.querySelector('.decrease-quantity').addEventListener('click', () => removeFromCart(item._id));
+        cartItem.querySelector('.increase-quantity').addEventListener('click', () => addToCart(item));
+        cartItem.querySelector('.remove-item').addEventListener('click', () => {
+          cart = cart.filter(cartItem => cartItem._id !== item._id);
+          renderCart();
+        });
       });
-    });
+    }
+    
+    // Update total
+    cartTotal.textContent = formatCurrency(calculateTotal());
+    console.log("Cart rendered successfully");
   }
-  
-  // Update total
-  cartTotal.textContent = formatCurrency(calculateTotal());
-  console.log("Cart rendered successfully");
-}
 
-  // Place order
-  function placeOrder() {
+  // Place order using API
+  async function placeOrder() {
     console.log("Placing order");
     if (cart.length === 0) {
       alert("Your cart is empty. Please add items before placing an order.");
       return;
     }
     
-    // Create order data
-  const orderData = {
-    order_id: Math.floor(1000 + Math.random() * 9000),
-    table_number: selectedTable,
-    table_id: selectedTable,
-    status: 'pending',
-    created_at: new Date().toISOString(),
-    items: cart.map(item => ({
-      order_item_id: Math.floor(Math.random() * 1000),
-      menu_item_id: item.item_id,
-      menu_item_name: item.name,
-      quantity: item.quantity,
-      item_price: item.price,
-      special_instructions: item.notes || ''
-    })),
-    total_amount: calculateTotal()
-  };
-  
-  console.log("Order created:", orderData);
-  
-  // Add to local storage for staff view
-  localStorage.setItem('newOrderForStaff', JSON.stringify(orderData));
-  
-  // Trigger storage event manually (for same-page communication)
-  window.dispatchEvent(new Event('storage'));
-  
-  // Add to sample orders
-  sampleOrders.push(orderData);
-  
-  // Clear cart
-  cart = [];
-  renderCart();
-  
-  // Refresh orders
-  loadOrders();
-  
-  // Show confirmation
-  alert('Order placed successfully!');
-}
-  
-  // Listen for new orders from other views
-  
-window.addEventListener('storage', function(event) {
-  if (event.key === 'newStaffOrder') {
-    const newOrder = JSON.parse(event.newValue);
-    console.log("Received new order notification", newOrder);
-    
-    // Add to sample orders if it's not already there
-    const existingOrder = sampleOrders.find(o => o.order_id === newOrder.order_id);
-    if (!existingOrder) {
-      sampleOrders.push(newOrder);
-      loadOrders();
-    }
-  }
-});
-
-  // Enhanced order loading
-function loadOrders() {
-  console.log("Loading orders for table", selectedTable);
-  
-  // Check for new orders in local storage
-  const newOrderStr = localStorage.getItem('newOrderForStaff');
-  if (newOrderStr) {
     try {
-      const newOrder = JSON.parse(newOrderStr);
-      // Add to sample orders only if it's not already there
-      const existingOrder = sampleOrders.find(o => o.order_id === newOrder.order_id);
-      if (!existingOrder) {
-        sampleOrders.push(newOrder);
+      // Prepare order data for API
+      const orderData = {
+        tableId: selectedTable,
+        items: cart.map(item => ({
+          menuItemId: item._id,
+          quantity: item.quantity,
+          specialInstructions: item.notes || ''
+        }))
+      };
+      
+      // Get authentication token
+      const token = localStorage.getItem('token');
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+      
+      // Add authorization header if token exists
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
+      
+      // Send order to API
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(orderData)
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to place order');
+      }
+      
+      // Clear cart
+      cart = [];
+      renderCart();
+      
+      // Refresh orders to show the new one
+      loadOrders();
+      
+      // Show confirmation
+      alert('Order placed successfully!');
+      
     } catch (error) {
-      console.error("Error parsing new order:", error);
+      console.error('Error placing order:', error);
+      alert('An error occurred while placing your order. Please try again.');
     }
   }
   
- // Filter orders for this table
- const tableOrders = sampleOrders.filter(order => order.table_number == selectedTable);
- console.log(`Found ${tableOrders.length} orders for table ${selectedTable}`);
- 
- // Render orders
- if (!customerOrders || !customerOrderCards || !noCustomerOrders) {
-   console.error("Orders UI elements not found");
-   return;
- }
- 
- if (tableOrders.length === 0) {
-   customerOrders.style.display = 'none';
-   return;
- }
- 
- customerOrders.style.display = 'block';
- noCustomerOrders.style.display = 'none';
- customerOrderCards.innerHTML = '';
- 
- // Use a Set to track unique order IDs
- const uniqueOrderIds = new Set();
- 
- tableOrders.forEach(order => {
-  if (!uniqueOrderIds.has(order.order_id)) {
-    renderOrderCard(order);
-    uniqueOrderIds.add(order.order_id);
+  // Load orders from API
+  async function loadOrders() {
+    console.log("Loading orders for table", selectedTable);
+    
+    try {
+      const response = await fetch(`/api/orders/table/${selectedTable}`);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to load orders');
+      }
+      
+      // Render orders
+      if (!customerOrders || !customerOrderCards || !noCustomerOrders) {
+        console.error("Orders UI elements not found");
+        return;
+      }
+      
+      if (data.length === 0) {
+        customerOrders.style.display = 'none';
+        return;
+      }
+      
+      customerOrders.style.display = 'block';
+      noCustomerOrders.style.display = 'none';
+      customerOrderCards.innerHTML = '';
+      
+      // Render each order
+      data.forEach(order => {
+        renderOrderCard(order);
+      });
+      
+    } catch (error) {
+      console.error('Error loading orders:', error);
+      
+      // Hide orders section on error
+      if (customerOrders) {
+        customerOrders.style.display = 'none';
+      }
+    }
   }
-});
-}
 
   // Render an order card
   function renderOrderCard(order) {
-    console.log("Rendering order card for order", order.order_id);
+    console.log("Rendering order card for order", order._id);
     
     let statusBadgeClass = '';
     let statusText = '';
@@ -590,7 +574,7 @@ function loadOrders() {
     orderCard.innerHTML = `
       <div class="customer-order-header">
         <div class="customer-order-title">
-          Order #${order.order_id}
+          Order #${order._id}
           <span class="badge ${statusBadgeClass}">${statusText}</span>
         </div>
         <div>${formatTime(order.created_at)}</div>
@@ -660,18 +644,14 @@ function loadOrders() {
   }
 });
 
-// Set up category listeners
+// Setup for category and search listeners - these can be left empty as they're
+// already handled in the main event listeners
 function setupCategoryListeners() {
-  // This function is called but not defined
   console.log("Setting up category listeners");
-  // You can implement this if needed
 }
 
-// Set up search listener
 function setupSearchListener() {
-  // This function is called but not defined
   console.log("Setting up search listener");
-  // You can implement this if needed
 }
 
 // Format currency in Vietnamese Dong

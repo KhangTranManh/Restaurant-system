@@ -606,5 +606,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
   updateAdminTableStatus();
+  
 
 });

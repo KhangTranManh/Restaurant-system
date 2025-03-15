@@ -1,9 +1,5 @@
-// Mock user database for authentication
-const users = [
-  { username: 'staff1', password: 'password123', name: 'Staff User', role: 'staff' },
-  { username: 'kitchen1', password: 'password123', name: 'Kitchen User', role: 'kitchen' },
-  { username: 'admin1', password: 'password123', name: 'Admin User', role: 'admin' }
-];
+
+// login.js - Modified to use the MongoDB API
 
 // Enhanced logging function
 function debugLog(message, data = null) {
@@ -30,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // Handle login form submission
-  loginForm.addEventListener('submit', function(e) {
+  loginForm.addEventListener('submit', async function(e) {
     e.preventDefault();
     
     const username = usernameInput.value.trim();
@@ -38,43 +34,40 @@ document.addEventListener('DOMContentLoaded', function() {
     
     debugLog(`Login attempt: ${username}`);
     
-    // Authenticate user
-    const user = users.find(user => 
-      user.username === username && 
-      user.password === password
-    );
-    
-    if (user) {
-      // Store user info in localStorage for persistence
-      debugLog(`Successful login for: ${username} (${user.role})`);
+    try {
+      // Send login request to API
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+      });
       
-      try {
-        // Detailed localStorage logging
-        const userToStore = {
-          username: user.username,
-          name: user.name,
-          role: user.role
-        };
-        
-        debugLog('Storing user in localStorage:', userToStore);
-        localStorage.setItem('currentUser', JSON.stringify(userToStore));
-        
-        // Verify storage
-        const storedUser = JSON.parse(localStorage.getItem('currentUser'));
-        debugLog('Retrieved user from localStorage:', storedUser);
-        
-        // Detailed redirect logging
-        debugLog(`Attempting to redirect for role: ${user.role}`);
-        redirectToRolePage(user.role);
-      } catch (error) {
-        debugLog('Error during login process:', error);
-        loginError.textContent = 'An error occurred during login.';
-        loginError.style.display = 'block';
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Invalid username or password');
       }
-    } else {
+      
+      // Store user info in localStorage for persistence
+      debugLog(`Successful login for: ${username} (${data.role})`);
+      
+      // Store token and user info
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('currentUser', JSON.stringify({
+        username: data.username,
+        name: data.name,
+        role: data.role
+      }));
+      
+      // Redirect based on role
+      redirectToRolePage(data.role);
+      
+    } catch (error) {
       // Show error message
-      debugLog("Login failed: Invalid credentials");
-      loginError.textContent = 'Invalid username or password.';
+      debugLog("Login failed:", error.message);
+      loginError.textContent = error.message;
       loginError.style.display = 'block';
     }
   });
@@ -84,6 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
     debugLog("Customer access requested");
     // Clear any existing user data
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('token');
     
     // Set role to customer
     const customerUser = {
@@ -101,8 +95,9 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Check if user is already logged in
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  const token = localStorage.getItem('token');
   
-  if (currentUser) {
+  if (currentUser && token) {
     debugLog(`Already logged in as: ${currentUser.username} (${currentUser.role})`);
     // User is already logged in, redirect to appropriate page
     redirectToRolePage(currentUser.role);
