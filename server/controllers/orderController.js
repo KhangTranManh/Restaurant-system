@@ -1,7 +1,7 @@
 const Order = require('../models/Order');
 const Table = require('../models/Table');
 const MenuItem = require('../models/MenuItem');
-const { io } = require('../config/socket');
+const socketConfig = require('../config/socket');
 const mongoose = require('mongoose');
 
 // Get all orders
@@ -44,6 +44,30 @@ exports.getOrders = async (req, res) => {
   }
 };
 
+// Get all orders for a specific table
+exports.getOrdersByTable = async (req, res) => {
+  try {
+    const tableNumber = req.params.table_number;
+    
+    // Find the table first
+    const table = await Table.findOne({ table_number: parseInt(tableNumber) || 0 });
+    
+    if (!table) {
+      return res.status(404).json({ message: 'Table not found' });
+    }
+    
+    // Find all orders for this table
+    const orders = await Order.find({ table: table._id })
+      .sort({ created_at: -1 })
+      .populate('items.menu_item');
+    
+    res.json(orders);
+  } catch (error) {
+    console.error('Error getting table orders:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 // Get a specific order
 exports.getOrder = async (req, res) => {
   try {
@@ -64,7 +88,6 @@ exports.getOrder = async (req, res) => {
   }
 };
 
-// Create a new order
 exports.createOrder = async (req, res) => {
   try {
     const { tableId, items } = req.body;
@@ -73,19 +96,13 @@ exports.createOrder = async (req, res) => {
       return res.status(400).json({ message: 'Table ID and items are required' });
     }
     
-    // Find table
-    const table = await Table.findOne({
-      $or: [
-        { _id: mongoose.isValidObjectId(tableId) ? tableId : null },
-        { table_number: parseInt(tableId) || 0 }
-      ]
-    });
+    // Find table by table_number instead of _id
+    const table = await Table.findOne({ table_number: parseInt(tableId) });
     
     if (!table) {
       return res.status(404).json({ message: 'Table not found' });
     }
     
-    // Process order items
     let total_amount = 0;
     const orderItems = [];
     
@@ -140,91 +157,147 @@ exports.createOrder = async (req, res) => {
     await table.save();
     
     // Notify clients via Socket.IO
-    io.emit('newOrder', {
-      _id: savedOrder._id,
-      orderId: savedOrder._id,
-      tableId: table._id,
-      tableNumber: table.table_number,
-      status: savedOrder.status,
-      items: savedOrder.items,
-      totalAmount: savedOrder.total_amount,
-      createdAt: savedOrder.created_at
-    });
+    try {
+      const io = socketConfig.getIO();
+      
+      // Emit event to kitchen about new order
+      io.emit('newOrder', savedOrder);
+      
+      // Also emit to specific rooms
+      io.to('kitchen').emit('newOrder', savedOrder);
+      io.to(`table-${table.table_number}`).emit('orderUpdated', savedOrder);
+      io.to('staff').emit('tableOrderUpdated', {
+        tableNumber: table.table_number,
+        order: savedOrder
+      });
+      
+      console.log(`Emitted new order event for order ${savedOrder._id}`);
+    } catch (error) {
+      console.error('Socket.IO emission error:', error);
+      // Continue with response even if socket emission fails
+    }
     
     res.status(201).json(savedOrder);
   } catch (error) {
     console.error('Error creating order:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
-// Update order status
+// Get all active orders (pending, preparing, ready)
+exports.getAllOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({
+      $or: [
+        { status: 'pending' },
+        { status: 'preparing' },
+        { status: 'ready' }
+      ]
+    })
+    .sort({ created_at: -1 })
+    .populate('items.menu_item');
+    
+    res.json(orders);
+  } catch (error) {
+    console.error('Error fetching active orders:', error);
+    res.status(500).json({ message: 'Error fetching orders', error: error.message });
+  }
+};
+
 exports.updateOrderStatus = async (req, res) => {
   try {
-    const orderId = req.params.order_id;
+    // Check both URL params and request body for the order ID
+    const orderId = req.params.order_id || req.body.orderId;
     const { status } = req.body;
     
-    if (!['pending', 'preparing', 'ready', 'delivered', 'cancelled'].includes(status)) {
-      return res.status(400).json({ message: 'Invalid status' });
+    console.log("Received order status update request:", { 
+      orderId, 
+      status,
+      params: req.params,
+      body: req.body
+    });
+    
+    // Validate input
+    if (!orderId) {
+      console.error("Order ID is required");
+      return res.status(400).json({ message: 'Order ID is required' });
     }
     
-    const order = await Order.findById(orderId);
+    // Try to find the order by either _id or order_id
+    const order = await Order.findOne({
+      $or: [
+        { _id: mongoose.isValidObjectId(orderId) ? orderId : null },
+        { order_id: parseInt(orderId) || 0 }
+      ]
+    });
     
     if (!order) {
+      console.error(`Order not found with ID: ${orderId}`);
       return res.status(404).json({ message: 'Order not found' });
     }
     
-    // Update order status
-    const oldStatus = order.status;
+    // Update the status based on requested status
+    const previousStatus = order.status;
     order.status = status;
     
-    // Set timestamps based on status
-    if (status === 'ready' && !order.ready_at) {
+    // Set timestamp for status changes
+    if (status === 'ready') {
       order.ready_at = new Date();
-    } else if (status === 'delivered' && !order.delivered_at) {
+    } else if (status === 'delivered') {
       order.delivered_at = new Date();
     }
     
-    await order.save();
+    // Save the updated order
+    const updatedOrder = await order.save();
     
-    // If order is delivered, check if the table should be updated
-    if (status === 'delivered' && oldStatus !== 'delivered') {
-      const table = await Table.findById(order.table);
+    // If the status changes to 'delivered', update the table status if needed
+    if (status === 'delivered') {
+      // Check if there are any more active orders for this table
+      const activeOrdersCount = await Order.countDocuments({
+        table: order.table,
+        status: { $in: ['pending', 'preparing', 'ready'] }
+      });
       
-      if (table && table.current_order_id && table.current_order_id.equals(order._id)) {
-        // Check if there are other active orders for this table
-        const otherActiveOrders = await Order.countDocuments({
-          table: table._id,
-          _id: { $ne: order._id },
-          status: { $nin: ['delivered', 'cancelled'] }
-        });
-        
-        if (otherActiveOrders === 0) {
-          // No other active orders, set table to available
-          table.status = 'available';
-          table.current_order_id = null;
-          await table.save();
-          
-          // Notify about table change
-          io.emit('tableStatusChanged', {
-            tableId: table._id,
-            tableNumber: table.table_number,
-            status: 'available'
-          });
-        }
+      // If no more active orders, update table status to 'available'
+      if (activeOrdersCount === 0) {
+        await Table.findByIdAndUpdate(order.table, { status: 'available' });
       }
     }
     
     // Notify clients via Socket.IO
-    io.emit('orderStatusChanged', {
-      orderId: order._id,
-      status: order.status,
-      timestamp: new Date().toISOString()
-    });
+    try {
+      const io = socketConfig.getIO();
+      
+      // Construct status update event data
+      const statusUpdateData = {
+        orderId: order._id,
+        tableNumber: order.table_number,
+        previousStatus,
+        newStatus: status,
+        order: updatedOrder
+      };
+      
+      // Broadcast to everyone
+      io.emit('orderStatusChanged', statusUpdateData);
+      
+      // Also emit to specific rooms
+      io.to('kitchen').emit('orderStatusChanged', statusUpdateData);
+      io.to(`table-${order.table_number}`).emit('orderStatusChanged', statusUpdateData);
+      io.to('staff').emit('orderStatusChanged', statusUpdateData);
+      
+      console.log(`Emitted status change event for order ${order._id} from ${previousStatus} to ${status}`);
+    } catch (error) {
+      console.error('Socket.IO emission error:', error);
+      // Continue with response even if socket emission fails
+    }
     
-    res.json(order);
+    console.log("Order status updated successfully:", updatedOrder);
+    res.json(updatedOrder);
   } catch (error) {
     console.error('Error updating order status:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      message: 'Error updating order status', 
+      error: error.message 
+    });
   }
 };

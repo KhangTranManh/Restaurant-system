@@ -6,5 +6,9 @@ router.get('/', orderController.getOrders);
 router.get('/:order_id', orderController.getOrder);
 router.post('/', orderController.createOrder);
 router.put('/:order_id/status', orderController.updateOrderStatus);
+router.get('/table/:table_number', orderController.getOrdersByTable);
+router.put('/:order_id/status', orderController.updateOrderStatus);
+
+
 
 module.exports = router;

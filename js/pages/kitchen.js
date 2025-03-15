@@ -1,7 +1,7 @@
 // kitchen.js - Kitchen dashboard functionality
 
 // Sample orders array for local state management
-let sampleOrders = [];
+let orders = [];
 
 // DOM Elements for Admin Page (only used if in admin mode)
 let adminStaffBtn;
@@ -11,12 +11,12 @@ let adminStaffView;
 let adminKitchenView;
 let adminAnalyticsView;
 
-// Check authentication and initialize on DOM load
 document.addEventListener('DOMContentLoaded', function() {
   console.log("Kitchen page loaded");
-  setupStorageListener();
-  checkForNewOrdersFromStaff();
-
+  
+  // Define these at the top
+  const pendingOrdersContainer = document.getElementById('kitchen-pending-orders');
+  const noOrdersMessage = document.getElementById('no-pending-orders');
   
   // Check authentication
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
@@ -27,25 +27,161 @@ document.addEventListener('DOMContentLoaded', function() {
     return;
   }
   
-  console.log(`Logged in as ${currentUser.name} (${currentUser.role})`);
+  // Fetch initial orders
+  fetchInitialOrders();
   
-  // Update user info
-  const userInfoEl = document.getElementById('user-info');
-  if (userInfoEl) {
-    userInfoEl.textContent = `Welcome, ${currentUser.name}`;
-  }
-  
-  // Initialize admin-specific elements if in admin mode
-  if (currentUser.role === 'admin') {
-    initializeAdminElements();
-  }
-  
-  // Setup common kitchen functionality
+  // Setup other functionality
   setupKitchenFunctionality();
-  
-  // Initialize real-time updates
-  initializeRealTimeUpdates();
+  setupRealTimeUpdates();
 });
+
+async function fetchInitialOrders() {
+  try {
+    const response = await fetch('/api/orders');
+    orders = await response.json();
+    
+    console.log("Fetched orders - Full list:", orders);
+    
+    // Render orders in different tabs
+    renderPendingOrders();
+    renderPreparingOrders();
+    renderCompletedOrders();
+    updateDashboardStats();
+  } catch (error) {
+    console.error('Error fetching initial orders:', error);
+  }
+}
+// Render orders in different tabs
+function renderPendingOrders() {
+  const pendingOrders = orders.filter(order => order.status === 'pending');
+  const pendingContainer = document.getElementById('kitchen-pending-orders');
+  const noPendingMessage = document.getElementById('no-pending-orders');
+  
+  if (pendingContainer) {
+    pendingContainer.innerHTML = '';
+    
+    if (pendingOrders.length === 0) {
+      noPendingMessage.classList.remove('hidden');
+    } else {
+      noPendingMessage.classList.add('hidden');
+      pendingOrders.forEach(order => addOrderToKitchenView(order));
+    }
+  }
+}
+function renderPreparingOrders() {
+  // Get all unique orders in 'preparing' status
+  const preparingOrders = orders.filter(order => order.status === 'preparing');
+  const preparingContainer = document.getElementById('kitchen-preparing-orders');
+  const noPreparingMessage = document.getElementById('no-preparing-orders');
+  
+  if (preparingContainer) {
+    // Clear the container first
+    preparingContainer.innerHTML = '';
+    
+    if (preparingOrders.length === 0) {
+      noPreparingMessage.classList.remove('hidden');
+    } else {
+      noPreparingMessage.classList.add('hidden');
+      
+      // Create a Set to track order IDs we've already rendered
+      const renderedOrderIds = new Set();
+      
+      preparingOrders.forEach(order => {
+        const orderId = order._id || order.order_id;
+        
+        // Only render if we haven't seen this order ID yet
+        if (!renderedOrderIds.has(orderId)) {
+          renderedOrderIds.add(orderId);
+          moveOrderToPreparation(order);
+        }
+      });
+    }
+  }
+}
+function renderCompletedOrders() {
+  const completedOrders = orders.filter(order => order.status === 'ready');
+  const completedContainer = document.getElementById('kitchen-completed-orders');
+  const noCompletedMessage = document.getElementById('no-completed-orders');
+  
+  if (completedContainer) {
+    completedContainer.innerHTML = '';
+    
+    if (completedOrders.length === 0) {
+      noCompletedMessage.classList.remove('hidden');
+    } else {
+      noCompletedMessage.classList.add('hidden');
+      completedOrders.forEach(order => moveOrderToCompleted(order));
+    }
+  }
+}
+function setupRealTimeUpdates() {
+  // Determine correct WebSocket URL based on current location
+  const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = `${wsProtocol}//${window.location.host}/api/socket`;
+  
+  console.log(`Connecting to WebSocket at ${wsUrl}`);
+  const socket = new WebSocket(wsUrl);
+  
+  socket.onopen = function() {
+    console.log('Kitchen WebSocket connection established');
+  };
+  
+  socket.onmessage = function(event) {
+    try {
+      const data = JSON.parse(event.data);
+      console.log('WebSocket message received:', data);
+      
+      // Handle different types of events
+      if (data.type === 'newOrder' && data.order) {
+        const newOrder = data.order;
+        // Check if the order is already in our list
+        if (!orders.some(o => o._id === newOrder._id || o.order_id === newOrder._id)) {
+          // Add new order to the list
+          orders.push(newOrder);
+          
+          // Only add to kitchen view if status is pending
+          if (newOrder.status === 'pending') {
+            addOrderToKitchenView(newOrder);
+          }
+          
+          // Update dashboard stats
+          updateDashboardStats();
+        }
+      } else if (data.type === 'orderStatusChanged' && data.order) {
+        // Find and update the order in our local array
+        const updatedOrder = data.order;
+        const orderIndex = orders.findIndex(o => 
+          o._id === updatedOrder._id || 
+          o.order_id === updatedOrder._id
+        );
+        
+        if (orderIndex !== -1) {
+          orders[orderIndex] = updatedOrder;
+        } else {
+          orders.push(updatedOrder);
+        }
+        
+        // Refresh all tabs
+        renderPendingOrders();
+        renderPreparingOrders();
+        renderCompletedOrders();
+        updateDashboardStats();
+      }
+    } catch (error) {
+      console.error('Error handling WebSocket message:', error);
+    }
+  };
+  
+  socket.onerror = function(error) {
+    console.error('WebSocket error:', error);
+  };
+  
+  socket.onclose = function() {
+    console.log('WebSocket connection closed. Attempting to reconnect...');
+    // Try to reconnect after a delay
+    setTimeout(setupRealTimeUpdates, 5000);
+  };
+}
 
 // Initialize kitchen functionality
 function setupKitchenFunctionality() {
@@ -164,15 +300,15 @@ function setupKitchenFunctionality() {
   });
   
   // Logout functionality with proper path
-  const logoutBtn = document.getElementById('logout-btn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', function() {
-      // Clear user data
-      localStorage.removeItem('currentUser');
-      // Use absolute path to ensure correct navigation
-      window.location.href = '/views/login.html';
-    });
-  }
+const logoutBtn = document.getElementById('logout-btn');
+if (logoutBtn) {
+  logoutBtn.addEventListener('click', function() {
+    // Remove localStorage.removeItem('currentUser');
+    
+    // Redirect to login page
+    window.location.href = '/views/login.html';
+  });
+}
   
   // Set up order timer updating
   setupTimerUpdates();
@@ -236,165 +372,15 @@ function initializeAdminElements() {
   }
 }
 
-// Function to initialize real-time updates
-function initializeRealTimeUpdates() {
-  console.log("Setting up real-time updates");
-  
-  // Listen for storage events to update orders
-  window.addEventListener('storage', function(event) {
-    // Check for new order from another view
-    const newOrderStr = localStorage.getItem('newOrderForStaff');
-    if (newOrderStr) {
-      try {
-        const newOrder = JSON.parse(newOrderStr);
-        
-        // Add to sample orders if not already present
-        const existingOrder = sampleOrders.find(o => o.order_id === newOrder.order_id);
-        if (!existingOrder) {
-          sampleOrders.push(newOrder);
-          
-          // Add to pending orders in the kitchen view
-          addOrderToKitchenView(newOrder);
-          
-          // Update dashboard stats
-          const pendingCountEl = document.querySelector('.dashboard-stats .stat-card:first-child .stat-value');
-          if (pendingCountEl) {
-            pendingCountEl.textContent = parseInt(pendingCountEl.textContent) + 1;
-          }
-          
-          // Remove the item from local storage
-          localStorage.removeItem('newOrderForStaff');
-        }
-      } catch (error) {
-        console.error("Error parsing new order:", error);
-      }
-    }
-  });
-}
-// Listen for admin updates
-window.addEventListener('storage', function(event) {
-  if (event.key === 'adminKitchenUpdate') {
-    try {
-      const update = JSON.parse(event.newValue);
-      console.log('Received order update from admin:', update);
-      
-      // Find and update the order in kitchen view
-      // This will depend on how your kitchen.js handles orders
-      // For example:
-      updateKitchenOrderStatus(update.orderId, update.status);
-    } catch (error) {
-      console.error('Error processing admin update:', error);
-    }
-  }
-});
-
 // Function to update order status in kitchen view
 function updateKitchenOrderStatus(orderId, newStatus) {
   // Implement based on your kitchen.js logic
   // This will vary depending on how your kitchen tracks orders
 }
-
-// Add a new order to the kitchen view
-function addOrderToKitchenView(order) {
-  console.log("Adding new order to kitchen view:", order);
-  
-  const pendingOrdersContainer = document.getElementById('kitchen-pending-orders');
-  const noOrdersMessage = document.getElementById('no-pending-orders');
-  
-  if (!pendingOrdersContainer) {
-    console.error("Pending orders container not found");
-    return;
-  }
-  
-  // Hide "no orders" message if visible
-  if (noOrdersMessage) {
-    noOrdersMessage.classList.add('hidden');
-  }
-  
-  // Create new order card
-  const orderCard = document.createElement('div');
-  orderCard.className = 'kitchen-order-card pending';
-  
-  // Format order creation time
-  const orderTime = new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  
-  // Populate order card with order details
-  orderCard.innerHTML = `
-    <div class="kitchen-order-header pending">
-      <div class="kitchen-order-title">
-        <span>Order #${order.order_id}</span>
-        <span class="badge yellow">New Order</span>
-      </div>
-      <div class="kitchen-order-subtitle">
-        <span>Table ${order.table_number}</span>
-        <span>${orderTime}</span>
-      </div>
-    </div>
-    <div class="kitchen-order-content">
-      <div class="kitchen-order-items">
-        ${order.items.map(item => `
-          <div class="kitchen-order-item">
-            <div class="kitchen-order-item-name">${item.quantity}x ${item.menu_item_name}</div>
-            ${item.special_instructions ? `<div class="kitchen-order-item-notes">${item.special_instructions}</div>` : ''}
-          </div>
-        `).join('')}
-      </div>
-      <div class="kitchen-order-timer">
-        <span>Waiting for:</span>
-        <span>Just arrived</span>
-      </div>
-    </div>
-    <div class="kitchen-order-footer">
-      <button class="primary start-cooking" data-id="${order.order_id}">Start Preparing</button>
-    </div>
-  `;
-  
-  // Add order card to pending orders container
-  pendingOrdersContainer.appendChild(orderCard);
-  
-  // Add event listener to the new start cooking button
-  const startCookingBtn = orderCard.querySelector('.start-cooking');
-  if (startCookingBtn) {
-    startCookingBtn.addEventListener('click', function() {
-      const orderId = this.dataset.id;
-      alert(`Started preparation for Order #${orderId}`);
-      
-      // Hide the card
-      this.closest('.kitchen-order-card').style.display = 'none';
-      
-      // Check remaining orders
-      const remainingOrders = document.querySelectorAll('#kitchen-pending-orders .kitchen-order-card:not([style="display: none;"])').length;
-      if (remainingOrders === 0 && noOrdersMessage) {
-        noOrdersMessage.classList.remove('hidden');
-      }
-      
-      // Update dashboard stats
-      const pendingCountEl = document.querySelector('.dashboard-stats .stat-card:first-child .stat-value');
-      const preparingCountEl = document.querySelector('.dashboard-stats .stat-card:nth-child(2) .stat-value');
-      
-      if (pendingCountEl) {
-        pendingCountEl.textContent = parseInt(pendingCountEl.textContent) - 1;
-      }
-      
-      if (preparingCountEl) {
-        preparingCountEl.textContent = parseInt(preparingCountEl.textContent) + 1;
-      }
-      
-      // Update order status
-      updateOrderStatus(orderId, 'preparing');
-      
-      // Move order to preparation tab
-      moveOrderToPreparation(orderId);
-    });
-  }
-}
-
-// Function to move an order from New Orders to In Preparation tab
-function moveOrderToPreparation(orderId) {
+function moveOrderToPreparation(order) {
   // Find the order data
-  const order = sampleOrders.find(o => o.order_id.toString() === orderId.toString());
   if (!order) {
-    console.error(`Order #${orderId} not found in sampleOrders`);
+    console.error('No order provided');
     return;
   }
   
@@ -414,7 +400,7 @@ function moveOrderToPreparation(orderId) {
   preparingCard.innerHTML = `
     <div class="kitchen-order-header preparing">
       <div class="kitchen-order-title">
-        <span>Order #${order.order_id}</span>
+        <span>Order #${order._id || order.order_id}</span>
         <span class="badge blue">In Preparation</span>
       </div>
       <div class="kitchen-order-subtitle">
@@ -441,7 +427,209 @@ function moveOrderToPreparation(orderId) {
       <div>
         <span class="font-medium">Est. completion:</span> ${formattedCompletionTime}
       </div>
-      <button class="primary complete-cooking" data-id="${order.order_id}">Mark as Ready</button>
+      <button class="primary complete-cooking" data-id="${order._id || order.order_id}">Mark as Ready</button>
+    </div>
+  `;
+  
+  // Add the new card to the In Preparation tab
+  const preparingContainer = document.getElementById('kitchen-preparing-orders');
+  const noPreparingOrders = document.getElementById('no-preparing-orders');
+  
+  if (preparingContainer) {
+    preparingContainer.appendChild(preparingCard);
+    
+    // Hide the "no orders" message if it's visible
+    if (noPreparingOrders) {
+      noPreparingOrders.classList.add('hidden');
+    }
+    
+    // Add event listener to the Mark as Ready button
+    const completeButton = preparingCard.querySelector('.complete-cooking');
+    if (completeButton) {
+      completeButton.addEventListener('click', async function() {
+        const orderId = this.dataset.id;
+        
+        try {
+          // Update order status to 'ready'
+          const updatedOrder = await updateOrderStatus(orderId, 'ready');
+          
+          if (updatedOrder) {
+            // Remove this card from the In Preparation tab
+            this.closest('.kitchen-order-card').remove();
+            
+            // Check if there are any orders left
+            if (preparingContainer.querySelectorAll('.kitchen-order-card').length === 0 && noPreparingOrders) {
+              noPreparingOrders.classList.remove('hidden');
+            }
+          }
+        } catch (error) {
+          console.error('Error marking order as ready:', error);
+        }
+      });
+    }
+  }
+}
+// In kitchen.js - Fix the Start Preparing button click handler
+
+// First, find where the event listeners are being attached to the buttons
+// Look for this section in the code
+function addOrderToKitchenView(order) {
+  console.log("Full order object:", order);
+  
+  const orderId = order._id || order.order_id;
+  console.log("Extracted Order ID:", orderId);
+  
+  if (!orderId) {
+    console.error("No valid order ID found for order:", order);
+    return;
+  }
+  
+  // Get the container for pending orders
+  const pendingOrdersContainer = document.getElementById('kitchen-pending-orders');
+  const noOrdersMessage = document.getElementById('no-pending-orders');
+  
+  if (!pendingOrdersContainer) {
+    console.error("Pending orders container not found");
+    return;
+  }
+  
+  // Hide "no orders" message if visible
+  if (noOrdersMessage) {
+    noOrdersMessage.classList.add('hidden');
+  }
+  
+  // Create new order card
+  const orderCard = document.createElement('div');
+  orderCard.className = 'kitchen-order-card pending';
+  
+  // Format order creation time
+  const orderTime = new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  
+  // Populate order card with order details
+  orderCard.innerHTML = `
+    <div class="kitchen-order-header pending">
+      <div class="kitchen-order-title">
+        <span>Order #${orderId}</span>
+        <span class="badge yellow">New Order</span>
+      </div>
+      <div class="kitchen-order-subtitle">
+        <span>Table ${order.table_number}</span>
+        <span>${orderTime}</span>
+      </div>
+    </div>
+    <div class="kitchen-order-content">
+      <div class="kitchen-order-items">
+        ${order.items.map(item => `
+          <div class="kitchen-order-item">
+            <div class="kitchen-order-item-name">${item.quantity}x ${item.menu_item_name}</div>
+            ${item.special_instructions ? `<div class="kitchen-order-item-notes">${item.special_instructions}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+      <div class="kitchen-order-timer">
+        <span>Waiting for:</span>
+        <span>Just arrived</span>
+      </div>
+    </div>
+    <div class="kitchen-order-footer">
+      <button class="primary start-cooking" data-order-id="${orderId}">Start Preparing</button>
+    </div>
+  `;
+  
+  // Add order card to pending orders container
+  pendingOrdersContainer.appendChild(orderCard);
+  
+  // Add event listener to the new start cooking button
+  // Add event listener to the new start cooking button
+const startCookingBtn = orderCard.querySelector('.start-cooking');
+if (startCookingBtn) {
+  startCookingBtn.addEventListener('click', function() {
+    const clickedOrderId = this.dataset.orderId;
+    console.log("Start cooking button clicked for order:", clickedOrderId);
+    
+    if (!clickedOrderId) {
+      console.error("Order ID not found in button dataset");
+      return;
+    }
+    
+    // Remove the card immediately to prevent duplicate clicks
+    const orderCard = this.closest('.kitchen-order-card');
+    if (orderCard) {
+      orderCard.remove();
+    }
+    
+    updateOrderStatus(clickedOrderId, 'preparing')
+      .then(updatedOrder => {
+        if (updatedOrder) {
+          // No need to do anything else, the renderPreparingOrders function will handle it
+          updateDashboardStats();
+        }
+      })
+      .catch(error => {
+        console.error('Error starting preparation:', error);
+        // If there was an error, re-render the pending orders to show the card again
+        renderPendingOrders();
+      });
+  });
+}
+}
+
+function moveOrderToPreparation(order) {
+  // Check if we received an actual order object
+  if (!order) {
+    console.error('No order provided to moveOrderToPreparation');
+    return;
+  }
+  
+  console.log("Moving order to preparation:", order);
+  
+  // Format the time elements
+  const orderTime = new Date(order.created_at);
+  const formattedTime = orderTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const prepStartTime = new Date();
+  
+  // Calculate estimated completion time (20 minutes from now)
+  const estCompletionTime = new Date(prepStartTime.getTime() + 20 * 60 * 1000);
+  const formattedCompletionTime = estCompletionTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  
+  // Extract the order ID (handle both _id and order_id formats)
+  const orderId = order._id || order.order_id;
+  
+  // Create a new card for the In Preparation tab
+  const preparingCard = document.createElement('div');
+  preparingCard.className = 'kitchen-order-card preparing';
+  
+  preparingCard.innerHTML = `
+    <div class="kitchen-order-header preparing">
+      <div class="kitchen-order-title">
+        <span>Order #${orderId}</span>
+        <span class="badge blue">In Preparation</span>
+      </div>
+      <div class="kitchen-order-subtitle">
+        <span>Table ${order.table_number}</span>
+        <span>${formattedTime}</span>
+      </div>
+    </div>
+    <div class="kitchen-order-content">
+      <div class="kitchen-order-items">
+        ${order.items.map(item => `
+          <div class="kitchen-order-item">
+            <div class="kitchen-order-item-name">${item.quantity}x ${item.menu_item_name}</div>
+            ${item.special_instructions ? `<div class="kitchen-order-item-notes">${item.special_instructions}</div>` : ''}
+            <div class="status-label preparing">Preparing</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="kitchen-order-timer">
+        <span>Preparing for:</span>
+        <span>0 minutes</span>
+      </div>
+    </div>
+    <div class="kitchen-order-footer">
+      <div>
+        <span class="font-medium">Est. completion:</span> ${formattedCompletionTime}
+      </div>
+      <button class="primary complete-cooking" data-order-id="${orderId}">Mark as Ready</button>
     </div>
   `;
   
@@ -461,114 +649,88 @@ function moveOrderToPreparation(orderId) {
     const completeButton = preparingCard.querySelector('.complete-cooking');
     if (completeButton) {
       completeButton.addEventListener('click', function() {
-        const orderId = this.dataset.id;
-        completeCooking(orderId);
+        const clickedOrderId = this.dataset.orderId;
+        console.log("Mark as Ready clicked for order:", clickedOrderId);
         
-        // Remove this card from the In Preparation tab
-        this.closest('.kitchen-order-card').remove();
-        
-        // Check if there are any orders left
-        if (preparingContainer.querySelectorAll('.kitchen-order-card').length === 0 && noPreparingOrders) {
-          noPreparingOrders.classList.remove('hidden');
-        }
+        updateOrderStatus(clickedOrderId, 'ready')
+          .then(updatedOrder => {
+            if (updatedOrder) {
+              // Remove from preparation and move to ready
+              this.closest('.kitchen-order-card').remove();
+              moveOrderToCompleted(updatedOrder);
+              updateDashboardStats();
+            }
+          })
+          .catch(error => {
+            console.error('Error marking order as ready:', error);
+          });
       });
     }
   }
 }
-
-// Start cooking an order
-function startCooking(orderId) {
-  console.log(`Starting cooking for order ${orderId}`);
-  
-  // Find the order
-  const orderIndex = sampleOrders.findIndex(o => o.order_id.toString() === orderId.toString());
-  if (orderIndex === -1) return;
-  
-  // Update order status
-  sampleOrders[orderIndex].status = 'preparing';
-  sampleOrders[orderIndex].prep_start_time = new Date().toISOString();
-  
-  // Mark all items as preparing
-  sampleOrders[orderIndex].items.forEach(item => {
-    item.status = 'preparing';
-  });
-  
-  // Save updated orders
-  localStorage.setItem('kitchenOrders', JSON.stringify(sampleOrders));
-  
-  // Notify staff of status change
-  notifyStaffOfStatusChange(sampleOrders[orderIndex]);
-  
-  // Move the order card to the In Preparation tab
-  moveOrderToPreparation(orderId);
-}
-
-// Complete cooking an order
-function completeCooking(orderId) {
-  console.log(`Completing cooking for order ${orderId}`);
-  
-  // Find the order
-  const orderIndex = sampleOrders.findIndex(o => o.order_id.toString() === orderId.toString());
-  if (orderIndex === -1) return;
-  
-  // Update order status
-  sampleOrders[orderIndex].status = 'ready';
-  sampleOrders[orderIndex].ready_at = new Date().toISOString();
-  
-  // Mark all items as ready
-  sampleOrders[orderIndex].items.forEach(item => {
-    item.status = 'ready';
-  });
-  
-  // Save updated orders
-  localStorage.setItem('kitchenOrders', JSON.stringify(sampleOrders));
-  
-  // Notify staff of status change
-  notifyStaffOfStatusChange(sampleOrders[orderIndex]);
-  
-  // Refresh displays
-  refreshAllTabs();
-  
-  // Move the order to Completed Today tab
-  moveOrderToCompleted(orderId);
-}
-
-// Notify staff of order status change
-function notifyStaffOfStatusChange(order) {
+async function updateOrderStatus(orderId, newStatus) {
   try {
-    // Store the updated order in localStorage for staff to pick up
-    localStorage.setItem('updatedOrderFromKitchen', JSON.stringify(order));
-  } catch (error) {
-    console.error('Error notifying staff of status change:', error);
-  }
-}
-
-// Check for new orders from staff
-function checkForNewOrdersFromStaff() {
-  const newOrderStr = localStorage.getItem('newOrderForKitchen');
-  if (newOrderStr) {
-    try {
-      const newOrder = JSON.parse(newOrderStr);
-      console.log('New order from staff:', newOrder);
-      
-      // Check if this order is already in our list
-      const existingOrder = sampleOrders.find(o => o.order_id === newOrder.order_id);
-      if (!existingOrder) {
-        // Add the new order
-        sampleOrders.push(newOrder);
-        
-        // Remove from localStorage to prevent duplicate processing
-        localStorage.removeItem('newOrderForKitchen');
-        
-        // Save updated orders
-        localStorage.setItem('kitchenOrders', JSON.stringify(sampleOrders));
-        
-        // Refresh displays
-        refreshAllTabs();
-      }
-    } catch (error) {
-      console.error('Error processing new order:', error);
+    console.log("Updating order status:", { 
+      orderId, 
+      newStatus
+    });
+    
+    // Ensure orderId is defined
+    if (!orderId) {
+      throw new Error('Invalid order ID: ID is undefined or null');
     }
+
+    const response = await fetch(`/api/orders/${orderId}/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ 
+        status: newStatus
+      })
+    });
+    
+    console.log("Response status:", response.status);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Error response:", errorText);
+      throw new Error(`Failed to update order status: ${errorText}`);
+    }
+    
+    const updatedOrder = await response.json();
+    console.log("Updated order:", updatedOrder);
+    
+    // Update local orders array
+    const orderIndex = orders.findIndex(o => 
+      o._id === updatedOrder._id || 
+      o.order_id === updatedOrder._id ||
+      o._id === updatedOrder.order_id
+    );
+    
+    if (orderIndex !== -1) {
+      orders[orderIndex] = updatedOrder;
+    } else {
+      // If not found, add the new order
+      orders.push(updatedOrder);
+    }
+    
+    // Refresh the view based on the new status
+    if (newStatus === 'preparing') {
+      renderPendingOrders();  // Remove from pending
+      renderPreparingOrders(); // Add to preparing
+    } else if (newStatus === 'ready') {
+      renderPreparingOrders(); // Remove from preparing
+      renderCompletedOrders(); // Add to completed
+    }
+    
+    updateDashboardStats();
+    
+    return updatedOrder;
+  } catch (error) {
+    console.error(`Error updating order ${orderId} status:`, error);
+    alert(`Failed to update order status: ${error.message}`);
+    return null;
   }
 }
 
@@ -650,18 +812,6 @@ function moveOrderToCompleted(orderId) {
   }
 }
 
-// Handle localStorage changes
-function handleStorageChange(event) {
-  if (event.key === 'newOrderForKitchen') {
-    console.log('New order detected in localStorage');
-    checkForNewOrdersFromStaff();
-  }
-}
-
-// Listen for storage events
-function setupStorageListener() {
-  window.addEventListener('storage', handleStorageChange);
-}
 
 // Helper function to refresh all tabs
 function refreshAllTabs() {
@@ -760,7 +910,6 @@ function setupTableButtons() {
   });
 }
 
-// Modify existing order action buttons to update order status and sync with staff
 function setupOrderButtons() {
   console.log("Setting up admin order buttons");
   
@@ -768,12 +917,16 @@ function setupOrderButtons() {
   document.querySelectorAll('.start-cooking').forEach(button => {
     button.addEventListener('click', function() {
       const orderCard = this.closest('.kitchen-order-card');
-      const orderId = this.dataset.id;
+      
+      // Use data-order-id instead of data-id
+      const orderId = this.dataset.orderId;
+      console.log("Start cooking button clicked:", {
+        buttonDataOrderId: orderId,
+        buttonElement: this
+      });
       
       // Update order status to 'preparing'
       updateOrderStatus(orderId, 'preparing');
-      
-      // Rest of the functionality is handled by the common event handler
     });
   });
   
@@ -781,66 +934,35 @@ function setupOrderButtons() {
   document.querySelectorAll('.complete-cooking').forEach(button => {
     button.addEventListener('click', function() {
       const orderCard = this.closest('.kitchen-order-card');
-      const orderId = this.dataset.id;
+      
+      // Use data-order-id instead of data-id
+      const orderId = this.dataset.orderId;
+      console.log("Complete cooking button clicked:", {
+        buttonDataOrderId: orderId,
+        buttonElement: this
+      });
       
       // Update order status to 'ready'
       updateOrderStatus(orderId, 'ready');
-      
-      // Rest of the functionality is handled by the common event handler
     });
   });
 }
 
-// Update order status and sync with staff view
-function updateOrderStatus(orderId, newStatus) {
-  console.log(`Updating order #${orderId} status to ${newStatus}`);
-  
-  // Find the order in sample orders
-  const orderIndex = sampleOrders.findIndex(o => o.order_id == orderId);
-  
-  if (orderIndex >= 0) {
-    // Update order status
-    sampleOrders[orderIndex].status = newStatus;
-    
-    // Store updated order in localStorage for staff view
-    localStorage.setItem('updatedOrderFromKitchen', JSON.stringify(sampleOrders[orderIndex]));
-    
-    // Trigger storage event to notify other views
-    window.dispatchEvent(new Event('storage'));
-    
-    return sampleOrders[orderIndex];
-  } else {
-    console.warn(`Order #${orderId} not found in sample orders`);
-  }
-  
-  return null;
-}
-
 // Update dashboard statistics
-function updateDashboardStats(fromTab, toTab) {
-  console.log(`Updating dashboard stats: ${fromTab} -> ${toTab}`);
+function updateDashboardStats() {
+  const pendingCount = orders.filter(order => order.status === 'pending').length;
+  const preparingCount = orders.filter(order => order.status === 'preparing').length;
+  const completedCount = orders.filter(order => order.status === 'ready').length;
   
-  try {
-    // Decrement count for the 'from' tab
-    const fromStatCard = document.querySelector(`.dashboard-stats .stat-card:contains(${fromTab})`);
-    if (fromStatCard) {
-      const fromCountEl = fromStatCard.querySelector('.stat-value');
-      let fromCount = parseInt(fromCountEl.textContent);
-      fromCountEl.textContent = Math.max(0, fromCount - 1);
-    }
-    
-    // Increment count for the 'to' tab
-    const toStatCard = document.querySelector(`.dashboard-stats .stat-card:contains(${toTab})`);
-    if (toStatCard) {
-      const toCountEl = toStatCard.querySelector('.stat-value');
-      let toCount = parseInt(toCountEl.textContent);
-      toCountEl.textContent = toCount + 1;
-    }
-  } catch (error) {
-    console.error("Error updating dashboard stats:", error);
-  }
+  // Update stat cards
+  const pendingCountEl = document.querySelector('.dashboard-stats .stat-card:first-child .stat-value');
+  const preparingCountEl = document.querySelector('.dashboard-stats .stat-card:nth-child(2) .stat-value');
+  const completedCountEl = document.querySelector('.dashboard-stats .stat-card:nth-child(3) .stat-value');
+  
+  if (pendingCountEl) pendingCountEl.textContent = pendingCount;
+  if (preparingCountEl) preparingCountEl.textContent = preparingCount;
+  if (completedCountEl) completedCountEl.textContent = completedCount;
 }
-
 // Check if there are any remaining orders in a specific tab
 function checkRemainingOrders(tab) {
   const orderContainer = document.getElementById(`kitchen-${tab}-orders`);

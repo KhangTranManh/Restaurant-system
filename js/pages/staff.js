@@ -9,69 +9,13 @@ let customerViewBtn;
 // State variables
 let selectedTable = null;
 let orders = [];
-
-// Sample orders data
-const sampleOrders = [
-  {
-    order_id: 1001,
-    table_id: 2,
-    table_number: 2,
-    status: 'pending',
-    created_at: new Date().toISOString(),
-    items: [
-      { order_item_id: 1, menu_item_id: 101, menu_item_name: 'Phở Bò', quantity: 2, item_price: 90000, special_instructions: 'Extra bean sprouts' },
-      { order_item_id: 2, menu_item_id: 102, menu_item_name: 'Bún Chả', quantity: 1, item_price: 95000, special_instructions: '' },
-      { order_item_id: 3, menu_item_id: 103, menu_item_name: 'Cà Phê Sữa Đá', quantity: 3, item_price: 25000, special_instructions: '' }
-    ],
-    total_amount: 350000
-  },
-  {
-    order_id: 1002,
-    table_id: 5,
-    table_number: 5,
-    status: 'preparing',
-    created_at: new Date().toISOString(),
-    items: [
-      { order_item_id: 4, menu_item_id: 201, menu_item_name: 'Gỏi Cuốn', quantity: 1, item_price: 65000, special_instructions: '' },
-      { order_item_id: 5, menu_item_id: 202, menu_item_name: 'Bánh Xèo', quantity: 1, item_price: 85000, special_instructions: 'No shrimp, extra vegetables' }
-    ],
-    total_amount: 150000
-  },
-  {
-    order_id: 1003,
-    table_id: 2,
-    table_number: 2,
-    status: 'ready',
-    created_at: new Date().toISOString(),
-    items: [
-      { order_item_id: 6, menu_item_id: 301, menu_item_name: 'Chả Giò', quantity: 1, item_price: 75000, special_instructions: '' },
-      { order_item_id: 7, menu_item_id: 302, menu_item_name: 'Bún Bò Huế', quantity: 1, item_price: 120000, special_instructions: 'Extra spicy' },
-      { order_item_id: 8, menu_item_id: 303, menu_item_name: 'Nước Chanh Muối', quantity: 1, item_price: 35000, special_instructions: '' }
-    ],
-    total_amount: 230000
-  },
-  {
-    order_id: 1000,
-    table_id: 7,
-    table_number: 7,
-    status: 'delivered',
-    created_at: new Date(Date.now() - 60 * 60 * 1000).toISOString(), // 1 hour ago
-    delivered_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
-    items: [
-      { order_item_id: 9, menu_item_id: 401, menu_item_name: 'Cà Phê Sữa Đá', quantity: 2, item_price: 25000, special_instructions: '' },
-      { order_item_id: 10, menu_item_id: 402, menu_item_name: 'Bánh Mì Thịt', quantity: 1, item_price: 85000, special_instructions: '' }
-    ],
-    total_amount: 135000
-  }
-];
-
 // Console log to verify script execution
 console.log("Staff.js loaded");
 
 // DOM content loaded handler
 document.addEventListener('DOMContentLoaded', function() {
   console.log("DOM loaded - Initializing staff page");
-  setupKitchenIntegration();
+  
   
   
   // Get DOM elements
@@ -99,30 +43,9 @@ document.addEventListener('DOMContentLoaded', function() {
     userInfoEl.textContent = `Welcome, ${currentUser.name}`;
   }
   
-  // Check for new orders in local storage
-  const newOrderStr = localStorage.getItem('newOrderForStaff');
-  if (newOrderStr) {
-    try {
-      const newOrder = JSON.parse(newOrderStr);
-      
-      // Add to orders if not already present
-      const existingOrder = sampleOrders.find(o => o.order_id === newOrder.order_id);
-      if (!existingOrder) {
-        sampleOrders.push(newOrder);
-        
-        // Remove the item from local storage to prevent duplicate processing
-        localStorage.removeItem('newOrderForStaff');
-      }
-    } catch (error) {
-      console.error("Error parsing new order:", error);
-    }
-  }
   
-  // Load orders from sample data
-  orders = sampleOrders;
   
   // Set up UI components
-  setTimeout(shareOrdersWithAdmin, 1000);
   setupTabs();
   setupTableSelection();
   setupEventListeners();
@@ -137,36 +60,8 @@ document.addEventListener('DOMContentLoaded', function() {
     selectTable(2);
   }
 
-  // Listen for storage changes (new orders)
-window.addEventListener('storage', function(event) {
-  // Check for new order from customer or kitchen
-  if (event.key === 'newOrderForStaff' || event.key === 'updatedOrderFromKitchen') {
-    const newOrder = JSON.parse(event.newValue);
-    console.log(`Received new ${event.key === 'newOrderForStaff' ? 'customer' : 'kitchen'} order in staff view`, newOrder);
-    
-    // Add to orders if it's not already there
-    const existingOrder = orders.find(o => o.order_id === newOrder.order_id);
-    if (!existingOrder) {
-      orders.push(newOrder);
-      sampleOrders.push(newOrder);
-      
-      // Refresh orders for the current table
-      if (selectedTable) {
-        fetchOrdersForTable(selectedTable);
-      }
-      
-      // Update table status
-      updateTableStatus();
-    }
-    
-    // Remove the item from local storage
-    localStorage.removeItem(event.key);
-  }
-  shareAllOrders();
 
-});
 
-// Direct table selection function
 function selectTable(tableNumber) {
   console.log("Table " + tableNumber + " clicked");
   
@@ -191,16 +86,10 @@ function selectTable(tableNumber) {
     selectedTableEl.classList.remove('hidden');
   }
   
-  // Save to localStorage
-  localStorage.setItem('selectedTable', tableNumber);
-  
   // Update selected table variable
   selectedTable = tableNumber.toString();
   
-  // Update table details
-  updateTableDetails(tableNumber);
-  
-  // Update orders for this table
+  // Update table details and orders
   fetchOrdersForTable(tableNumber);
 }
 
@@ -266,20 +155,17 @@ function setupEventListeners() {
       window.location.href = `customer.html?staff=true`;
     });
   }
+
   // Logout button
-const logoutBtn = document.getElementById('logout-btn');
-if (logoutBtn) {
-  logoutBtn.addEventListener('click', function() {
-    // Clear user data from localStorage
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('selectedTable');
-    
-    // Redirect to login page
-    window.location.href = 'login.html';
-    
-    console.log("User logged out");
-  });
-}
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', function() {
+      // Redirect to login page
+      window.location.href = 'login.html';
+      
+      console.log("User logged out");
+    });
+  }
   
   // Mark as delivered buttons
   document.querySelectorAll('.mark-delivered').forEach(button => {
@@ -290,8 +176,7 @@ if (logoutBtn) {
   });
 }
 
-// Update table status based on orders
-function updateTableStatus() {
+async function updateTableStatus() {
   console.log("Updating table status");
   
   if (!tablesGrid) {
@@ -299,27 +184,30 @@ function updateTableStatus() {
     return;
   }
   
-  const tableButtons = tablesGrid.querySelectorAll('button');
-  
-  // Reset all tables to default state
-  tableButtons.forEach(btn => {
-    btn.classList.remove('occupied', 'reserved');
-  });
-  
-  // Set occupied tables based on orders
-  orders.forEach(order => {
-    if (order.status !== 'delivered' && order.status !== 'cancelled') {
-      const tableBtn = document.getElementById(`table-${order.table_number}`);
+  try {
+    const response = await fetch('/api/tables');
+    const tables = await response.json();
+    
+    const tableButtons = tablesGrid.querySelectorAll('button');
+    
+    // Reset all tables to default state
+    tableButtons.forEach(btn => {
+      btn.classList.remove('occupied', 'reserved');
+    });
+    
+    // Set table statuses based on API data
+    tables.forEach(table => {
+      const tableBtn = document.getElementById(`table-${table.table_number}`);
       if (tableBtn) {
-        tableBtn.classList.add('occupied');
+        if (table.status === 'occupied') {
+          tableBtn.classList.add('occupied');
+        } else if (table.status === 'reserved') {
+          tableBtn.classList.add('reserved');
+        }
       }
-    }
-  });
-  
-  // Set reserved tables (for demonstration)
-  const tableBtn5 = document.getElementById('table-5');
-  if (tableBtn5) {
-    tableBtn5.classList.add('reserved');
+    });
+  } catch (error) {
+    console.error('Error updating table status:', error);
   }
 }
 
@@ -497,63 +385,83 @@ function fetchOrdersForTable(tableNumber) {
   }
   
   // Notify other views that a table has been selected
-  localStorage.setItem('selectedTable', tableNumber);
-  localStorage.setItem('lastUpdated', new Date().toISOString());
-  shareAllOrders();
-
-}
-// Add this near the end of your staff.js file
-// Share orders data with admin view
-// Add this function to staff.js
-function shareAllOrders() {
-  try {
-    // Save all orders to localStorage for admin to access
-    localStorage.setItem('allOrders', JSON.stringify(orders));
-    console.log("Shared all orders with admin view:", orders.length);
-  } catch (error) {
-    console.error("Error sharing orders:", error);
-  }
-}
-
-// Call this whenever orders change
-document.addEventListener('DOMContentLoaded', function() {
-  // Add to your existing initialization
- 
-
   
-  // Listen for admin updates
-window.addEventListener('storage', function(event) {
-  if (event.key === 'adminOrderUpdate') {
-    try {
-      const update = JSON.parse(event.newValue);
-      console.log('Received order update from admin:', update);
-      
-      // Find and update the order
-      const orderIndex = orders.findIndex(o => o.order_id.toString() === update.orderId.toString());
-      if (orderIndex >= 0) {
-        // Update status
-        orders[orderIndex].status = update.status;
-        
-        // Add timestamp if delivered
-        if (update.status === 'delivered') {
-          orders[orderIndex].delivered_at = update.timestamp;
-        }
-        
-        // Refresh view if this is for the selected table
-        if (selectedTable && selectedTable.toString() === orders[orderIndex].table_number.toString()) {
-          fetchOrdersForTable(selectedTable);
-        }
-        
-        // Update table status
-        updateTableStatus();
-      }
-    } catch (error) {
-      console.error('Error processing admin update:', error);
+}
+
+// Update the fetchOrdersForTable function
+async function fetchOrdersForTable(tableNumber) {
+  try {
+    console.log(`Fetching orders for table ${tableNumber}`);
+    
+    // Make sure we're using the API endpoint correctly
+    const response = await fetch(`/api/orders?table_id=${tableNumber}`);
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch orders');
     }
+    
+    const tableOrders = await response.json();
+    console.log(`Found ${tableOrders.length} orders for table ${tableNumber}`, tableOrders);
+    
+    // Update local orders array
+    orders = tableOrders;
+    
+    // Update the three order tabs
+    updateActiveOrdersTab(tableOrders);
+    updateReadyOrdersTab(tableOrders);
+    updateCompletedOrdersTab(tableOrders);
+    
+    // Update the table details
+    updateTableDetails(tableNumber);
+    
+    // Store selected table locally
+    selectedTable = tableNumber;
+    localStorage.setItem('selectedTable', tableNumber);
+    
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    alert('Failed to fetch orders for this table.');
   }
-});
-  shareAllOrders();
-});
+}
+
+// Update the markOrderAsDelivered function
+async function markOrderAsDelivered(orderId) {
+  try {
+    console.log(`Marking order ${orderId} as delivered`);
+    
+    const response = await fetch(`/api/orders/${orderId}/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status: 'delivered' })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to mark order as delivered');
+    }
+    
+    const updatedOrder = await response.json();
+    
+    // Update the local order in our orders array
+    const orderIndex = orders.findIndex(o => o._id === orderId || o.order_id === orderId);
+    if (orderIndex !== -1) {
+      orders[orderIndex] = updatedOrder;
+    }
+    
+    // Refresh the table view
+    if (selectedTable) {
+      fetchOrdersForTable(selectedTable);
+    }
+    
+    alert(`Order #${orderId} marked as delivered`);
+  } catch (error) {
+    console.error('Error marking order as delivered:', error);
+    alert('Failed to mark order as delivered');
+  }
+}
 // Update the Active Orders tab
 function updateActiveOrdersTab(tableOrders) {
   const activeOrders = tableOrders.filter(order => 
@@ -681,87 +589,6 @@ function renderActiveOrder(order, container) {
   
   container.innerHTML += orderHTML;
 }
-// Function to send new orders to the kitchen
-function sendOrderToKitchen(order) {
-  console.log(`Sending order #${order.order_id} to kitchen`);
-  
-  // Make sure the order has the required fields
-  const kitchenOrder = {
-    order_id: order.order_id,
-    table_id: order.table_id,
-    table_number: order.table_number,
-    status: 'pending',
-    created_at: order.created_at || new Date().toISOString(),
-    items: order.items,
-    total_amount: order.total_amount
-  };
-  
-  // Store the order in localStorage for the kitchen to pick up
-  try {
-    localStorage.setItem('newOrderForKitchen', JSON.stringify(kitchenOrder));
-    console.log('Order sent to kitchen successfully');
-    return true;
-  } catch (error) {
-    console.error('Error sending order to kitchen:', error);
-    return false;
-  }
-}
-
-// Function to listen for updates from the kitchen
-function setupKitchenIntegration() {
-  // Listen for storage changes from kitchen
-  window.addEventListener('storage', function(event) {
-    // Check for updates from the kitchen
-    if (event.key === 'updatedOrderFromKitchen') {
-      try {
-        const updatedOrder = JSON.parse(event.newValue);
-        console.log('Received updated order from kitchen:', updatedOrder);
-        
-        // Find and update the order in our local array
-        const orderIndex = orders.findIndex(o => o.order_id === updatedOrder.order_id);
-        if (orderIndex >= 0) {
-          orders[orderIndex].status = updatedOrder.status;
-          
-          // Refresh the display if this is for the selected table
-          if (selectedTable && selectedTable.toString() === updatedOrder.table_number.toString()) {
-            fetchOrdersForTable(selectedTable);
-          }
-          
-          // Update table status
-          updateTableStatus();
-          
-          // Remove from localStorage to prevent duplicate processing
-          localStorage.removeItem('updatedOrderFromKitchen');
-        }
-      } catch (error) {
-        console.error('Error processing kitchen update:', error);
-      }
-    }
-  });
-}
-// Add this to staff.js at the end of the file
-function shareOrdersWithAdmin() {
-  console.log("Sharing orders with admin view");
-  
-  try {
-    // Store all orders in localStorage
-    localStorage.setItem('allOrders', JSON.stringify(orders));
-    
-    // Also try to update the admin view directly if it's open
-    if (window.opener && !window.opener.closed) {
-      try {
-        window.opener.updateAdminOrders(orders);
-        console.log("Directly updated admin view");
-      } catch (e) {
-        console.log("Could not directly update admin view:", e);
-      }
-    } else {
-      console.log("Admin view not available for direct update");
-    }
-  } catch (error) {
-    console.error("Error sharing orders:", error);
-  }
-}
 
 // Example of creating a new order and sending it to kitchen
 function createOrder(tableNumber, menuItems) {
@@ -789,7 +616,6 @@ function createOrder(tableNumber, menuItems) {
   orders.push(newOrder);
   
   // Send to kitchen
-  sendOrderToKitchen(newOrder);
   
   // Refresh the table view if we're on the relevant table
   if (selectedTable && selectedTable.toString() === tableNumber.toString()) {
@@ -799,7 +625,6 @@ function createOrder(tableNumber, menuItems) {
   // Update table status
   updateTableStatus();
   
-  shareAllOrders();
   return orderId;
 
 
@@ -950,7 +775,6 @@ function cancelReservation(tableNumber) {
   alert(`Reservation cancelled for table ${tableNumber}`);
 }
 
-// Also call shareAllOrders() after any order status changes
 function markOrderAsDelivered(orderId) {
   console.log(`Marking order ${orderId} as delivered`);
   
@@ -966,8 +790,6 @@ function markOrderAsDelivered(orderId) {
     }
     
     // Share updated orders with admin
-    shareAllOrders();
-    
     alert(`Order #${orderId} marked as delivered`);
   }
 }

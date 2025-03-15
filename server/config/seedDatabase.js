@@ -62,7 +62,6 @@ const seedDatabase = async () => {
       4: categories[3]._id  // Drinks
     };
     
-    // Seed menu items
     const menuItemsData = [
       // Soups (category_id: 1)
       { 
@@ -70,7 +69,7 @@ const seedDatabase = async () => {
         category_id: 1,
         name: 'Phở Bò', 
         price: 9.50, 
-        image_path: '/images/pho-bo.jpg', 
+        image_path: '/images/Pho.jpg', 
         description: 'Traditional beef noodle soup with herbs and bean sprouts', 
         preparation_time: 18,
         item_id: 101
@@ -90,7 +89,7 @@ const seedDatabase = async () => {
         category_id: 1,
         name: 'Canh Chua Cá', 
         price: 5.50, 
-        image_path: '/images/canh-chua.jpg', 
+        image_path: '/images/spring-rolls.jpg', // Replaced with an available image
         description: 'Sweet and sour fish soup with vegetables', 
         preparation_time: 15,
         item_id: 103
@@ -206,7 +205,7 @@ const seedDatabase = async () => {
         category_id: 4,
         name: 'Trà Đá', 
         price: 1.50, 
-        image_path: '/images/tra-da.jpg', 
+        image_path: '/images/iced-tea.jpg', 
         description: 'Vietnamese iced tea', 
         preparation_time: 3,
         item_id: 403

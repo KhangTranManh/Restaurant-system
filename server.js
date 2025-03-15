@@ -20,6 +20,12 @@ const server = http.createServer(app);
 // Initialize Socket.IO
 const io = socketConfig.init(server);
 
+// Make io available in the request object for controllers to use
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
 // Connect to MongoDB
 connectDB();
 
@@ -35,6 +41,33 @@ app.use('/api/auth', authRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/tables', tableRoutes);
 app.use('/api/orders', orderRoutes);
+
+// Set up WebSocket event handlers
+io.on('connection', (socket) => {
+  console.log('New client connected:', socket.id);
+  
+  // Join kitchen room for kitchen staff
+  socket.on('joinKitchen', () => {
+    socket.join('kitchen');
+    console.log(`${socket.id} joined kitchen room`);
+  });
+  
+  // Join staff room for waitstaff
+  socket.on('joinStaff', () => {
+    socket.join('staff');
+    console.log(`${socket.id} joined staff room`);
+  });
+  
+  // Join customer room for specific table
+  socket.on('joinTable', (tableNumber) => {
+    socket.join(`table-${tableNumber}`);
+    console.log(`${socket.id} joined table-${tableNumber} room`);
+  });
+  
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
+});
 
 // Serve the main HTML file for all other routes
 app.get('*', (req, res) => {

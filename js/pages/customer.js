@@ -439,7 +439,6 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log("Cart rendered successfully");
   }
 
-  // Place order using API
   async function placeOrder() {
     console.log("Placing order");
     if (cart.length === 0) {
@@ -450,7 +449,7 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
       // Prepare order data for API
       const orderData = {
-        tableId: selectedTable,
+        tableId: selectedTable,  // This should be the table number, e.g., 8
         items: cart.map(item => ({
           menuItemId: item._id,
           quantity: item.quantity,
@@ -461,13 +460,9 @@ document.addEventListener('DOMContentLoaded', function() {
       // Get authentication token
       const token = localStorage.getItem('token');
       const headers = {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       };
-      
-      // Add authorization header if token exists
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
       
       // Send order to API
       const response = await fetch('/api/orders', {
@@ -499,46 +494,49 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // Load orders from API
-  async function loadOrders() {
-    console.log("Loading orders for table", selectedTable);
+  // Update the loadOrders function
+async function loadOrders() {
+  console.log("Loading orders for table", selectedTable);
+  
+  try {
+    const response = await fetch(`/api/orders/table/${selectedTable}`);
     
-    try {
-      const response = await fetch(`/api/orders/table/${selectedTable}`);
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to load orders');
-      }
-      
-      // Render orders
-      if (!customerOrders || !customerOrderCards || !noCustomerOrders) {
-        console.error("Orders UI elements not found");
-        return;
-      }
-      
-      if (data.length === 0) {
-        customerOrders.style.display = 'none';
-        return;
-      }
-      
-      customerOrders.style.display = 'block';
-      noCustomerOrders.style.display = 'none';
-      customerOrderCards.innerHTML = '';
-      
-      // Render each order
-      data.forEach(order => {
-        renderOrderCard(order);
-      });
-      
-    } catch (error) {
-      console.error('Error loading orders:', error);
-      
-      // Hide orders section on error
-      if (customerOrders) {
-        customerOrders.style.display = 'none';
-      }
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to load orders');
+    }
+    
+    const data = await response.json();
+    
+    // Render orders
+    if (!customerOrders || !customerOrderCards || !noCustomerOrders) {
+      console.error("Orders UI elements not found");
+      return;
+    }
+    
+    if (data.length === 0) {
+      customerOrders.style.display = 'none';
+      return;
+    }
+    
+    customerOrders.style.display = 'block';
+    noCustomerOrders.style.display = 'none';
+    customerOrderCards.innerHTML = '';
+    
+    // Render each order
+    data.forEach(order => {
+      renderOrderCard(order);
+    });
+    
+  } catch (error) {
+    console.error('Error loading orders:', error);
+    
+    // Hide orders section on error
+    if (customerOrders) {
+      customerOrders.style.display = 'none';
     }
   }
+}
 
   // Render an order card
   function renderOrderCard(order) {
