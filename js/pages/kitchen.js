@@ -652,17 +652,29 @@ function moveOrderToPreparation(order) {
         const clickedOrderId = this.dataset.orderId;
         console.log("Mark as Ready clicked for order:", clickedOrderId);
         
+        if (!clickedOrderId) {
+          console.error("Order ID not found in button dataset");
+          return;
+        }
+        
+        // Remove the card immediately to prevent duplicate clicks
+        const orderCard = this.closest('.kitchen-order-card');
+        if (orderCard) {
+          orderCard.remove();
+        }
+        
         updateOrderStatus(clickedOrderId, 'ready')
           .then(updatedOrder => {
             if (updatedOrder) {
-              // Remove from preparation and move to ready
-              this.closest('.kitchen-order-card').remove();
-              moveOrderToCompleted(updatedOrder);
+              // The order is now ready, no need to add it to the completed section
+              // That will be handled by renderCompletedOrders
               updateDashboardStats();
             }
           })
           .catch(error => {
             console.error('Error marking order as ready:', error);
+            // If there was an error, re-render the preparing orders to show the card again
+            renderPreparingOrders();
           });
       });
     }
@@ -733,15 +745,38 @@ async function updateOrderStatus(orderId, newStatus) {
     return null;
   }
 }
-
-// Function to move an order to the Completed Today tab
-function moveOrderToCompleted(orderId) {
-  // Find the order data
-  const order = sampleOrders.find(o => o.order_id.toString() === orderId.toString());
-  if (!order) {
-    console.error(`Order #${orderId} not found in sampleOrders`);
+// Replace this function in kitchen.js
+function completeCooking(orderId) {
+  if (!orderId) {
+    console.error("Invalid order ID");
     return;
   }
+  
+  console.log(`Marking order ${orderId} as ready`);
+  
+  // Use the API to update the order status
+  updateOrderStatus(orderId, 'ready')
+    .then(updatedOrder => {
+      if (updatedOrder) {
+        console.log("Order marked as ready:", updatedOrder);
+      }
+    })
+    .catch(error => {
+      console.error("Error marking order as ready:", error);
+    });
+}
+
+function moveOrderToCompleted(order) {
+  // Check if we received an actual order object
+  if (!order) {
+    console.error('No order provided to moveOrderToCompleted');
+    return;
+  }
+  
+  console.log("Moving order to completed:", order);
+  
+  // Extract the order ID
+  const orderId = order._id || order.order_id;
   
   // Format the time elements
   const orderTime = new Date(order.created_at);
@@ -760,7 +795,7 @@ function moveOrderToCompleted(orderId) {
   completedCard.innerHTML = `
     <div class="kitchen-order-header">
       <div class="kitchen-order-title">
-        <span>Order #${order.order_id}</span>
+        <span>Order #${orderId}</span>
         <span class="badge green">Completed</span>
       </div>
       <div class="kitchen-order-subtitle">
@@ -798,24 +833,11 @@ function moveOrderToCompleted(orderId) {
   }
   
   // Update dashboard stats
-  const preparingCountEl = document.querySelector('.dashboard-stats .stat-card:nth-child(2) .stat-value');
-  const completedCountEl = document.querySelector('.dashboard-stats .stat-card:nth-child(3) .stat-value');
-  
-  if (preparingCountEl) {
-    const currentCount = parseInt(preparingCountEl.textContent);
-    preparingCountEl.textContent = Math.max(0, currentCount - 1);
-  }
-  
-  if (completedCountEl) {
-    const currentCount = parseInt(completedCountEl.textContent);
-    completedCountEl.textContent = currentCount + 1;
-  }
+  updateDashboardStats();
 }
-
 
 // Helper function to refresh all tabs
 function refreshAllTabs() {
- 
 }
 
 // ========== ADMIN FUNCTIONS ==========

@@ -93,24 +93,18 @@ function selectTable(tableNumber) {
   fetchOrdersForTable(tableNumber);
 }
 
-// Tab navigation functionality
 function setupTabs() {
-  console.log("Setting up tabs");
-  if (!tabButtons || !tabContents) {
-    console.error("Tab elements not found");
-    return;
-  }
-  
-  tabButtons.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const tabId = tab.getAttribute('data-tab');
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+      const tabId = this.getAttribute('data-tab');
+      console.log("Tab clicked:", tabId);
       
       // Update active tab
-      tabButtons.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
       
       // Show selected tab content
-      tabContents.forEach(content => {
+      document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.remove('active');
         if (content.id === tabId) {
           content.classList.add('active');
@@ -119,7 +113,6 @@ function setupTabs() {
     });
   });
 }
-
 // Table selection functionality
 function setupTableSelection() {
   console.log("Setting up table selection");
@@ -429,52 +422,10 @@ async function fetchOrdersForTable(tableNumber) {
     updateTableDetails(tableNumber);
     
     // Store selected table locally
-    selectedTable = tableNumber;
-    localStorage.setItem('selectedTable', tableNumber);
-    
+    selectedTable = tableNumber;    
   } catch (error) {
     console.error('Error fetching orders:', error);
     alert('Failed to fetch orders for this table.');
-  }
-}
-
-// Update the markOrderAsDelivered function
-async function markOrderAsDelivered(orderId) {
-  try {
-    console.log(`Marking order ${orderId} as delivered`);
-    
-    const response = await fetch(`/api/orders/${orderId}/status`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ status: 'delivered' })
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to mark order as delivered');
-    }
-    
-    const updatedOrder = await response.json();
-    
-    // Update the local order in our orders array
-    const orderIndex = orders.findIndex(o => o._id === orderId || o.order_id === orderId);
-    if (orderIndex !== -1) {
-      orders[orderIndex] = updatedOrder;
-    }
-    
-    // Refresh the table view
-    if (selectedTable) {
-      fetchOrdersForTable(selectedTable);
-    }
-    
-    alert(`Order #${orderId} marked as delivered`);
-    updateTableStatus();
-
-  } catch (error) {
-    console.error('Error marking order as delivered:', error);
-    alert('Failed to mark order as delivered');
   }
 }
 // Update the Active Orders tab
@@ -505,7 +456,6 @@ function updateActiveOrdersTab(tableOrders) {
   });
 }
 
-// Update the Ready for Service tab
 function updateReadyOrdersTab(tableOrders) {
   const readyOrders = tableOrders.filter(order => order.status === 'ready');
   
@@ -517,23 +467,82 @@ function updateReadyOrdersTab(tableOrders) {
     return;
   }
   
+  // Clear the container
+  staffReadyOrders.innerHTML = '';
+  
   if (readyOrders.length === 0) {
-    staffReadyOrders.innerHTML = '';
     noReadyOrders.classList.remove('hidden');
     return;
   }
   
-  staffReadyOrders.innerHTML = '';
   noReadyOrders.classList.add('hidden');
   
+  // Render each ready order
   readyOrders.forEach(order => {
-    renderReadyOrder(order, staffReadyOrders);
+    const orderCard = createReadyOrderCard(order);
+    staffReadyOrders.appendChild(orderCard);
   });
 }
-
-// Update the Completed tab
+function createReadyOrderCard(order) {
+  // Format the time
+  const orderTime = new Date(order.created_at);
+  const formattedTime = orderTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  
+  // Extract the order ID
+  const orderId = order._id || order.order_id;
+  
+  // Create order card container
+  const orderCard = document.createElement('div');
+  orderCard.className = 'staff-order-card';
+  
+  // Create HTML content
+  orderCard.innerHTML = `
+    <div class="staff-order-header">
+      <div class="staff-order-title">
+        <span>Order #${orderId} - Table ${order.table_number}</span>
+        <span class="badge green">Ready for Service</span>
+      </div>
+      <div class="staff-order-time">${formattedTime}</div>
+    </div>
+    <div class="staff-order-content">
+      <div class="staff-order-items">
+        ${order.items.map(item => `
+          <div class="staff-order-item">
+            <div class="staff-order-item-name">
+              <span class="staff-order-item-quantity">${item.quantity}x</span>
+              ${item.menu_item_name}
+              ${item.special_instructions ? `<span class="staff-order-item-notes">"${item.special_instructions}"</span>` : ''}
+            </div>
+            <span>${formatCurrency(item.item_price * item.quantity)}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="staff-order-footer">
+      <div class="staff-order-total">
+        Total: ${formatCurrency(order.total_amount)}
+      </div>
+      <button class="primary mark-delivered" data-order-id="${orderId}">
+        Mark as Delivered
+      </button>
+    </div>
+  `;
+  
+  // Add event listener directly to the button
+  const deliveredButton = orderCard.querySelector('.mark-delivered');
+  deliveredButton.addEventListener('click', function() {
+    console.log(`Clicked Mark as Delivered for Order #${orderId}`);
+    markOrderAsDelivered(orderId);
+  });
+  
+  return orderCard;
+}
 function updateCompletedOrdersTab(tableOrders) {
+  console.log("Updating completed orders tab with", tableOrders);
+  
+  // Filter for orders with status 'delivered'
   const completedOrders = tableOrders.filter(order => order.status === 'delivered');
+  console.log("Found completed orders:", completedOrders);
   
   const staffCompletedOrders = document.getElementById('staff-completed-orders');
   const noCompletedOrders = document.getElementById('no-completed-orders');
@@ -543,18 +552,21 @@ function updateCompletedOrdersTab(tableOrders) {
     return;
   }
   
-  if (completedOrders.length === 0) {
-    staffCompletedOrders.innerHTML = '';
-    noCompletedOrders.classList.remove('hidden');
-    return;
-  }
-  
+  // Clear existing content
   staffCompletedOrders.innerHTML = '';
-  noCompletedOrders.classList.add('hidden');
   
-  completedOrders.forEach(order => {
-    renderCompletedOrder(order, staffCompletedOrders);
-  });
+  if (completedOrders.length === 0) {
+    console.log("No completed orders to display");
+    noCompletedOrders.classList.remove('hidden');
+  } else {
+    console.log(`Rendering ${completedOrders.length} completed orders`);
+    noCompletedOrders.classList.add('hidden');
+    
+    // Render each completed order
+    completedOrders.forEach(order => {
+      renderCompletedOrder(order, staffCompletedOrders);
+    });
+  }
 }
 
 // Render a single active order
@@ -648,17 +660,19 @@ function createOrder(tableNumber, menuItems) {
 
 }
 
-// Render a single ready order
 function renderReadyOrder(order, container) {
   // Format the time
   const orderTime = new Date(order.created_at);
   const formattedTime = orderTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   
+  // Extract the order ID (handle both _id and order_id formats)
+  const orderId = order._id || order.order_id;
+  
   const orderHTML = `
     <div class="staff-order-card">
       <div class="staff-order-header">
         <div class="staff-order-title">
-          <span>Order #${order.order_id} - Table ${order.table_number}</span>
+          <span>Order #${orderId} - Table ${order.table_number}</span>
           <span class="badge green">Ready for Service</span>
         </div>
         <div class="staff-order-time">${formattedTime}</div>
@@ -681,7 +695,7 @@ function renderReadyOrder(order, container) {
         <div class="staff-order-total">
           Total: ${formatCurrency(order.total_amount)}
         </div>
-        <button class="primary mark-delivered" data-id="${order.order_id}">
+        <button class="primary mark-delivered" data-order-id="${orderId}">
           Mark as Delivered
         </button>
       </div>
@@ -689,66 +703,155 @@ function renderReadyOrder(order, container) {
   `;
   
   container.innerHTML += orderHTML;
-  
-  // Add event listener to the new button
-  setTimeout(() => {
-    const newButton = container.querySelector(`.mark-delivered[data-id="${order.order_id}"]`);
-    if (newButton) {
-      newButton.addEventListener('click', function() {
-        markOrderAsDelivered(order.order_id);
-      });
-    }
-  }, 0);
+}
+// After rendering the ready orders, add event listeners
+function setupReadyOrderEventListeners() {
+  document.querySelectorAll('.mark-delivered').forEach(button => {
+    button.addEventListener('click', function() {
+      const clickedOrderId = this.dataset.orderId;
+      console.log("Mark as Delivered clicked for order:", clickedOrderId);
+      
+      if (!clickedOrderId) {
+        console.error("Order ID not found in button dataset");
+        return;
+      }
+      
+      markOrderAsDelivered(clickedOrderId);
+    });
+  });
 }
 
-// Render a single completed order
+async function markOrderAsDelivered(orderId) {
+  try {
+    console.log(`Marking order ${orderId} as delivered`);
+    
+    if (!orderId) {
+      alert("Cannot mark order as delivered: Order ID is missing");
+      return;
+    }
+    
+    // Show loading state
+    const button = document.querySelector(`.mark-delivered[data-order-id="${orderId}"]`);
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Processing...";
+    }
+    
+    // Send API request
+    const response = await fetch(`/api/orders/${orderId}/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status: 'delivered' })
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to mark order as delivered: ${errorText}`);
+    }
+    
+    const updatedOrder = await response.json();
+    console.log("Order successfully marked as delivered:", updatedOrder);
+    
+    // Update the local orders array with the updated order
+    const orderIndex = orders.findIndex(o => o._id === orderId || o.order_id === orderId);
+    if (orderIndex !== -1) {
+      orders[orderIndex] = updatedOrder;
+    }
+    
+    // Remove the order card from the Ready for Service tab
+    const orderCard = button ? button.closest('.staff-order-card') : null;
+    if (orderCard) {
+      orderCard.remove();
+    }
+    
+    // Force a complete refresh of the orders display
+    if (selectedTable) {
+      // Fetch fresh data from the server
+      const ordersResponse = await fetch(`/api/orders?table_id=${selectedTable}`);
+      if (ordersResponse.ok) {
+        const freshOrders = await ordersResponse.json();
+        orders = freshOrders;
+        
+        // Update all tabs with the fresh data
+        updateActiveOrdersTab(orders);
+        updateReadyOrdersTab(orders);
+        updateCompletedOrdersTab(orders);
+        
+        // Switch to the completed tab
+        const completedTab = document.querySelector('.tab[data-tab="completed-orders"]');
+        if (completedTab) {
+          completedTab.click();
+        }
+      }
+    }
+    
+    alert(`Order #${orderId} marked as delivered`);
+  } catch (error) {
+    console.error('Error marking order as delivered:', error);
+    
+    // Reset button state if there was an error
+    const button = document.querySelector(`.mark-delivered[data-order-id="${orderId}"]`);
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Mark as Delivered";
+    }
+    
+    alert(`Failed to mark order as delivered: ${error.message}`);
+  }
+}
 function renderCompletedOrder(order, container) {
+  console.log("Rendering completed order:", order);
+  
   // Format the time
   const orderTime = new Date(order.created_at);
   const formattedTime = orderTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   
-  let deliveredTime = '';
-  if (order.delivered_at) {
-    const deliveredDate = new Date(order.delivered_at);
-    deliveredTime = deliveredDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  } else {
-    deliveredTime = '12:05 PM'; // Fallback for demo
-  }
+  const deliveredTime = order.delivered_at ? 
+    new Date(order.delivered_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 
+    formattedTime;
+    
+  // Extract the order ID
+  const orderId = order._id || order.order_id;
   
-  const orderHTML = `
-    <div class="staff-order-card">
-      <div class="staff-order-header">
-        <div class="staff-order-title">
-          <span>Order #${order.order_id} - Table ${order.table_number}</span>
-          <span class="badge" style="background-color: #6b7280;">Completed</span>
-        </div>
-        <div class="staff-order-time">${formattedTime}</div>
+  // Create a new card element
+  const orderCard = document.createElement('div');
+  orderCard.className = 'staff-order-card';
+  
+  orderCard.innerHTML = `
+    <div class="staff-order-header">
+      <div class="staff-order-title">
+        <span>Order #${orderId} - Table ${order.table_number}</span>
+        <span class="badge" style="background-color: #6b7280;">Delivered</span>
       </div>
-      <div class="staff-order-content">
-        <div class="staff-order-items">
-          ${order.items.map(item => `
-            <div class="staff-order-item">
-              <div class="staff-order-item-name">
-                <span class="staff-order-item-quantity">${item.quantity}x</span>
-                ${item.menu_item_name}
-              </div>
-              <span>${formatCurrency(item.item_price * item.quantity)}</span>
+      <div class="staff-order-time">${formattedTime}</div>
+    </div>
+    <div class="staff-order-content">
+      <div class="staff-order-items">
+        ${order.items.map(item => `
+          <div class="staff-order-item">
+            <div class="staff-order-item-name">
+              <span class="staff-order-item-quantity">${item.quantity}x</span>
+              ${item.menu_item_name}
             </div>
-          `).join('')}
-        </div>
+            <span>${formatCurrency(item.item_price * item.quantity)}</span>
+          </div>
+        `).join('')}
       </div>
-      <div class="staff-order-footer">
-        <div class="staff-order-total">
-          Total: ${formatCurrency(order.total_amount)}
-        </div>
-        <div class="staff-order-action">
-          <span style="color: #6b7280; font-weight: 500;">Delivered at ${deliveredTime}</span>
-        </div>
+    </div>
+    <div class="staff-order-footer">
+      <div class="staff-order-total">
+        Total: ${formatCurrency(order.total_amount)}
+      </div>
+      <div class="staff-order-action">
+        <span style="color: #6b7280; font-weight: 500;">Delivered at ${deliveredTime}</span>
       </div>
     </div>
   `;
   
-  container.innerHTML += orderHTML;
+  // Append the card to the container
+  container.appendChild(orderCard);
 }
 
 // Table action functions
@@ -791,25 +894,6 @@ function cancelReservation(tableNumber) {
   }
   selectTable(tableNumber);
   alert(`Reservation cancelled for table ${tableNumber}`);
-}
-
-function markOrderAsDelivered(orderId) {
-  console.log(`Marking order ${orderId} as delivered`);
-  
-  // Update order status in our array
-  const orderIndex = orders.findIndex(o => o.order_id == orderId);
-  if (orderIndex >= 0) {
-    orders[orderIndex].status = 'delivered';
-    orders[orderIndex].delivered_at = new Date().toISOString();
-    
-    // Refresh the table orders
-    if (selectedTable) {
-      fetchOrdersForTable(selectedTable);
-    }
-    
-    // Share updated orders with admin
-    alert(`Order #${orderId} marked as delivered`);
-  }
 }
 
 // Format currency in Vietnamese Dong
