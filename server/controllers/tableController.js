@@ -1,11 +1,34 @@
 const Table = require('../models/Table');
 const { io } = require('../config/socket');
+const Order = require('../models/Order'); // Add this line
 
-// Get all tables
 exports.getTables = async (req, res) => {
   try {
     const tables = await Table.find().sort({ table_number: 1 });
-    res.json(tables);
+    
+    // For each table, check if there are any active orders
+    const updatedTables = await Promise.all(tables.map(async (table) => {
+      const activeOrderCount = await Order.countDocuments({
+        table: table._id,
+        status: { $in: ['pending', 'preparing', 'ready'] }
+      });
+      
+      // If there are no active orders but the table is marked as occupied,
+      // update the table status to available
+      if (activeOrderCount === 0 && table.status === 'occupied') {
+        table.status = 'available';
+        await table.save();
+      } else if (activeOrderCount > 0 && table.status !== 'occupied') {
+        // If there are active orders but the table is not marked as occupied,
+        // update the table status to occupied
+        table.status = 'occupied';
+        await table.save();
+      }
+      
+      return table;
+    }));
+    
+    res.json(updatedTables);
   } catch (error) {
     console.error('Error getting tables:', error);
     res.status(500).json({ message: 'Server error' });

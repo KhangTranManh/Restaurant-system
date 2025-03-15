@@ -185,21 +185,34 @@ async function updateTableStatus() {
   }
   
   try {
-    const response = await fetch('/api/tables');
-    const tables = await response.json();
-    
+    // First, reset all tables to default state
     const tableButtons = tablesGrid.querySelectorAll('button');
-    
-    // Reset all tables to default state
     tableButtons.forEach(btn => {
       btn.classList.remove('occupied', 'reserved');
     });
     
-    // Set table statuses based on API data
+    // Get fresh table data from API
+    const response = await fetch('/api/tables');
+    const tables = await response.json();
+    
+    // Also get active orders to double-check table status
+    const ordersResponse = await fetch('/api/orders?status=pending&status=preparing&status=ready');
+    const activeOrders = await ordersResponse.json();
+    
+    // Create a Set of table numbers that have active orders
+    const tablesWithActiveOrders = new Set();
+    activeOrders.forEach(order => {
+      tablesWithActiveOrders.add(order.table_number);
+    });
+    
+    // Set table statuses based on API data and active orders
     tables.forEach(table => {
       const tableBtn = document.getElementById(`table-${table.table_number}`);
       if (tableBtn) {
-        if (table.status === 'occupied') {
+        if (tablesWithActiveOrders.has(table.table_number)) {
+          // If table has active orders, mark as occupied regardless of what the table status says
+          tableBtn.classList.add('occupied');
+        } else if (table.status === 'occupied') {
           tableBtn.classList.add('occupied');
         } else if (table.status === 'reserved') {
           tableBtn.classList.add('reserved');
@@ -457,6 +470,8 @@ async function markOrderAsDelivered(orderId) {
     }
     
     alert(`Order #${orderId} marked as delivered`);
+    updateTableStatus();
+
   } catch (error) {
     console.error('Error marking order as delivered:', error);
     alert('Failed to mark order as delivered');
@@ -624,6 +639,9 @@ function createOrder(tableNumber, menuItems) {
   
   // Update table status
   updateTableStatus();
+
+  setInterval(updateTableStatus, 60000);
+
   
   return orderId;
 
