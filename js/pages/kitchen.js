@@ -299,14 +299,19 @@ function setupKitchenFunctionality() {
     });
   });
   
-  // Logout functionality with proper path
+  // Logout button
 const logoutBtn = document.getElementById('logout-btn');
 if (logoutBtn) {
   logoutBtn.addEventListener('click', function() {
-    // Remove localStorage.removeItem('currentUser');
+    // Clear user session data from localStorage
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('token');
+    localStorage.removeItem('selectedTable');
     
     // Redirect to login page
-    window.location.href = '/views/login.html';
+    window.location.href = 'login.html';
+    
+    console.log("User logged out");
   });
 }
   

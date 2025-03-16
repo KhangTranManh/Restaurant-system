@@ -185,9 +185,3 @@ window.addEventListener('unhandledrejection', function(event) {
     alert('An unexpected error occurred. Please try again.');
   }
 });
-
-// Export functions for potential testing or module usage
-export {
-  setupHeaderControls,
-  setupRoleButtons
-};

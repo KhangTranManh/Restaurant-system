@@ -12,6 +12,11 @@ const authRoutes = require('./server/routes/auth');
 const menuRoutes = require('./server/routes/menu');
 const tableRoutes = require('./server/routes/tables');
 const orderRoutes = require('./server/routes/orders');
+const userRoutes = require('./server/routes/users'); // Add this line
+const settingsRoutes = require('./server/routes/settings');
+
+
+
 
 // Initialize express app
 const app = express();
@@ -41,6 +46,12 @@ app.use('/api/auth', authRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/tables', tableRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/users', userRoutes); // Add this line
+app.use('/api/settings', settingsRoutes);
+
+
+
+
 
 // Set up WebSocket event handlers
 io.on('connection', (socket) => {

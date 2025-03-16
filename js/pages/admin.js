@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// Set up tab buttons for admin dashboard
+// Add this to your admin.js file
 function setupTabButtons() {
   console.log("Setting up admin tab buttons");
   
@@ -43,102 +43,114 @@ function setupTabButtons() {
   const adminStaffBtn = document.getElementById('admin-staff-btn');
   const adminKitchenBtn = document.getElementById('admin-kitchen-btn');
   const adminAnalyticsBtn = document.getElementById('admin-analytics-btn');
+  const adminManagementBtn = document.getElementById('admin-management-btn');
+  
   const adminStaffView = document.getElementById('admin-staff-view');
   const adminKitchenView = document.getElementById('admin-kitchen-view');
   const adminAnalyticsView = document.getElementById('admin-analytics-view');
+  const adminManagementView = document.getElementById('admin-management-view');
   
-  if (!adminStaffBtn || !adminKitchenBtn || !adminStaffView || !adminKitchenView) {
-    console.error("Admin view toggle elements not found");
-    return;
+  // Hide ALL management sections when switching to any non-management view
+  function hideAllManagementSections() {
+    // Hide main management view
+    if (adminManagementView) adminManagementView.classList.add('hidden');
+    
+    // Hide all management sub-sections
+    const managementSections = document.querySelectorAll('.management-section');
+    managementSections.forEach(section => {
+      section.classList.add('hidden');
+    });
   }
   
   // Staff view button
   adminStaffBtn.addEventListener('click', function() {
+    // Hide all management sections
+    hideAllManagementSections();
+    
     // Update button styles
     adminStaffBtn.classList.add('primary');
     adminStaffBtn.classList.remove('secondary');
     adminKitchenBtn.classList.add('secondary');
     adminKitchenBtn.classList.remove('primary');
-    
-    if (adminAnalyticsBtn) {
-      adminAnalyticsBtn.classList.add('secondary');
-      adminAnalyticsBtn.classList.remove('primary');
-    }
+    adminAnalyticsBtn.classList.add('secondary');
+    adminAnalyticsBtn.classList.remove('primary');
+    adminManagementBtn.classList.add('secondary');
+    adminManagementBtn.classList.remove('primary');
     
     // Show staff view, hide others
     adminStaffView.classList.remove('hidden');
     adminKitchenView.classList.add('hidden');
-    
-    if (adminAnalyticsView) {
-      adminAnalyticsView.classList.add('hidden');
-    }
+    adminAnalyticsView.classList.add('hidden');
   });
   
-  // Kitchen view button
+  // Apply the same pattern to other view buttons
   adminKitchenBtn.addEventListener('click', function() {
+    hideAllManagementSections();
+    
     // Update button styles
     adminKitchenBtn.classList.add('primary');
     adminKitchenBtn.classList.remove('secondary');
     adminStaffBtn.classList.add('secondary');
     adminStaffBtn.classList.remove('primary');
-    
-    if (adminAnalyticsBtn) {
-      adminAnalyticsBtn.classList.add('secondary');
-      adminAnalyticsBtn.classList.remove('primary');
-    }
+    adminAnalyticsBtn.classList.add('secondary');
+    adminAnalyticsBtn.classList.remove('primary');
+    adminManagementBtn.classList.add('secondary');
+    adminManagementBtn.classList.remove('primary');
     
     // Show kitchen view, hide others
     adminKitchenView.classList.remove('hidden');
     adminStaffView.classList.add('hidden');
-    
-    if (adminAnalyticsView) {
-      adminAnalyticsView.classList.add('hidden');
-    }
+    adminAnalyticsView.classList.add('hidden');
   });
   
-  // Analytics view button
-  if (adminAnalyticsBtn && adminAnalyticsView) {
-    adminAnalyticsBtn.addEventListener('click', function() {
-      // Update button styles
-      adminAnalyticsBtn.classList.add('primary');
-      adminAnalyticsBtn.classList.remove('secondary');
-      adminStaffBtn.classList.add('secondary');
-      adminStaffBtn.classList.remove('primary');
-      adminKitchenBtn.classList.add('secondary');
-      adminKitchenBtn.classList.remove('primary');
-      
-      // Show analytics view, hide others
-      adminAnalyticsView.classList.remove('hidden');
-      adminStaffView.classList.add('hidden');
-      adminKitchenView.classList.add('hidden');
+  adminAnalyticsBtn.addEventListener('click', function() {
+    hideAllManagementSections();
+    
+    // Update button styles
+    adminAnalyticsBtn.classList.add('primary');
+    adminAnalyticsBtn.classList.remove('secondary');
+    adminStaffBtn.classList.add('secondary');
+    adminStaffBtn.classList.remove('primary');
+    adminKitchenBtn.classList.add('secondary');
+    adminKitchenBtn.classList.remove('primary');
+    adminManagementBtn.classList.add('secondary');
+    adminManagementBtn.classList.remove('primary');
+    
+    // Show analytics view, hide others
+    adminAnalyticsView.classList.remove('hidden');
+    adminStaffView.classList.add('hidden');
+    adminKitchenView.classList.add('hidden');
+  });
+  
+  adminManagementBtn.addEventListener('click', function() {
+    // Hide all management sections except the main view
+    const managementSections = document.querySelectorAll('.management-section');
+    managementSections.forEach(section => {
+      section.classList.add('hidden');
     });
-  }
+    
+    // Update button styles
+    adminManagementBtn.classList.add('primary');
+    adminManagementBtn.classList.remove('secondary');
+    adminStaffBtn.classList.add('secondary');
+    adminStaffBtn.classList.remove('primary');
+    adminKitchenBtn.classList.add('secondary');
+    adminKitchenBtn.classList.remove('primary');
+    adminAnalyticsBtn.classList.add('secondary');
+    adminAnalyticsBtn.classList.remove('primary');
+    
+    // Show management view, hide others
+    adminManagementView.classList.remove('hidden');
+    adminStaffView.classList.add('hidden');
+    adminKitchenView.classList.add('hidden');
+    adminAnalyticsView.classList.add('hidden');
+    
+    // Load dashboard stats for management
+    if (typeof loadDashboardStats === 'function') {
+      loadDashboardStats();
+    }
+  });
 }
-
-// Sample order data for demonstration
-const tableOrders = {
-  // Table 2 has an active order
-  "2": {
-    order_id: 1002,
-    status: 'preparing',
-    created_at: '2023-03-13T12:30:00',
-    items: [
-      { menu_item_name: 'Gỏi Cuốn', quantity: 1, special_instructions: '' },
-      { menu_item_name: 'Bánh Xèo', quantity: 1, special_instructions: 'No shrimp, extra vegetables' }
-    ]
-  },
-  // Table 3 has a pending order
-  "3": {
-    order_id: 1001,
-    status: 'pending',
-    created_at: '2023-03-13T12:45:00',
-    items: [
-      { menu_item_name: 'Phở Bò', quantity: 2, special_instructions: 'Extra bean sprouts' },
-      { menu_item_name: 'Bún Chả', quantity: 1, special_instructions: '' },
-      { menu_item_name: 'Cà Phê Sữa Đá', quantity: 3, special_instructions: '' }
-    ]
-  }
-};
 // Add to admin.js
 window.updateAdminOrders = function(newOrders) {
   console.log("Admin received orders update:", newOrders.length);

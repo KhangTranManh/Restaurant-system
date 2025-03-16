@@ -150,15 +150,20 @@ function setupEventListeners() {
   }
 
   // Logout button
-  const logoutBtn = document.getElementById('logout-btn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', function() {
-      // Redirect to login page
-      window.location.href = 'login.html';
-      
-      console.log("User logged out");
-    });
-  }
+const logoutBtn = document.getElementById('logout-btn');
+if (logoutBtn) {
+  logoutBtn.addEventListener('click', function() {
+    // Clear user session data from localStorage
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('token');
+    localStorage.removeItem('selectedTable');
+    
+    // Redirect to login page
+    window.location.href = 'login.html';
+    
+    console.log("User logged out");
+  });
+}
   
   // Mark as delivered buttons
   document.querySelectorAll('.mark-delivered').forEach(button => {

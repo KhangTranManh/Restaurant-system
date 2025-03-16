@@ -17,8 +17,17 @@ const UserSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['staff', 'kitchen', 'admin', 'customer'],
+    enum: ['staff', 'chef', 'bartender', 'kitchen', 'admin', 'customer', 'manager', 'waiter'],
     required: true
+  },
+  contact: {
+    type: String,
+    default: ''
+  },
+  status: {
+    type: String,
+    enum: ['active', 'inactive'],
+    default: 'active'
   }
 }, { timestamps: true });
 
@@ -39,4 +48,4 @@ UserSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-module.exports = mongoose.model('User', UserSchema);
+module.exports = mongoose.models.User || mongoose.model('User', UserSchema);
