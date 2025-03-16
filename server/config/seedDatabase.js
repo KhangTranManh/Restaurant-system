@@ -45,8 +45,9 @@ const seedDatabase = async () => {
     
     // Seed menu categories
     const categoriesData = [
-      { name: 'Soups', description: 'Hearty Vietnamese soups' },
-      { name: 'Rice & Noodles', description: 'Traditional rice and noodle dishes' },
+      { name: 'Noodles', description: 'Hearty Vietnamese soups' },
+      { name: 'Rice', description: 'Traditional rice and noodle dishes' },
+      { name: 'Additional foods', description: 'More Foods' },
       { name: 'Desserts', description: 'Sweet treats to finish your meal' },
       { name: 'Drinks', description: 'Refreshing beverages' }
     ];
@@ -56,19 +57,20 @@ const seedDatabase = async () => {
     
     // Create a map for easy lookup
     const categoryMap = {
-      1: categories[0]._id, // Soups
-      2: categories[1]._id, // Rice & Noodles
-      3: categories[2]._id, // Desserts
-      4: categories[3]._id  // Drinks
+      1: categories[0]._id, // Noodles
+      2: categories[1]._id, // Rice
+      3: categories[2]._id, // Additional foods
+      4: categories[3]._id, // Desserts
+      5: categories[4]._id  // Drinks
     };
     
     const menuItemsData = [
-      // Soups (category_id: 1)
+      // Noodles (category_id: 1)
       { 
         category: categoryMap[1], 
         category_id: 1,
         name: 'Phở Bò', 
-        price: 9.50, 
+        price: 60000, 
         image_path: '/images/Pho.jpg', 
         description: 'Traditional beef noodle soup with herbs and bean sprouts', 
         preparation_time: 18,
@@ -78,7 +80,7 @@ const seedDatabase = async () => {
         category: categoryMap[1], 
         category_id: 1,
         name: 'Bún Bò Huế', 
-        price: 10.50, 
+        price: 60000, 
         image_path: '/images/bun-bo-hue.jpg', 
         description: 'Spicy beef noodle soup from central Vietnam', 
         preparation_time: 20,
@@ -87,20 +89,20 @@ const seedDatabase = async () => {
       { 
         category: categoryMap[1], 
         category_id: 1,
-        name: 'Canh Chua Cá', 
-        price: 5.50, 
-        image_path: '/images/spring-rolls.jpg', // Replaced with an available image
-        description: 'Sweet and sour fish soup with vegetables', 
-        preparation_time: 15,
+        name: 'Bún Chả', 
+        price: 50000, 
+        image_path: '/images/bun-cha.jpg', 
+        description: 'Grilled pork with rice noodles and herbs', 
+        preparation_time: 20,
         item_id: 103
       },
       
-      // Rice & Noodles (category_id: 2)
+      // Rice (category_id: 2)
       { 
         category: categoryMap[2], 
         category_id: 2,
         name: 'Cơm Chiên Hải Sản', 
-        price: 11.00, 
+        price: 60000, 
         image_path: '/images/com-chien.jpg', 
         description: 'Seafood fried rice', 
         preparation_time: 15,
@@ -109,116 +111,107 @@ const seedDatabase = async () => {
       { 
         category: categoryMap[2], 
         category_id: 2,
-        name: 'Bánh Mì Thịt', 
-        price: 8.50, 
-        image_path: '/images/banh-mi.jpg', 
-        description: 'Vietnamese sandwich with various meats and vegetables', 
-        preparation_time: 10,
-        item_id: 202
-      },
-      { 
-        category: categoryMap[2], 
-        category_id: 2,
-        name: 'Bún Chả', 
-        price: 9.50, 
-        image_path: '/images/bun-cha.jpg', 
-        description: 'Grilled pork with rice noodles and herbs', 
-        preparation_time: 20,
-        item_id: 203
-      },
-      { 
-        category: categoryMap[2], 
-        category_id: 2,
         name: 'Cơm Tấm', 
-        price: 10.50, 
+        price: 50000, 
         image_path: '/images/com-tam.jpg', 
         description: 'Broken rice with grilled pork, egg, and vegetables', 
         preparation_time: 15,
-        item_id: 204
+        item_id: 202
       },
-      { 
-        category: categoryMap[2], 
-        category_id: 2,
-        name: 'Bánh Xèo', 
-        price: 8.50, 
-        image_path: '/images/banh-xeo.jpg', 
-        description: 'Vietnamese crispy pancake with shrimp and bean sprouts', 
-        preparation_time: 18,
-        item_id: 205
-      },
-      
-      // Desserts (category_id: 3)
+
+      // Additional foods (category_id: 3)
       { 
         category: categoryMap[3], 
         category_id: 3,
-        name: 'Chè Ba Màu', 
-        price: 4.50, 
-        image_path: '/images/che-ba-mau.jpg', 
-        description: 'Three-color dessert with beans, jelly, and coconut milk', 
-        preparation_time: 8,
+        name: 'Bánh Mì Thịt', 
+        price: 30000, 
+        image_path: '/images/banh-mi.jpg', 
+        description: 'Vietnamese sandwich with various meats and vegetables', 
+        preparation_time: 10,
         item_id: 301
       },
       { 
         category: categoryMap[3], 
         category_id: 3,
-        name: 'Bánh Flan', 
-        price: 3.50, 
-        image_path: '/images/banh-flan.jpg', 
-        description: 'Vietnamese caramel custard', 
-        preparation_time: 5,
+        name: 'Bánh Xèo', 
+        price: 45000, 
+        image_path: '/images/banh-xeo.jpg', 
+        description: 'Vietnamese crispy pancake with shrimp and bean sprouts', 
+        preparation_time: 18,
         item_id: 302
       },
-      { 
-        category: categoryMap[3], 
+      {
+        category: categoryMap[3],
         category_id: 3,
-        name: 'Chè Đậu Xanh', 
-        price: 4.00, 
-        image_path: '/images/che-dau-xanh.jpg', 
-        description: 'Mung bean pudding with coconut cream', 
-        preparation_time: 6,
+        name: 'Chả Giò',
+        price: 30000,
+        image_path: '/images/spring-rolls.jpg',
+        description: 'Fried spring rolls with pork and vegetables',
+        preparation_time: 15,
         item_id: 303
       },
-      
-      // Drinks (category_id: 4)
+      // Desserts (category_id: 4)
       { 
         category: categoryMap[4], 
         category_id: 4,
-        name: 'Cà Phê Sữa Đá', 
-        price: 2.50, 
-        image_path: '/images/ca-phe-sua-da.jpg', 
-        description: 'Vietnamese iced coffee with condensed milk', 
-        preparation_time: 5,
+        name: 'Chè Ba Màu', 
+        price: 20000, 
+        image_path: '/images/che-ba-mau.jpg', 
+        description: 'Three-color dessert with beans, jelly, and coconut milk', 
+        preparation_time: 8,
         item_id: 401
       },
       { 
         category: categoryMap[4], 
         category_id: 4,
-        name: 'Nước Chanh Muối', 
-        price: 3.50, 
-        image_path: '/images/nuoc-chanh-muoi.jpg', 
-        description: 'Salted preserved lime juice', 
-        preparation_time: 3,
+        name: 'Bánh Flan', 
+        price: 15000, 
+        image_path: '/images/banh-flan.jpg', 
+        description: 'Vietnamese caramel custard', 
+        preparation_time: 5,
         item_id: 402
       },
       { 
         category: categoryMap[4], 
         category_id: 4,
-        name: 'Trà Đá', 
-        price: 1.50, 
+        name: 'Chè Đậu Xanh', 
+        price: 15000, 
+        image_path: '/images/che-dau-xanh.jpg', 
+        description: 'Mung bean pudding with coconut cream', 
+        preparation_time: 6,
+        item_id: 403
+      },
+      
+      // Drinks (category_id: 5)
+      { 
+        category: categoryMap[5], 
+        category_id: 5,
+        name: 'Cà Phê Sữa Đá', 
+        price: 15000, 
+        image_path: '/images/ca-phe-sua-da.jpg', 
+        description: 'Vietnamese iced coffee with condensed milk', 
+        preparation_time: 5,
+        item_id: 501
+      },
+      { 
+        category: categoryMap[5], 
+        category_id: 5,
+        name: 'Trà Lipton', 
+        price: 10000, 
         image_path: '/images/iced-tea.jpg', 
         description: 'Vietnamese iced tea', 
         preparation_time: 3,
-        item_id: 403
+        item_id: 502
       },
       { 
-        category: categoryMap[4], 
-        category_id: 4,
+        category: categoryMap[5], 
+        category_id: 5,
         name: 'Sinh Tố Bơ', 
-        price: 4.50, 
+        price: 25000, 
         image_path: '/images/sinh-to-bo.jpg', 
         description: 'Avocado smoothie with condensed milk', 
         preparation_time: 5,
-        item_id: 404
+        item_id: 503
       }
     ];
     
