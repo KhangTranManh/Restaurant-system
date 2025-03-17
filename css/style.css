@@ -1544,3 +1544,284 @@ input[type="password"]:focus {
   font-size: 1.1rem;
   margin-bottom: 0.5rem;
 }
+/* Create a 2x2 grid layout for management cards */
+
+/* Main container for the management view */
+#admin-management-view {
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 1.5rem;
+}
+
+/* Create a 2x2 grid layout for management cards */
+#admin-management-view .dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Force 2 columns */
+  grid-template-rows: auto auto; /* Two rows */
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* If the dashboard grid exists as a separate element, target it as well */
+.dashboard-grid:last-of-type {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Force 2 columns */
+  grid-template-rows: auto auto; /* Two rows */
+  gap: 1.5rem;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Target each management card to ensure it takes up the right space */
+#staff-management, 
+#menu-management, 
+#user-accounts, 
+#restaurant-settings {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Consistent card styling */
+#staff-management h3, 
+#menu-management h3, 
+#user-accounts h3, 
+#restaurant-settings h3 {
+  padding: 1rem;
+  margin: 0;
+  border-bottom: 1px solid var(--border-color);
+  background-color: #f9f9f9;
+  color: var(--primary-color);
+  font-size: 1.1rem;
+}
+
+/* Fix the content area of each card */
+#staff-management .card-content, 
+#menu-management .card-content, 
+#user-accounts .card-content, 
+#restaurant-settings .card-content {
+  padding: 1rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Style the stat items consistently */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Style the management buttons consistently */
+#staff-management button,
+#menu-management button,
+#user-accounts button,
+#restaurant-settings button {
+  margin-top: auto;
+  max-width: 160px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.6rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+#staff-management button:hover,
+#menu-management button:hover,
+#user-accounts button:hover,
+#restaurant-settings button:hover {
+  background-color: #8a2929;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(168, 50, 50, 0.25);
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+  #admin-management-view .dashboard-grid,
+  .dashboard-grid:last-of-type {
+    grid-template-columns: 1fr; /* Stack cards on mobile */
+  }
+}
+/* Management Sections Generic Styles - Enhanced Readability */
+.management-section {
+  padding: 20px;
+  background-color: transparent;
+}
+
+.management-container {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px var(--shadow-color);
+  padding: 20px;
+  max-width: 1100px; /* Increased width */
+  margin: 0 auto;
+}
+
+.management-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 15px;
+}
+
+.management-section-header h3 {
+  margin: 0;
+  color: var(--primary-color);
+  font-size: 1.5rem; /* Slightly larger */
+}
+
+.management-add-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.625rem 1.125rem; /* Slightly larger */
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.management-add-btn:hover {
+  background-color: #8a2929;
+}
+
+.management-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.management-table th {
+  background-color: #f9f9f9;
+  border-bottom: 1px solid var(--border-color);
+  padding: 1rem 1.25rem; /* Increased padding */
+  text-align: left;
+  color: #666;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.management-table td {
+  padding: 1rem 1.25rem; /* Increased padding */
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.95rem;
+}
+
+/* Improved column sizing */
+.management-table td:nth-child(1) { width: 15%; } /* Name */
+.management-table td:nth-child(2) { width: 35%; } /* Description/Category */
+.management-table td:nth-child(3) { width: 15%; } /* Price/Role */
+.management-table td:nth-child(4) { width: 15%; } /* Status */
+.management-table td:nth-child(5) { width: 10%; text-align: center; } /* Actions */
+
+.management-table .status-out-of-stock,
+.management-table .status-inactive {
+  color: #ef4444;
+  background-color: #fef2f2;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-weight: 500;
+}
+
+.management-table .status-active {
+  color: #10b981;
+  background-color: #ecfdf5;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-weight: 500;
+}
+
+.management-table .action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.management-table .action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  font-size: 1em;
+  padding: 0.25rem;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.management-table .action-btn:hover {
+  color: var(--primary-color);
+}
+
+.management-back-btn {
+  background-color: white;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.management-back-btn:hover {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .management-container {
+      max-width: 100%;
+      margin: 0 10px;
+  }
+
+  .management-table {
+      font-size: 0.9rem;
+  }
+
+  .management-table th,
+  .management-table td {
+      padding: 0.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .management-section-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+  }
+
+  .management-table {
+      font-size: 0.85rem;
+  }
+
+  .management-table th,
+  .management-table td {
+      padding: 0.5rem;
+  }
+}

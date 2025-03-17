@@ -21,9 +21,10 @@ document.addEventListener('DOMContentLoaded', function() {
     userInfoEl.textContent = `Welcome, ${currentUser.name}`;
   }
   
-  // Initialize functionality
   setupTabButtons();
   setupTableButtons();
+  setupManagementButtonsAndSections();
+  setupAutoRefresh();
   
   // Set up logout button
   const logoutBtn = document.getElementById('logout-btn');
@@ -32,6 +33,46 @@ document.addEventListener('DOMContentLoaded', function() {
       localStorage.removeItem('currentUser');
       window.location.href = 'login.html';
     });
+  }
+  
+  // First hide the management view
+  const adminManagementView = document.getElementById('admin-management-view');
+  if (adminManagementView) {
+    adminManagementView.style.display = 'none';
+    adminManagementView.classList.add('hidden');
+  }
+  
+  // Hide all management sections
+  const managementSections = document.querySelectorAll('.management-section');
+  managementSections.forEach(section => {
+    section.style.display = 'none';
+    section.classList.add('hidden');
+  });
+  
+  // Hide bottom dashboard grid with management cards
+  const bottomGrid = document.querySelector('.dashboard-grid:last-of-type');
+  if (bottomGrid) {
+    bottomGrid.style.display = 'none';
+  }
+  
+  // Show Staff View as default
+  const adminStaffView = document.getElementById('admin-staff-view');
+  if (adminStaffView) {
+    adminStaffView.style.display = 'block';
+    adminStaffView.classList.remove('hidden');
+  }
+  
+  // Update button styles to highlight Staff View button
+  const adminStaffBtn = document.getElementById('admin-staff-btn');
+  if (adminStaffBtn) {
+    adminStaffBtn.classList.add('primary');
+    adminStaffBtn.classList.remove('secondary');
+  }
+  
+  const adminManagementBtn = document.getElementById('admin-management-btn');
+  if (adminManagementBtn) {
+    adminManagementBtn.classList.remove('primary');
+    adminManagementBtn.classList.add('secondary');
   }
 });
 
@@ -151,6 +192,193 @@ function setupTabButtons() {
     }
   });
 }
+
+// NEW FUNCTION: Add management button functionality
+function setupManagementButtonsAndSections() {
+  console.log("Setting up management buttons");
+  
+  // Find all management buttons by ID or text content
+  const manageStaffBtn = document.querySelector('#manage-staff-btn, button:contains("Manage Staff")');
+  const manageMenuBtn = document.querySelector('#manage-menu-btn, button:contains("Manage Menu")');
+  const manageUsersBtn = document.querySelector('#manage-users-btn, button:contains("Manage Users")');
+  const settingsBtn = document.querySelector('#settings-btn, button:contains("Settings")');
+  
+  // Function to show Staff Management
+  function showStaffManagement() {
+    console.log("Showing Staff Management section");
+    
+    // Hide the main management view
+    const adminManagementView = document.getElementById('admin-management-view');
+    if (adminManagementView) {
+      adminManagementView.style.display = 'none';
+    }
+    
+    // Hide all dashboard grids
+    const dashboardGrids = document.querySelectorAll('.dashboard-grid');
+    dashboardGrids.forEach(grid => {
+      grid.style.display = 'none';
+    });
+    
+    // Try to find an existing staff management section
+    let staffSection = document.querySelector('#staff-management-section');
+    
+    // If it doesn't exist, create it
+    if (!staffSection) {
+      staffSection = document.createElement('div');
+      staffSection.id = 'staff-management-section';
+      staffSection.className = 'management-section';
+      staffSection.innerHTML = `
+        <h3>Staff Management</h3>
+        <button id="add-staff-btn" class="primary">+ Add Staff</button>
+        
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Role</th>
+              <th>Contact</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Staff User</td>
+              <td>Staff</td>
+              <td>N/A</td>
+              <td><span class="badge green">Active</span></td>
+              <td>
+                <button class="icon-button">✏️</button>
+                <button class="icon-button">🗑️</button>
+              </td>
+            </tr>
+            <tr>
+              <td>Kitchen User</td>
+              <td>Kitchen</td>
+              <td>N/A</td>
+              <td><span class="badge green">Active</span></td>
+              <td>
+                <button class="icon-button">✏️</button>
+                <button class="icon-button">🗑️</button>
+              </td>
+            </tr>
+            <tr>
+              <td>Admin User</td>
+              <td>Admin</td>
+              <td>N/A</td>
+              <td><span class="badge green">Active</span></td>
+              <td>
+                <button class="icon-button">✏️</button>
+                <button class="icon-button">🗑️</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <button id="back-to-management-btn" class="secondary">Back to Management</button>
+      `;
+      
+      // Add it to the page
+      const container = document.querySelector('.container, main');
+      if (container) {
+        container.appendChild(staffSection);
+      } else {
+        document.body.appendChild(staffSection);
+      }
+      
+      // Add back button functionality
+      const backBtn = staffSection.querySelector('#back-to-management-btn');
+      if (backBtn) {
+        backBtn.addEventListener('click', backToManagement);
+      }
+    }
+    
+    // Show the staff section
+    staffSection.style.display = 'block';
+  }
+  
+  // Function to show Menu Management (similar structure)
+  function showMenuManagement() {
+    console.log("Showing Menu Management section");
+    
+    // Hide the main management view
+    const adminManagementView = document.getElementById('admin-management-view');
+    if (adminManagementView) {
+      adminManagementView.style.display = 'none';
+    }
+    
+    // Hide all dashboard grids
+    const dashboardGrids = document.querySelectorAll('.dashboard-grid');
+    dashboardGrids.forEach(grid => {
+      grid.style.display = 'none';
+    });
+    
+    // Create or show menu management section (similar to staff management)
+    // ...
+  }
+  
+  // Function to show User Management (similar structure)
+  function showUserManagement() {
+    console.log("Showing User Management section");
+    // Similar implementation to showStaffManagement
+  }
+  
+  // Function to show Settings (similar structure)
+  function showSettings() {
+    console.log("Showing Settings section");
+    // Similar implementation to showStaffManagement
+  }
+  
+  // Function to go back to the main management dashboard
+  function backToManagement() {
+    console.log("Going back to Management Dashboard");
+    
+    // Hide all management sections
+    const managementSections = document.querySelectorAll('.management-section');
+    managementSections.forEach(section => {
+      section.style.display = 'none';
+    });
+    
+    // Show the main management view
+    const adminManagementView = document.getElementById('admin-management-view');
+    if (adminManagementView) {
+      adminManagementView.style.display = 'block';
+    }
+    
+    // Show the dashboard grids
+    const dashboardGrids = document.querySelectorAll('.dashboard-grid');
+    dashboardGrids.forEach(grid => {
+      grid.style.display = 'grid';
+    });
+  }
+  
+  // Add click event handlers to all management buttons
+  if (manageStaffBtn) {
+    console.log("Found Manage Staff button");
+    manageStaffBtn.addEventListener('click', showStaffManagement);
+  }
+  
+  if (manageMenuBtn) {
+    console.log("Found Manage Menu button");
+    manageMenuBtn.addEventListener('click', showMenuManagement);
+  }
+  
+  if (manageUsersBtn) {
+    console.log("Found Manage Users button");
+    manageUsersBtn.addEventListener('click', showUserManagement);
+  }
+  
+  if (settingsBtn) {
+    console.log("Found Settings button");
+    settingsBtn.addEventListener('click', showSettings);
+  }
+  
+  // Add click handlers for any existing back buttons
+  document.querySelectorAll('button[id^="back-to-management"]').forEach(button => {
+    button.addEventListener('click', backToManagement);
+  });
+}
+
 // Add to admin.js
 window.updateAdminOrders = function(newOrders) {
   console.log("Admin received orders update:", newOrders.length);
@@ -172,8 +400,8 @@ window.updateAdminOrders = function(newOrders) {
       
       setTimeout(() => showTableOrderPopup(tableNumber, tableOrders), 100);
     }
-  }}
-
+  }
+}
 
 // Modified function to show table order popup without action buttons
 function showTableOrderPopup(tableNumber, tableOrders) {
@@ -280,7 +508,6 @@ function showTableOrderPopup(tableNumber, tableOrders) {
     });
   }
 }
-// Add this to your admin.js file
 
 // Function to set up auto-refresh for table status
 function setupAutoRefresh() {
@@ -368,13 +595,6 @@ function closePopup() {
   }
 }
 
-// Make sure to call the setup function when the page loads
-document.addEventListener('DOMContentLoaded', function() {
-  // Your existing initialization code first...
-  
-  // Then set up auto-refresh
-  setupAutoRefresh();
-});
 // Function to update order status across all views (staff, kitchen, admin)
 function updateOrderStatusAcrossViews(orderId, newStatus) {
   console.log(`Updating order ${orderId} to ${newStatus} across all views`);
@@ -613,11 +833,7 @@ document.addEventListener('DOMContentLoaded', function() {
         closePopup();
         setTimeout(() => showTableOrderPopup(tableNum), 100);
       }
-      
-
     }
   });
   updateAdminTableStatus();
-  
-
 });
