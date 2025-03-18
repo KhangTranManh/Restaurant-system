@@ -751,60 +751,75 @@
   <div class="management-container">
     <div class="management-section-header">
       <h3>Restaurant Settings</h3>
-      <button id="edit-settings-btn" class="management-add-btn">
-        <i class="fas fa-edit"></i> Edit Settings
-      </button>
     </div>
     
-    <table class="management-table" id="settings-table">
-      <thead>
-        <tr>
-          <th>Setting</th>
-          <th>Current Value</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="settings-table-body">
-        <tr>
-          <td>Restaurant Name</td>
-          <td>Viet Nam Cuisine</td>
-          <td>
-            <div class="action-buttons">
-              <button class="action-btn" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td>Contact Number</td>
-          <td>(+84) 123 456 789</td>
-          <td>
-            <div class="action-buttons">
-              <button class="action-btn" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td>Tax Rate</td>
-          <td>10%</td>
-          <td>
-            <div class="action-buttons">
-              <button class="action-btn" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <!-- Restaurant Information Form -->
+    <div class="settings-form-container">
+      <h4>Restaurant Information</h4>
+      <form id="restaurant-info-form">
+        <div class="form-group">
+          <label for="restaurant-name">Restaurant Name</label>
+          <input type="text" id="restaurant-name" value="Viet Nam Cuisine" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="contact-number">Contact Number</label>
+          <input type="text" id="contact-number" value="(+84) 123 456 789" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="restaurant-email">Email Address</label>
+          <input type="email" id="restaurant-email" value="info@vietnamcuisine.com" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="tax-rate">Tax Rate (%)</label>
+          <input type="number" id="tax-rate" value="10" min="0" max="100" required>
+        </div>
+        
+        <!-- Color Settings -->
+        <div class="form-group">
+          <label for="primary-color">Primary Color</label>
+          <input type="color" id="primary-color" value="#B32821">
+          <p class="form-help">Used for primary buttons and brand colors</p>
+        </div>
+        
+        <div class="form-group">
+          <label for="secondary-color">Secondary Color</label>
+          <input type="color" id="secondary-color" value="#4B6F44">
+          <p class="form-help">Used for secondary buttons and accents</p>
+        </div>
+        
+        <div class="form-actions">
+          <button type="submit" class="primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+    
+    <!-- Table Settings Form -->
+    <div class="settings-form-container">
+      <h4>Table Settings</h4>
+      <form id="table-settings-form">
+        <div class="form-group">
+          <label for="table-count">Number of Tables</label>
+          <input type="number" id="table-count" value="8" min="1" max="50" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="reserved-tables">Reserved Tables (comma-separated)</label>
+          <input type="text" id="reserved-tables" placeholder="5,8" value="5">
+          <p class="form-help">Enter table numbers separated by commas</p>
+        </div>
+        
+        <div class="form-actions">
+          <button type="submit" class="primary">Save Table Settings</button>
+        </div>
+      </form>
+    </div>
     
     <button id="back-to-management-from-settings-btn" class="management-back-btn">Back to Management</button>
   </div>
 </div>
-
 <!-- Modal Templates -->
 <div id="modal-backdrop" class="modal-backdrop" style="display: none;">
   <!-- Staff Modal -->

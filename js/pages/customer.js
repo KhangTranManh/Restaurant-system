@@ -11,6 +11,9 @@ let staffViewBtn = null;
 // Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
   console.log("Customer page loaded");
+
+  applyRestaurantSettings();
+
   
   // DOM Elements for Customer Page
   const menuSearch = document.getElementById('menu-search');
@@ -27,6 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const customerOrderCards = document.getElementById('customer-order-cards');
   const noCustomerOrders = document.getElementById('no-customer-orders');
   const headerControls = document.querySelector('.header-controls');
+  
   
   // Remove any stray badges that might appear in the search area
   const searchArea = document.querySelector('.search-bar').parentElement;
@@ -661,4 +665,110 @@ function formatCurrency(amount) {
 function formatTime(dateString) {
   const date = new Date(dateString);
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+async function applyRestaurantSettings() {
+  try {
+    // Fetch settings from the API
+    const response = await fetch('/api/settings');
+    
+    if (!response.ok) {
+      throw new Error('Failed to load restaurant settings');
+    }
+    
+    const settings = await response.json();
+    console.log("Loaded restaurant settings:", settings);
+    
+    // Apply restaurant name
+    if (settings.restaurantName) {
+      const nameElements = document.querySelectorAll('.header-brand h1');
+      nameElements.forEach(el => {
+        el.textContent = settings.restaurantName;
+      });
+    }
+    
+    // Apply theme colors (if you add this to your settings)
+    if (settings.primaryColor) {
+      document.documentElement.style.setProperty('--primary-color', settings.primaryColor);
+    }
+    
+    if (settings.secondaryColor) {
+      document.documentElement.style.setProperty('--secondary-color', settings.secondaryColor);
+    }
+    
+    // Set table count based on settings
+    if (settings.tableCount) {
+      updateTableGrid(settings.tableCount, settings.reservedTables || []);
+    }
+    
+  } catch (error) {
+    console.error('Error applying restaurant settings:', error);
+    // Fallback to default settings if API fails
+    applyDefaultSettings();
+  }
+}
+// Apply default settings when API fails
+function applyDefaultSettings() {
+  // Default restaurant name
+  const nameElements = document.querySelectorAll('.header-brand h1');
+  nameElements.forEach(el => {
+    el.textContent = "Viet Nam Cuisine";
+  });
+  
+  // Default colors
+  document.documentElement.style.setProperty('--primary-color', '#B32821');
+  document.documentElement.style.setProperty('--secondary-color', '#4B6F44');
+  
+  // Default table count
+  updateTableGrid(8, [5]);
+}
+// Update the table grid based on settings
+function updateTableGrid(tableCount, reservedTables) {
+  const tablesGrid = document.querySelector('.customer-tables-grid');
+  if (!tablesGrid) return;
+  
+  // Clear current tables
+  tablesGrid.innerHTML = '';
+  
+  // Add new table buttons based on the count
+  for (let i = 1; i <= tableCount; i++) {
+    const tableButton = document.createElement('button');
+    tableButton.setAttribute('data-table', i);
+    tableButton.textContent = i;
+    
+    // Mark reserved tables
+    if (reservedTables.includes(i)) {
+      tableButton.classList.add('reserved');
+    }
+    
+    // Mark currently selected table
+    if (i === parseInt(selectedTable)) {
+      tableButton.classList.add('active');
+    }
+    
+    // Add click event listener
+    tableButton.addEventListener('click', () => {
+      // Update UI - remove active class from all buttons
+      tablesGrid.querySelectorAll('button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // Add active class to selected button
+      tableButton.classList.add('active');
+      
+      // Update selected table
+      selectedTable = i;
+      localStorage.setItem('selectedTable', selectedTable);
+      
+      // Update the displayed table number
+      const customerTableNumber = document.getElementById('customer-table-number');
+      if (customerTableNumber) {
+        customerTableNumber.textContent = selectedTable;
+      }
+      
+      // Refresh orders for this table
+      loadOrders();
+    });
+    
+    tablesGrid.appendChild(tableButton);
+  }
 }

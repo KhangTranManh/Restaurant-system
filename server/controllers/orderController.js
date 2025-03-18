@@ -301,3 +301,32 @@ exports.updateOrderStatus = async (req, res) => {
     });
   }
 };
+// Add this to your orderController.js
+exports.getOrderStats = async (req, res) => {
+  try {
+    // Get today's date (start of day)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Count active orders (pending, preparing, ready)
+    const active = await Order.countDocuments({
+      status: { $in: ['pending', 'preparing', 'ready'] }
+    });
+    
+    // Count completed orders for today
+    const completedToday = await Order.countDocuments({
+      status: 'delivered',
+      updatedAt: { $gte: today }
+    });
+    
+    res.json({
+      active,
+      completedToday
+    });
+  } catch (error) {
+    console.error('Error getting order stats:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Add this route to your orders router

@@ -78,19 +78,19 @@ function initializeManagementSections() {
 // Load dashboard statistics from MongoDB
 function loadDashboardStats() {
   try {
-    // Staff stats - fetch from MongoDB
     fetch('/api/users/stats')
-      .then(response => response.json())
-      .then(stats => {
-        // Update staff stats
-        document.getElementById('total-staff-count').textContent = stats.totalStaff || 0;
-        document.getElementById('kitchen-staff-count').textContent = stats.kitchenStaff || 0;
-        document.getElementById('active-users-count').textContent = stats.activeUsers || 0;
-        document.getElementById('admin-users-count').textContent = stats.adminUsers || 0;
-      })
-      .catch(error => {
-        console.error("Error loading staff stats:", error);
-      });
+  .then(response => response.json())
+  .then(stats => {
+    // Update staff stats
+    document.getElementById('total-staff-count').textContent = stats.totalStaff || 0;
+    document.getElementById('kitchen-staff-count').textContent = stats.kitchenStaff || 0;
+    document.getElementById('active-users-count').textContent = stats.activeUsers || 0;
+    document.getElementById('admin-users-count').textContent = stats.adminUsers || 0;
+  })
+  .catch(error => {
+    console.error("Error loading staff stats:", error);
+    
+  });
     
     // Menu stats - fetch from MongoDB
     fetch('/api/menu/stats')
@@ -347,7 +347,6 @@ function displayStaffList() {
   // Clear the table
   staffTableBody.innerHTML = '';
   
-  // Fetch staff data from server
   fetch('/api/users?role=staff,kitchen,admin')
     .then(response => {
       if (!response.ok) {
@@ -363,8 +362,9 @@ function displayStaffList() {
         // Format role with first letter capitalized
         const formattedRole = user.role.charAt(0).toUpperCase() + user.role.slice(1);
         
-        // Status badge - assuming all users in database are active
-        const statusBadge = '<span class="badge green small">Active</span>';
+        const statusBadge = user.status === 'active' 
+  ? '<span class="badge green small">Active</span>'
+  : '<span class="badge red small">Inactive</span>';
         
         row.innerHTML = `
           <td>${user.name}</td>
@@ -640,7 +640,6 @@ function initMenuManagement() {
   displayMenuItems();
 }
 
-// Display menu items from MongoDB
 function displayMenuItems() {
   const menuTableBody = document.getElementById('menu-table-body');
   if (!menuTableBody) return;
@@ -665,9 +664,10 @@ function displayMenuItems() {
         const formattedPrice = new Intl.NumberFormat('vi-VN').format(item.price) + '₫';
         
         // Status badge
-        const statusBadge = item.status === 'available' ? 
-          '<span class="badge green small">Available</span>' : 
-          '<span class="badge red small">Out of Stock</span>';
+       // Status badge - check specifically for 'available' vs 'out-of-stock'
+const statusBadge = item.status === 'available' ? 
+'<span class="badge green small">Available</span>' : 
+'<span class="badge red small">Out of Stock</span>';
         
         row.innerHTML = `
           <td>${item.name}</td>
@@ -846,7 +846,14 @@ function saveMenuItemData() {
   
   // Get form data
   const name = document.getElementById('menu-item-name').value;
-  const vietnameseName = document.getElementById('menu-item-vietnamese').value;
+  
+  // Check if vietnameseName field exists before trying to access it
+  let vietnameseName = '';
+  const vietnameseNameField = document.getElementById('menu-item-vietnamese');
+  if (vietnameseNameField) {
+    vietnameseName = vietnameseNameField.value;
+  }
+  
   const categoryId = document.getElementById('menu-item-category').value;
   const price = parseFloat(document.getElementById('menu-item-price').value);
   const status = document.getElementById('menu-item-status').value;
@@ -861,12 +868,16 @@ function saveMenuItemData() {
   // Prepare data for API call
   const menuItemData = {
     name,
-    vietnameseName,
     category: categoryId,
     price,
     status,
     description
   };
+  
+  // Only add vietnameseName if the field exists and has a value
+  if (vietnameseName) {
+    menuItemData.vietnameseName = vietnameseName;
+  }
   
   // Add preparation_time if available
   if (preparation_time !== null) {
@@ -989,7 +1000,6 @@ function initUserManagement() {
   }
 }
 
-// Display users
 function displayUsers() {
   const userTableBody = document.getElementById('user-table-body');
   if (!userTableBody) return;
@@ -997,48 +1007,55 @@ function displayUsers() {
   // Clear the table
   userTableBody.innerHTML = '';
   
-  try {
-    // Get user data
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    
-    // Add each user to the table
-    users.forEach(user => {
-      const row = document.createElement('tr');
+  // Fetch user data from server instead of localStorage
+  fetch('/api/users')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(users => {
+      // Add each user to the table
+      users.forEach(user => {
+        const row = document.createElement('tr');
+        
+        // Format role
+        const formattedRole = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+        
+        // Status badge
+        const statusBadge = user.status === 'active' ? 
+          '<span class="badge green small">Active</span>' : 
+          '<span class="badge red small">Inactive</span>';
+        
+        // Disable delete for admin
+        const deleteDisabled = user.username === 'admin' ? 'disabled' : '';
+        
+        row.innerHTML = `
+          <td>${user.username}</td>
+          <td>${user.name}</td>
+          <td>${formattedRole}</td>
+          <td>${statusBadge}</td>
+          <td>
+            <button class="icon-button edit-user-btn" data-id="${user._id}">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="icon-button delete-user-btn" data-id="${user._id}" ${deleteDisabled}>
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        `;
+        
+        userTableBody.appendChild(row);
+      });
       
-      // Format role
-      const formattedRole = user.role.charAt(0).toUpperCase() + user.role.slice(1);
-      
-      // Status badge
-      const statusBadge = user.status === 'active' ? 
-        '<span class="badge green small">Active</span>' : 
-        '<span class="badge red small">Inactive</span>';
-      
-      // Disable delete for admin
-      const deleteDisabled = user.username === 'admin' ? 'disabled' : '';
-      
-      row.innerHTML = `
-        <td>${user.username}</td>
-        <td>${user.name}</td>
-        <td>${formattedRole}</td>
-        <td>${statusBadge}</td>
-        <td>
-          <button class="icon-button edit-user-btn" data-id="${user.id}">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="icon-button delete-user-btn" data-id="${user.id}" ${deleteDisabled}>
-            <i class="fas fa-trash"></i>
-          </button>
-        </td>
-      `;
-      
-      userTableBody.appendChild(row);
+      // Setup edit and delete buttons
+      setupUserButtons();
+    })
+    .catch(error => {
+      console.error("Error displaying users:", error);
+      userTableBody.innerHTML = '<tr><td colspan="5">Error loading user data. Please try again.</td></tr>';
     });
-    
-    // Setup edit and delete buttons
-    setupUserButtons();
-  } catch (error) {
-    console.error("Error displaying users:", error);
-  }
 }
 
 // Setup user action buttons
@@ -1214,20 +1231,10 @@ function deleteUser(userId) {
 
 // Initialize settings management
 function initSettingsManagement() {
-  // Initial settings data if none exists
-  if (!localStorage.getItem('restaurantSettings')) {
-    const initialSettings = {
-      restaurantName: "Viet Nam Cuisine",
-      contactNumber: "(+84) 123 456 789",
-      email: "info@vietnamcuisine.com",
-      taxRate: 10,
-      tableCount: 8,
-      reservedTables: [5]
-    };
-    localStorage.setItem('restaurantSettings', JSON.stringify(initialSettings));
-  }
+  // Load settings data from MongoDB
+  loadSettingsData();
   
-  // Restaurant info form
+  // Restaurant info form submit handler
   const restaurantInfoForm = document.getElementById('restaurant-info-form');
   if (restaurantInfoForm) {
     restaurantInfoForm.addEventListener('submit', function(event) {
@@ -1236,7 +1243,7 @@ function initSettingsManagement() {
     });
   }
   
-  // Table settings form
+  // Table settings form submit handler
   const tableSettingsForm = document.getElementById('table-settings-form');
   if (tableSettingsForm) {
     tableSettingsForm.addEventListener('submit', function(event) {
@@ -1246,56 +1253,109 @@ function initSettingsManagement() {
   }
 }
 
-// Load settings data into forms
-function loadSettingsData() {
+
+// Load settings data into forms from MongoDB
+async function loadSettingsData() {
   try {
-    const settings = JSON.parse(localStorage.getItem('restaurantSettings')) || {};
+    // Fetch settings from API
+    const response = await fetch('/api/settings');
     
-    // Restaurant info
+    if (!response.ok) {
+      throw new Error('Failed to load settings');
+    }
+    
+    const settings = await response.json();
+    
+    // Populate form fields with settings
     document.getElementById('restaurant-name').value = settings.restaurantName || '';
     document.getElementById('contact-number').value = settings.contactNumber || '';
     document.getElementById('restaurant-email').value = settings.email || '';
     document.getElementById('tax-rate').value = settings.taxRate || 10;
-    
-    // Table settings
     document.getElementById('table-count').value = settings.tableCount || 8;
     document.getElementById('reserved-tables').value = settings.reservedTables ? settings.reservedTables.join(',') : '';
+    
+    // Set color values if they exist
+    if (settings.primaryColor) {
+      document.getElementById('primary-color').value = settings.primaryColor;
+    }
+    
+    if (settings.secondaryColor) {
+      document.getElementById('secondary-color').value = settings.secondaryColor;
+    }
+    
   } catch (error) {
     console.error("Error loading settings data:", error);
+    // Use default values if API fails
+    const defaultSettings = {
+      restaurantName: "Viet Nam Cuisine",
+      contactNumber: "(+84) 123 456 789",
+      email: "info@vietnamcuisine.com",
+      taxRate: 10,
+      tableCount: 8,
+      reservedTables: [5],
+      primaryColor: "#B32821",
+      secondaryColor: "#4B6F44"
+    };
+    
+    // Populate form fields with default settings
+    document.getElementById('restaurant-name').value = defaultSettings.restaurantName;
+    document.getElementById('contact-number').value = defaultSettings.contactNumber;
+    document.getElementById('restaurant-email').value = defaultSettings.email;
+    document.getElementById('tax-rate').value = defaultSettings.taxRate;
+    document.getElementById('table-count').value = defaultSettings.tableCount;
+    document.getElementById('reserved-tables').value = defaultSettings.reservedTables.join(',');
+    document.getElementById('primary-color').value = defaultSettings.primaryColor;
+    document.getElementById('secondary-color').value = defaultSettings.secondaryColor;
   }
 }
-
-// Save restaurant info
-function saveRestaurantInfo() {
+// Save restaurant info to MongoDB
+async function saveRestaurantInfo() {
   try {
-    // Get current settings
-    const settings = JSON.parse(localStorage.getItem('restaurantSettings')) || {};
+    // Get form values
+    const restaurantName = document.getElementById('restaurant-name').value;
+    const contactNumber = document.getElementById('contact-number').value;
+    const email = document.getElementById('restaurant-email').value;
+    const taxRate = parseInt(document.getElementById('tax-rate').value);
+    const primaryColor = document.getElementById('primary-color').value;
+    const secondaryColor = document.getElementById('secondary-color').value;
     
-    // Update with form values
-    settings.restaurantName = document.getElementById('restaurant-name').value;
-    settings.contactNumber = document.getElementById('contact-number').value;
-    settings.email = document.getElementById('restaurant-email').value;
-    settings.taxRate = parseInt(document.getElementById('tax-rate').value);
+    // Prepare settings data
+    const settingsData = {
+      restaurantName,
+      contactNumber,
+      email,
+      taxRate,
+      primaryColor,
+      secondaryColor
+    };
     
-    // Save to localStorage
-    localStorage.setItem('restaurantSettings', JSON.stringify(settings));
+    // Send data to API
+    const response = await fetch('/api/settings', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(settingsData)
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to save settings');
+    }
+    
+    // Show success message
+    alert('Restaurant information saved successfully!');
     
     // Update dashboard stats
     loadDashboardStats();
     
-    alert('Restaurant information saved successfully!');
   } catch (error) {
     console.error("Error saving restaurant info:", error);
     alert('An error occurred while saving restaurant information.');
   }
 }
-
-// Save table settings
-function saveTableSettings() {
+// Save table settings to MongoDB
+async function saveTableSettings() {
   try {
-    // Get current settings
-    const settings = JSON.parse(localStorage.getItem('restaurantSettings')) || {};
-    
     // Get form values
     const tableCount = parseInt(document.getElementById('table-count').value);
     
@@ -1313,28 +1373,41 @@ function saveTableSettings() {
       return;
     }
     
-    // Update settings
-    settings.tableCount = tableCount;
-    settings.reservedTables = reservedTables;
+    // Prepare settings data
+    const settingsData = {
+      tableCount,
+      reservedTables
+    };
     
-    // Save to localStorage
-    localStorage.setItem('restaurantSettings', JSON.stringify(settings));
+    // Send data to API
+    const response = await fetch('/api/settings', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(settingsData)
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to save settings');
+    }
+    
+    // Show success message
+    alert('Table settings saved successfully!');
     
     // Update dashboard stats
     loadDashboardStats();
-    
-    alert('Table settings saved successfully!');
     
     // Notify other parts of the application
     window.dispatchEvent(new CustomEvent('tableSettingsChanged', {
       detail: { tableCount, reservedTables }
     }));
+    
   } catch (error) {
     console.error("Error saving table settings:", error);
     alert('An error occurred while saving table settings.');
   }
 }
-
 // ------------ MODAL CONTROLS ------------
 
 // Setup modal controls

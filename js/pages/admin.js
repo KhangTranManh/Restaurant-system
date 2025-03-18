@@ -1,8 +1,23 @@
 // admin.js - Updated for the Vietnam Cuisine theme
 
-// Check authentication and initialize on DOM load
+/// Single combined DOMContentLoaded event listener
 document.addEventListener('DOMContentLoaded', function() {
   console.log("Admin page loaded");
+  
+  // Logout button functionality
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', function() {
+      // Clear user data and authentication tokens
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('token');
+      
+      // Redirect to login page
+      window.location.href = 'login.html';
+    });
+  } else {
+    console.error("Logout button not found");
+  }
   
   // Check authentication
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
@@ -21,19 +36,11 @@ document.addEventListener('DOMContentLoaded', function() {
     userInfoEl.textContent = `Welcome, ${currentUser.name}`;
   }
   
+  // Setup functions
   setupTabButtons();
   setupTableButtons();
   setupManagementButtonsAndSections();
   setupAutoRefresh();
-  
-  // Set up logout button
-  const logoutBtn = document.getElementById('logout-btn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', function() {
-      localStorage.removeItem('currentUser');
-      window.location.href = 'login.html';
-    });
-  }
   
   // First hide the management view
   const adminManagementView = document.getElementById('admin-management-view');
@@ -74,6 +81,41 @@ document.addEventListener('DOMContentLoaded', function() {
     adminManagementBtn.classList.remove('primary');
     adminManagementBtn.classList.add('secondary');
   }
+  
+  // Create a direct link to the staff orders if possible
+  if (window.opener && window.opener.orders) {
+    console.log("Found staff orders through window.opener");
+    window.orders = window.opener.orders;
+  }
+  
+  // Listen for storage events from staff.js
+  window.addEventListener('storage', function(event) {
+    if (event.key === 'staffOrders' || event.key === 'selectedTable') {
+      console.log("Storage event detected:", event.key);
+      updateAdminTableStatus();
+      
+      // Update popup if it's open
+      const popup = document.getElementById('table-popup');
+      if (popup) {
+        const tableNum = popup.getAttribute('data-table');
+        closePopup();
+        setTimeout(() => showTableOrderPopup(tableNum), 100);
+      }
+    }
+  });
+  
+  // Load initial dashboard stats from database
+  loadDashboardStats();
+  loadTableData();
+  updateAdminTableStatus();
+  
+  // Set up auto-refresh for dashboard stats
+  setInterval(() => {
+    if (!document.getElementById('admin-staff-view').classList.contains('hidden')) {
+      loadDashboardStats();
+      loadTableData();
+    }
+  }, 30000); // Refresh every 30 seconds
 });
 
 // Add this to your admin.js file
@@ -103,26 +145,30 @@ function setupTabButtons() {
     });
   }
   
-  // Staff view button
-  adminStaffBtn.addEventListener('click', function() {
-    // Hide all management sections
-    hideAllManagementSections();
-    
-    // Update button styles
-    adminStaffBtn.classList.add('primary');
-    adminStaffBtn.classList.remove('secondary');
-    adminKitchenBtn.classList.add('secondary');
-    adminKitchenBtn.classList.remove('primary');
-    adminAnalyticsBtn.classList.add('secondary');
-    adminAnalyticsBtn.classList.remove('primary');
-    adminManagementBtn.classList.add('secondary');
-    adminManagementBtn.classList.remove('primary');
-    
-    // Show staff view, hide others
-    adminStaffView.classList.remove('hidden');
-    adminKitchenView.classList.add('hidden');
-    adminAnalyticsView.classList.add('hidden');
-  });
+ 
+adminStaffBtn.addEventListener('click', function() {
+  // Hide all management sections
+  hideAllManagementSections();
+  
+  // Update button styles
+  adminStaffBtn.classList.add('primary');
+  adminStaffBtn.classList.remove('secondary');
+  adminKitchenBtn.classList.add('secondary');
+  adminKitchenBtn.classList.remove('primary');
+  adminAnalyticsBtn.classList.add('secondary');
+  adminAnalyticsBtn.classList.remove('primary');
+  adminManagementBtn.classList.add('secondary');
+  adminManagementBtn.classList.remove('primary');
+  
+  // Show staff view, hide others
+  adminStaffView.classList.remove('hidden');
+  adminKitchenView.classList.add('hidden');
+  adminAnalyticsView.classList.add('hidden');
+  
+  // Load real-time data from the database
+  loadDashboardStats();
+  loadTableData();
+});
   
   // Apply the same pattern to other view buttons
   adminKitchenBtn.addEventListener('click', function() {
@@ -192,7 +238,82 @@ function setupTabButtons() {
     }
   });
 }
-
+// Add this function to admin.js to load dashboard stats from the database
+async function loadDashboardStats() {
+  try {
+    // Fetch table stats
+    const tableResponse = await fetch('/api/tables/stats');
+    if (tableResponse.ok) {
+      const tableStats = await tableResponse.json();
+      
+      // Update tables overview stats
+      document.getElementById('available-tables-count').textContent = tableStats.available || 0;
+      document.getElementById('occupied-tables-count').textContent = tableStats.occupied || 0;
+    }
+    
+    // Fetch order stats
+    const orderResponse = await fetch('/api/orders/stats');
+    if (orderResponse.ok) {
+      const orderStats = await orderResponse.json();
+      
+      // Update order stats
+      document.getElementById('active-orders-count').textContent = orderStats.active || 0;
+      document.getElementById('completed-today-count').textContent = orderStats.completedToday || 0;
+    }
+    
+    // Fetch revenue stats
+    const revenueResponse = await fetch('/api/orders/revenue');
+    if (revenueResponse.ok) {
+      const revenueStats = await revenueResponse.json();
+      
+      // Update revenue stats
+      document.getElementById('today-revenue').textContent = formatCurrency(revenueStats.today || 0);
+      document.getElementById('week-revenue').textContent = formatCurrency(revenueStats.week || 0);
+    }
+    
+    // Fetch staff stats
+    const staffResponse = await fetch('/api/users/stats');
+    if (staffResponse.ok) {
+      const staffStats = await staffResponse.json();
+      
+      // Update staff stats
+      document.getElementById('on-duty-count').textContent = staffStats.onDuty || 0;
+      document.getElementById('kitchen-staff-count').textContent = staffStats.kitchenStaff || 0;
+    }
+  } catch (error) {
+    console.error('Error loading dashboard stats:', error);
+  }
+}
+// Add this function to load real-time table data
+async function loadTableData() {
+  try {
+    const response = await fetch('/api/tables');
+    if (response.ok) {
+      const tables = await response.json();
+      
+      // Clear existing table status classes
+      const tableButtons = document.querySelectorAll('.tables-grid button');
+      tableButtons.forEach(button => {
+        button.classList.remove('occupied', 'reserved');
+      });
+      
+      // Update table status based on database data
+      tables.forEach(table => {
+        const tableButton = document.getElementById(`table-${table.table_number}`);
+        if (tableButton) {
+          // Apply appropriate class based on table status
+          if (table.status === 'occupied') {
+            tableButton.classList.add('occupied');
+          } else if (table.status === 'reserved') {
+            tableButton.classList.add('reserved');
+          }
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error loading table data:', error);
+  }
+}
 // NEW FUNCTION: Add management button functionality
 function setupManagementButtonsAndSections() {
   console.log("Setting up management buttons");
@@ -403,8 +524,7 @@ window.updateAdminOrders = function(newOrders) {
   }
 }
 
-// Modified function to show table order popup without action buttons
-function showTableOrderPopup(tableNumber, tableOrders) {
+async function showTableOrderPopup(tableNumber) {
   console.log(`Showing popup for Table ${tableNumber}`);
   
   // Close any existing popups first
@@ -413,102 +533,226 @@ function showTableOrderPopup(tableNumber, tableOrders) {
     existingPopup.remove();
   }
   
-  console.log("All table orders:", tableOrders);
-  
-  // Find ACTIVE orders for this table (not delivered or cancelled)
-  const activeOrders = tableOrders.filter(order => 
-    order.status !== 'delivered' && order.status !== 'cancelled'
-  );
-  
-  console.log(`Found ${activeOrders.length} ACTIVE orders for table ${tableNumber}`, activeOrders);
-  
-  // Use the most recent active order if available
-  const orderData = activeOrders.length > 0 ? 
-    activeOrders[activeOrders.length - 1] : null;
-  
-  if (orderData) {
-    console.log("Using order data:", orderData);
+  try {
+    // Fetch orders for this specific table from the backend
+    const response = await fetch(`/api/orders/table/${tableNumber}`);
     
-    // Format the time
-    const orderTime = new Date(orderData.created_at);
-    const formattedTime = orderTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    // Get status text with nice formatting
-    let statusText = '';
-    if (orderData.status === 'pending') {
-      statusText = '<span style="color: #f59e0b; font-weight: 500;">Pending</span>';
-    } else if (orderData.status === 'preparing') {
-      statusText = '<span style="color: #2563eb; font-weight: 500;">Preparing</span>';
-    } else if (orderData.status === 'ready') {
-      statusText = '<span style="color: #16a34a; font-weight: 500;">Ready</span>';
+    if (!response.ok) {
+      throw new Error('Failed to fetch orders');
     }
     
-    // Create popup HTML without action buttons
-    const popupHTML = `
-    <div id="table-popup" data-table="${tableNumber}" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); width: 90%; max-width: 400px; z-index: 1000;">
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid #eee;">
-        <h3 style="margin: 0; font-size: 1.2rem;">Order #${orderData.order_id}</h3>
-        <button id="close-popup" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
-      </div>
-      
-      <div style="padding: 0.75rem 1rem; display: flex; justify-content: space-between; color: #666;">
-        <span>Table ${tableNumber}</span>
-        <span>${formattedTime}</span>
-      </div>
-      
-      <div style="padding: 0.75rem 1rem; display: flex; justify-content: space-between; border-bottom: 1px solid #eee;">
-        <span>Status:</span>
-        <span>${statusText}</span>
-      </div>
-      
-      <div style="padding: 0.75rem 1rem;">
-        <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem;">Order Items:</h4>
-      </div>
-      
-      <div style="padding: 0 1rem 1rem;">
-        ${orderData.items.map(item => {
-          const specialInstructions = item.special_instructions 
-            ? `<span style="background-color: #fff7ed; color: #f59e0b; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.75rem; font-weight: 500; display: inline-block; margin-left: 0.5rem;">${item.special_instructions}</span>` 
-            : '';
-          return `<div style="padding: 0.5rem 0; border-bottom: 1px dashed #eee;"><strong>${item.quantity}x</strong> ${item.menu_item_name} ${specialInstructions}</div>`;
-        }).join('')}
-      </div>
-    </div>
-    `;
+    const tableOrders = await response.json();
     
-    // Add popup to document
-    document.body.insertAdjacentHTML('beforeend', popupHTML);
+    console.log("All table orders:", tableOrders);
     
-    // Add event listener for close button - directly on the button for better reliability
-    document.getElementById('close-popup').addEventListener('click', function() {
-      closePopup();
-    });
-  } else {
-    console.log("No active orders for table, showing empty state");
-    // No order for this table, show a simple message
+    // Find ACTIVE orders for this table (not delivered or cancelled)
+    const activeOrders = tableOrders.filter(order => 
+      order.status !== 'delivered' && order.status !== 'cancelled'
+    );
+    
+    console.log(`Found ${activeOrders.length} ACTIVE orders for table ${tableNumber}`, activeOrders);
+    
+    // Use the most recent active order if available
+    const orderData = activeOrders.length > 0 ? 
+      activeOrders[activeOrders.length - 1] : null;
+    
+    if (orderData) {
+      console.log("Using order data:", orderData);
+      
+      // Format the time
+      const orderTime = new Date(orderData.created_at);
+      const formattedTime = orderTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      // Get status text with nice formatting
+      let statusText = '';
+      if (orderData.status === 'pending') {
+        statusText = '<span style="color: #f59e0b; font-weight: 500;">Pending</span>';
+      } else if (orderData.status === 'preparing') {
+        statusText = '<span style="color: #2563eb; font-weight: 500;">Preparing</span>';
+      } else if (orderData.status === 'ready') {
+        statusText = '<span style="color: #16a34a; font-weight: 500;">Ready</span>';
+      }
+      
+      // Create popup HTML without action buttons
+      const popupHTML = `
+      <div id="table-popup" data-table="${tableNumber}" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); width: 90%; max-width: 400px; z-index: 1000;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid #eee;">
+          <h3 style="margin: 0; font-size: 1.2rem;">Order #${orderData._id}</h3>
+          <button id="close-popup" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        
+        <div style="padding: 0.75rem 1rem; display: flex; justify-content: space-between; color: #666;">
+          <span>Table ${tableNumber}</span>
+          <span>${formattedTime}</span>
+        </div>
+        
+        <div style="padding: 0.75rem 1rem; display: flex; justify-content: space-between; border-bottom: 1px solid #eee;">
+          <span>Status:</span>
+          <span>${statusText}</span>
+        </div>
+        
+        <div style="padding: 0.75rem 1rem;">
+          <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem;">Order Items:</h4>
+        </div>
+        
+        <div style="padding: 0 1rem 1rem;">
+          ${orderData.items.map(item => {
+            const specialInstructions = item.special_instructions 
+              ? `<span style="background-color: #fff7ed; color: #f59e0b; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.75rem; font-weight: 500; display: inline-block; margin-left: 0.5rem;">${item.special_instructions}</span>` 
+              : '';
+            return `<div style="padding: 0.5rem 0; border-bottom: 1px dashed #eee;"><strong>${item.quantity}x</strong> ${item.menu_item_name} ${specialInstructions}</div>`;
+          }).join('')}
+        </div>
+      </div>
+      `;
+      
+      // Add popup to document
+      document.body.insertAdjacentHTML('beforeend', popupHTML);
+      
+      // Add event listener for close button
+      document.getElementById('close-popup').addEventListener('click', function() {
+        closePopup();
+      });
+    } else {
+      console.log("No active orders for table, showing empty state");
+      // No order for this table, show a simple message
+      const popupHTML = `
+        <div id="table-popup" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); width: 90%; max-width: 400px; z-index: 1000;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid #eee;">
+            <h3 style="margin: 0; font-size: 1.2rem;">Table ${tableNumber}</h3>
+            <button id="close-popup" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+          </div>
+          
+          <div style="padding: 1.5rem; text-align: center;">
+            <p style="margin-bottom: 1rem;">No active orders for this table.</p>
+          </div>
+        </div>
+      `;
+      
+      // Add popup to document
+      document.body.insertAdjacentHTML('beforeend', popupHTML);
+      
+      // Add event listener for close button
+      document.getElementById('close-popup').addEventListener('click', function() {
+        closePopup();
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching table orders:', error);
+    // Show error popup
     const popupHTML = `
       <div id="table-popup" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); width: 90%; max-width: 400px; z-index: 1000;">
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid #eee;">
-          <h3 style="margin: 0; font-size: 1.2rem;">Table ${tableNumber}</h3>
+          <h3 style="margin: 0; font-size: 1.2rem; color: red;">Error</h3>
           <button id="close-popup" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
         </div>
         
         <div style="padding: 1.5rem; text-align: center;">
-          <p style="margin-bottom: 1rem;">No active orders for this table.</p>
+          <p style="margin-bottom: 1rem;">Unable to fetch orders. Please try again.</p>
         </div>
       </div>
     `;
     
-    // Add popup to document
     document.body.insertAdjacentHTML('beforeend', popupHTML);
     
-    // Add event listener for close button - directly on the button for better reliability
     document.getElementById('close-popup').addEventListener('click', function() {
       closePopup();
     });
   }
 }
 
+function setupTableButtons() {
+  console.log("Setting up admin table buttons");
+  
+  const tableButtons = document.querySelectorAll('.tables-grid button');
+  if (!tableButtons) {
+    console.error("Table buttons not found");
+    return;
+  }
+  
+  tableButtons.forEach(button => {
+    button.addEventListener('click', async function() {
+      // Get table number from text content (the button's inner text)
+      const tableNumber = this.textContent.trim();
+      console.log(`Admin: Table ${tableNumber} clicked`);
+      
+      try {
+        // First, try to get orders from localStorage
+        const ordersStr = localStorage.getItem('allOrders');
+        if (ordersStr) {
+          const allOrders = JSON.parse(ordersStr);
+          console.log(`Found ${allOrders.length} orders in localStorage`);
+          
+          // Filter for this table from localStorage
+          const localTableOrders = allOrders.filter(order => 
+            order.table_number.toString() === tableNumber.toString()
+          );
+          
+          console.log(`Found ${localTableOrders.length} orders for table ${tableNumber} in localStorage`);
+          
+          // If local orders exist, show them immediately
+          if (localTableOrders.length > 0) {
+            showTableOrderPopup(tableNumber, localTableOrders);
+          }
+        }
+        
+        // Always fetch fresh data from the server
+        const response = await fetch(`/api/orders/table/${tableNumber}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch orders');
+        }
+        
+        const serverTableOrders = await response.json();
+        console.log("Server orders:", serverTableOrders);
+        
+        // Update localStorage with fresh data
+        if (serverTableOrders.length > 0) {
+          // Update or add to existing localStorage orders
+          let allOrders = JSON.parse(localStorage.getItem('allOrders') || '[]');
+          
+          // Remove existing orders for this table
+          allOrders = allOrders.filter(order => 
+            order.table_number.toString() !== tableNumber.toString()
+          );
+          
+          // Add new server orders
+          allOrders.push(...serverTableOrders);
+          
+          // Save updated orders
+          localStorage.setItem('allOrders', JSON.stringify(allOrders));
+          
+          // Show the popup with server data
+          showTableOrderPopup(tableNumber, serverTableOrders);
+        } else {
+          // No orders found on server
+          showTableOrderPopup(tableNumber, []);
+        }
+        
+      } catch (error) {
+        console.error("Error fetching table orders:", error);
+        
+        // Fallback to localStorage if server fetch fails
+        try {
+          const ordersStr = localStorage.getItem('allOrders');
+          if (ordersStr) {
+            const allOrders = JSON.parse(ordersStr);
+            const localTableOrders = allOrders.filter(order => 
+              order.table_number.toString() === tableNumber.toString()
+            );
+            
+            showTableOrderPopup(tableNumber, localTableOrders);
+          } else {
+            showTableOrderPopup(tableNumber, []);
+          }
+        } catch (localError) {
+          console.error("Error accessing localStorage:", localError);
+          showTableOrderPopup(tableNumber, []);
+        }
+      }
+    });
+  });
+}
 // Function to set up auto-refresh for table status
 function setupAutoRefresh() {
   console.log("Setting up auto-refresh for table status");
@@ -662,47 +906,7 @@ function updateOrderStatusAcrossViews(orderId, newStatus) {
   alert("Could not update order. Please try again.");
   return false;
 }
-// Here's the improved setupTableButtons function
-function setupTableButtons() {
-  console.log("Setting up admin table buttons");
-  
-  const tableButtons = document.querySelectorAll('.tables-grid button');
-  if (!tableButtons) {
-    console.error("Table buttons not found");
-    return;
-  }
-  
-  tableButtons.forEach(button => {
-    button.addEventListener('click', function() {
-      // Get table number from text content (the button's inner text)
-      const tableNumber = this.textContent.trim();
-      console.log(`Admin: Table ${tableNumber} clicked`);
-      
-      // Try to get orders from localStorage
-      try {
-        const ordersStr = localStorage.getItem('allOrders');
-        if (ordersStr) {
-          const allOrders = JSON.parse(ordersStr);
-          console.log(`Found ${allOrders.length} orders in localStorage`);
-          
-          // Filter for this table
-          const tableOrders = allOrders.filter(order => 
-            order.table_number.toString() === tableNumber.toString()
-          );
-          
-          console.log(`Found ${tableOrders.length} orders for table ${tableNumber}`);
-          showTableOrderPopup(tableNumber, tableOrders);
-        } else {
-          console.log("No orders found in localStorage");
-          showTableOrderPopup(tableNumber, []);
-        }
-      } catch (error) {
-        console.error("Error getting orders:", error);
-        showTableOrderPopup(tableNumber, []);
-      }
-    });
-  });
-}
+
 function updateAdminTableStatus() {
   console.log("Updating admin table status");
   
@@ -808,32 +1012,3 @@ function updateOrderStatusInStaff(orderId, newStatus) {
 function formatCurrency(amount) {
   return new Intl.NumberFormat('vi-VN').format(amount) + '₫';
 }
-
-// Call this at the end of your admin.js initialization to directly access staff.js data
-document.addEventListener('DOMContentLoaded', function() {
-  // Add this line to your existing initialization code
-  console.log("Admin page initialized, looking for staff data");
-  
-  // Create a direct link to the staff orders if possible
-  if (window.opener && window.opener.orders) {
-    console.log("Found staff orders through window.opener");
-    window.orders = window.opener.orders;
-  }
-  
-  // Listen for storage events from staff.js
-  window.addEventListener('storage', function(event) {
-    if (event.key === 'staffOrders' || event.key === 'selectedTable') {
-      console.log("Storage event detected:", event.key);
-      updateAdminTableStatus();
-      
-      // Update popup if it's open
-      const popup = document.getElementById('table-popup');
-      if (popup) {
-        const tableNum = popup.getAttribute('data-table');
-        closePopup();
-        setTimeout(() => showTableOrderPopup(tableNum), 100);
-      }
-    }
-  });
-  updateAdminTableStatus();
-});

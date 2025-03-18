@@ -3,6 +3,8 @@ const User = require('../models/user');
 const MenuCategory = require('../models/MenuCategory');
 const MenuItem = require('../models/MenuItem');
 const Table = require('../models/Table');
+const Settings = require('../models/Settings'); // Add this line
+
 const bcrypt = require('bcrypt');
 require('dotenv').config();
 
@@ -27,6 +29,8 @@ const seedDatabase = async () => {
     await MenuCategory.deleteMany({});
     await MenuItem.deleteMany({});
     await Table.deleteMany({});
+    await Settings.deleteMany({}); // Add this line
+
     
     console.log('Cleared existing data');
     
@@ -74,6 +78,8 @@ const seedDatabase = async () => {
         image_path: '/images/Pho.jpg', 
         description: 'Traditional beef noodle soup with herbs and bean sprouts', 
         preparation_time: 18,
+        status: 'available', // Add this field
+
         item_id: 101
       },
       { 
@@ -84,6 +90,8 @@ const seedDatabase = async () => {
         image_path: '/images/bun-bo-hue.jpg', 
         description: 'Spicy beef noodle soup from central Vietnam', 
         preparation_time: 20,
+        status: 'available', // Add this field
+
         item_id: 102
       },
       { 
@@ -94,6 +102,8 @@ const seedDatabase = async () => {
         image_path: '/images/bun-cha.jpg', 
         description: 'Grilled pork with rice noodles and herbs', 
         preparation_time: 20,
+        status: 'available', // Add this field
+
         item_id: 103
       },
       
@@ -106,6 +116,8 @@ const seedDatabase = async () => {
         image_path: '/images/com-chien.jpg', 
         description: 'Seafood fried rice', 
         preparation_time: 15,
+        status: 'available', // Add this field
+
         item_id: 201
       },
       { 
@@ -116,6 +128,8 @@ const seedDatabase = async () => {
         image_path: '/images/com-tam.jpg', 
         description: 'Broken rice with grilled pork, egg, and vegetables', 
         preparation_time: 15,
+        status: 'available', // Add this field
+
         item_id: 202
       },
 
@@ -128,6 +142,8 @@ const seedDatabase = async () => {
         image_path: '/images/banh-mi.jpg', 
         description: 'Vietnamese sandwich with various meats and vegetables', 
         preparation_time: 10,
+        status: 'available', // Add this field
+
         item_id: 301
       },
       { 
@@ -138,6 +154,8 @@ const seedDatabase = async () => {
         image_path: '/images/banh-xeo.jpg', 
         description: 'Vietnamese crispy pancake with shrimp and bean sprouts', 
         preparation_time: 18,
+        status: 'available', // Add this field
+
         item_id: 302
       },
       {
@@ -148,6 +166,8 @@ const seedDatabase = async () => {
         image_path: '/images/spring-rolls.jpg',
         description: 'Fried spring rolls with pork and vegetables',
         preparation_time: 15,
+        status: 'available', // Add this field
+
         item_id: 303
       },
       // Desserts (category_id: 4)
@@ -159,6 +179,8 @@ const seedDatabase = async () => {
         image_path: '/images/che-ba-mau.jpg', 
         description: 'Three-color dessert with beans, jelly, and coconut milk', 
         preparation_time: 8,
+        status: 'available', // Add this field
+
         item_id: 401
       },
       { 
@@ -169,6 +191,8 @@ const seedDatabase = async () => {
         image_path: '/images/banh-flan.jpg', 
         description: 'Vietnamese caramel custard', 
         preparation_time: 5,
+        status: 'available', // Add this field
+
         item_id: 402
       },
       { 
@@ -179,6 +203,8 @@ const seedDatabase = async () => {
         image_path: '/images/che-dau-xanh.jpg', 
         description: 'Mung bean pudding with coconut cream', 
         preparation_time: 6,
+        status: 'available', // Add this field
+
         item_id: 403
       },
       
@@ -191,6 +217,8 @@ const seedDatabase = async () => {
         image_path: '/images/ca-phe-sua-da.jpg', 
         description: 'Vietnamese iced coffee with condensed milk', 
         preparation_time: 5,
+        status: 'available', // Add this field
+
         item_id: 501
       },
       { 
@@ -201,6 +229,8 @@ const seedDatabase = async () => {
         image_path: '/images/iced-tea.jpg', 
         description: 'Vietnamese iced tea', 
         preparation_time: 3,
+        status: 'available', // Add this field
+
         item_id: 502
       },
       { 
@@ -211,12 +241,28 @@ const seedDatabase = async () => {
         image_path: '/images/sinh-to-bo.jpg', 
         description: 'Avocado smoothie with condensed milk', 
         preparation_time: 5,
+        status: 'available', // Add this field
+
         item_id: 503
       }
     ];
     
     await MenuItem.insertMany(menuItemsData);
     console.log('Seeded menu items');
+    // Seed settings
+    const settingsData = {
+      restaurantName: "Viet Nam Cuisine",
+      contactNumber: "(+84) 123 456 789",
+      email: "info@vietnamcuisine.com",
+      taxRate: 10,
+      tableCount: 8,
+      reservedTables: [5],
+      primaryColor: "#B32821",
+      secondaryColor: "#4B6F44"
+    };
+    await Settings.create(settingsData);
+console.log('Seeded settings');
+    
     
     // Seed tables
     const tablesData = [
@@ -249,5 +295,6 @@ const runSeed = async () => {
     mongoose.disconnect();
   }
 };
+
 
 runSeed();

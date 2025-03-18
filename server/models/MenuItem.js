@@ -25,6 +25,12 @@ const MenuItemSchema = new mongoose.Schema({
   preparation_time: {
     type: Number,
     required: true
+  },
+  // Add the status field
+  status: {
+    type: String,
+    enum: ['available', 'out-of-stock'],
+    default: 'available'
   }
 }, { timestamps: true });
 

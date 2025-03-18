@@ -106,3 +106,21 @@ exports.updateTableStatus = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+// Add this function to tableController.js
+exports.getTableStats = async (req, res) => {
+  try {
+    const availableCount = await Table.countDocuments({ status: 'available' });
+    const occupiedCount = await Table.countDocuments({ status: 'occupied' });
+    const reservedCount = await Table.countDocuments({ status: 'reserved' });
+    
+    res.json({
+      available: availableCount,
+      occupied: occupiedCount,
+      reserved: reservedCount,
+      total: availableCount + occupiedCount + reservedCount
+    });
+  } catch (error) {
+    console.error('Error getting table stats:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

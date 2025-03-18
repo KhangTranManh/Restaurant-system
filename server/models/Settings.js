@@ -1,4 +1,4 @@
-// models/Settings.js
+// models/Settings.js - Updated with color settings
 const mongoose = require('mongoose');
 
 const SettingsSchema = new mongoose.Schema({
@@ -25,6 +25,15 @@ const SettingsSchema = new mongoose.Schema({
   reservedTables: {
     type: [Number],
     default: [5]
+  },
+  // Add color settings
+  primaryColor: {
+    type: String,
+    default: "#B32821" // Default red color
+  },
+  secondaryColor: {
+    type: String,
+    default: "#4B6F44" // Default green color
   }
 }, { timestamps: true });
 
