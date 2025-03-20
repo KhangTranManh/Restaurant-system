@@ -4,7 +4,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
 const connectDB = require('./server/config/db');
-const socketIO = require('socket.io');
+const socketConfig = require('./server/config/socket');
 
 require('dotenv').config();
 
@@ -20,73 +20,14 @@ const settingsRoutes = require('./server/routes/settings');
 const app = express();
 const server = http.createServer(app);
 
-// Initialize Socket.IO
-const io = socketIO(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
-  }
-});
-
-// Global io instance
-let globalIO;
-
-// Make io available globally and in request object
-const initSocketIO = () => {
-  globalIO = io;
-
-  io.on('connection', (socket) => {
-    console.log('New client connected:', socket.id);
-    
-    // Join kitchen room for kitchen staff
-    socket.on('joinKitchen', () => {
-      socket.join('kitchen');
-      console.log(`${socket.id} joined kitchen room`);
-    });
-    
-    // Join staff room for waitstaff
-    socket.on('joinStaff', () => {
-      socket.join('staff');
-      console.log(`${socket.id} joined staff room`);
-    });
-    
-    // Join customer room for specific table
-    socket.on('joinTable', (tableNumber) => {
-      socket.join(`table-${tableNumber}`);
-      console.log(`${socket.id} joined table-${tableNumber} room`);
-    });
-    
-    // Generic join room functionality
-    socket.on('join', (data) => {
-      const role = data.role || 'customer';
-      socket.join(role);
-      console.log(`Client joined ${role} room`);
-    });
-    
-    socket.on('disconnect', () => {
-      console.log('Client disconnected:', socket.id);
-    });
-  });
-
-  return io;
-};
+// Initialize Socket.IO using the configuration
+const io = socketConfig.init(server);
 
 // Middleware to make io available in request
 app.use((req, res, next) => {
-  req.io = globalIO;
+  req.io = io;
   next();
 });
-
-// Initialize Socket.IO
-initSocketIO();
-
-// Utility function to get IO instance if needed elsewhere
-const getIO = () => {
-  if (!globalIO) {
-    throw new Error('Socket.io not initialized!');
-  }
-  return globalIO;
-};
 
 // Connect to MongoDB
 connectDB();
@@ -117,7 +58,5 @@ server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-// Export utility functions if needed
-module.exports = {
-  getIO
-};
+// Don't export io directly - use the socket config module
+module.exports = app;

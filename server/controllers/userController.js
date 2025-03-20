@@ -173,4 +173,28 @@ exports.getUserStats = async (req, res) => {
     console.error('Error getting user stats:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
+  // Get dashboard staff stats
+exports.getDashboardStats = async (req, res) => {
+  try {
+    // Count staff on duty (active status & appropriate roles)
+    const onDuty = await User.countDocuments({ 
+      status: 'active',
+      role: { $in: ['staff', 'chef', 'bartender', 'waiter', 'kitchen', 'manager'] }
+    });
+    
+    // Count kitchen staff specifically (active status & kitchen-related roles)
+    const kitchenStaff = await User.countDocuments({ 
+      status: 'active',
+      role: { $in: ['chef', 'kitchen'] }
+    });
+    
+    res.json({
+      onDuty,
+      kitchenStaff
+    });
+  } catch (error) {
+    console.error('Error fetching dashboard staff stats:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 };

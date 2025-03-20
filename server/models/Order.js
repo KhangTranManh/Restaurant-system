@@ -43,7 +43,9 @@ const OrderSchema = new mongoose.Schema({
   items: [OrderItemSchema],
   total_amount: {
     type: Number,
-    required: true
+    required: true,
+    default: 0,
+    min: 0
   },
   created_at: {
     type: Date,
@@ -51,6 +53,33 @@ const OrderSchema = new mongoose.Schema({
   },
   ready_at: Date,
   delivered_at: Date
-}, { timestamps: true });
+}, { 
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Pre-save hook to calculate total amount
+OrderSchema.pre('save', function(next) {
+  // Calculate total amount only if items have changed or total_amount is not set
+  if (this.isModified('items') || this.total_amount === 0) {
+    this.total_amount = this.items.reduce((total, item) => 
+      total + (item.quantity * item.item_price), 0);
+  }
+  
+  // Ensure delivered_at is set when status becomes 'delivered'
+  if (this.isModified('status') && this.status === 'delivered' && !this.delivered_at) {
+    this.delivered_at = new Date();
+  }
+  
+  next();
+});
+
+// Index for efficient querying
+OrderSchema.index({ 
+  status: 1, 
+  delivered_at: -1, 
+  createdAt: -1 
+});
 
 module.exports = mongoose.model('Order', OrderSchema);

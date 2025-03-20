@@ -3,6 +3,41 @@
 /// Single combined DOMContentLoaded event listener
 document.addEventListener('DOMContentLoaded', function() {
   console.log("Admin page loaded");
+  loadDashboardStats();
+
+  const socket = io(); // Connect to Socket.IO server
+   // Add event listeners for real-time updates
+   socket.on('orderStatusChanged', function(statusUpdateData) {
+    console.log('Received order status update via socket:', statusUpdateData);
+    updateAdminTableStatus();
+    
+    // Refresh popup if open
+    const popup = document.getElementById('table-popup');
+    if (popup) {
+      const tableNum = popup.getAttribute('data-table');
+      closePopup();
+      setTimeout(() => showTableOrderPopup(tableNum), 100);
+    }
+    loadActiveOrders();
+  });
+  
+  // Additional socket events
+  socket.on('newOrder', function(order) {
+    console.log('New order received:', order);
+    loadDashboardStats();
+    loadTableData();
+    loadActiveOrders();
+
+  });
+  socket.emit('join', { role: 'admin' });
+  socket.emit('joinStaff');
+  
+  socket.on('tableStatusChanged', function(tableData) {
+    console.log('Table status changed:', tableData);
+    updateAdminTableStatus();
+  });
+  
+
   
   // Logout button functionality
   const logoutBtn = document.getElementById('logout-btn');
@@ -19,8 +54,11 @@ document.addEventListener('DOMContentLoaded', function() {
     console.error("Logout button not found");
   }
   
-  // Check authentication
   const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (currentUser && currentUser.role === 'admin') {
+    socket.emit('join', { role: 'admin' });
+    socket.emit('joinStaff'); // Admin should see staff updates too
+  }
   
   // If not logged in or not admin, redirect to login
   if (!currentUser || currentUser.role !== 'admin') {
@@ -116,6 +154,8 @@ document.addEventListener('DOMContentLoaded', function() {
       loadTableData();
     }
   }, 30000); // Refresh every 30 seconds
+  setupOrderRefresh();
+
 });
 
 // Add this to your admin.js file
@@ -238,50 +278,133 @@ adminStaffBtn.addEventListener('click', function() {
     }
   });
 }
-// Add this function to admin.js to load dashboard stats from the database
-async function loadDashboardStats() {
-  try {
-    // Fetch table stats
-    const tableResponse = await fetch('/api/tables/stats');
-    if (tableResponse.ok) {
-      const tableStats = await tableResponse.json();
-      
-      // Update tables overview stats
-      document.getElementById('available-tables-count').textContent = tableStats.available || 0;
-      document.getElementById('occupied-tables-count').textContent = tableStats.occupied || 0;
-    }
+function loadDashboardStats() {
+  console.log('Loading dashboard stats...');
+
+  // Helper function for error handling
+  const handleFetchError = (endpoint) => (error) => {
+    console.error(`Error loading ${endpoint} stats:`, error);
     
-    // Fetch order stats
-    const orderResponse = await fetch('/api/orders/stats');
-    if (orderResponse.ok) {
-      const orderStats = await orderResponse.json();
-      
-      // Update order stats
-      document.getElementById('active-orders-count').textContent = orderStats.active || 0;
-      document.getElementById('completed-today-count').textContent = orderStats.completedToday || 0;
+    // Optionally update UI to show error state
+    try {
+      switch(endpoint) {
+        case 'tables':
+          document.getElementById('available-tables-count').textContent = 'N/A';
+          document.getElementById('occupied-tables-count').textContent = 'N/A';
+          break;
+        case 'orders':
+          document.getElementById('active-orders-count').textContent = 'N/A';
+          document.getElementById('completed-today-count').textContent = 'N/A';
+          break;
+        case 'revenue':
+          const todayRevenueElement = document.getElementById('today-revenue');
+          const weekRevenueElement = document.getElementById('week-revenue');
+          
+          if (todayRevenueElement) {
+            todayRevenueElement.textContent = 'Error';
+            todayRevenueElement.style.color = 'red';
+          }
+          
+          if (weekRevenueElement) {
+            weekRevenueElement.textContent = 'Error';
+            weekRevenueElement.style.color = 'red';
+          }
+          break;
+        case 'staff':
+          document.getElementById('on-duty-count').textContent = 'N/A';
+          document.getElementById('kitchen-staff-count').textContent = 'N/A';
+          break;
+      }
+    } catch (uiError) {
+      console.error('Error updating UI:', uiError);
     }
-    
-    // Fetch revenue stats
-    const revenueResponse = await fetch('/api/orders/revenue');
-    if (revenueResponse.ok) {
-      const revenueStats = await revenueResponse.json();
-      
-      // Update revenue stats
-      document.getElementById('today-revenue').textContent = formatCurrency(revenueStats.today || 0);
-      document.getElementById('week-revenue').textContent = formatCurrency(revenueStats.week || 0);
-    }
-    
-    // Fetch staff stats
-    const staffResponse = await fetch('/api/users/stats');
-    if (staffResponse.ok) {
-      const staffStats = await staffResponse.json();
-      
-      // Update staff stats
-      document.getElementById('on-duty-count').textContent = staffStats.onDuty || 0;
-      document.getElementById('kitchen-staff-count').textContent = staffStats.kitchenStaff || 0;
-    }
-  } catch (error) {
-    console.error('Error loading dashboard stats:', error);
+  };
+
+  // Helper function to format revenue
+  const formatRevenue = (amount) => {
+    // Convert to millions and round to 1 decimal place
+    const formattedAmount = (amount / 1000000).toFixed(1);
+    return `${formattedAmount}M₫`;
+  };
+
+  // Tables stats
+  fetch('/api/tables/stats')
+    .then(response => {
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      return response.json();
+    })
+    .then(data => {
+      document.getElementById('available-tables-count').textContent = data.available || 0;
+      document.getElementById('occupied-tables-count').textContent = data.occupied || 0;
+    })
+    .catch(handleFetchError('tables'));
+
+  // Orders stats
+  fetch('/api/orders/stats')
+    .then(response => {
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      return response.json();
+    })
+    .then(data => {
+      document.getElementById('active-orders-count').textContent = data.active || 0;
+      document.getElementById('completed-today-count').textContent = data.completedToday || 0;
+    })
+    .catch(handleFetchError('orders'));
+
+  // Revenue stats
+  fetch('/api/orders/revenue')
+    .then(response => {
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      return response.json();
+    })
+    .then(data => {
+      // Detailed logging for debugging
+      console.log('Revenue Data Received:', data);
+
+      // Update revenue elements
+      const todayRevenueElement = document.getElementById('today-revenue');
+      const weekRevenueElement = document.getElementById('week-revenue');
+
+      if (todayRevenueElement) {
+        todayRevenueElement.textContent = formatRevenue(data.today);
+        todayRevenueElement.style.color = ''; // Reset any previous error styling
+      }
+
+      if (weekRevenueElement) {
+        weekRevenueElement.textContent = formatRevenue(data.week);
+        weekRevenueElement.style.color = ''; // Reset any previous error styling
+      }
+
+      // Log formatted revenues
+      console.log(`Today's Revenue: ${formatRevenue(data.today)}`);
+      console.log(`This Week's Revenue: ${formatRevenue(data.week)}`);
+    })
+    .catch(handleFetchError('revenue'));
+
+  // Staff stats
+  fetch('/api/users/stats')
+    .then(response => {
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      return response.json();
+    })
+    .then(data => {
+      document.getElementById('on-duty-count').textContent = data.onDuty || 0;
+      document.getElementById('kitchen-staff-count').textContent = data.kitchenStaff || 0;
+    })
+    .catch(handleFetchError('staff'));
+}
+
+// Automatically load stats when page loads
+document.addEventListener('DOMContentLoaded', loadDashboardStats);
+
+// Optional: Add a manual refresh button functionality
+function setupStatsRefresh() {
+  const refreshButton = document.getElementById('refresh-stats-btn');
+  if (refreshButton) {
+    refreshButton.addEventListener('click', () => {
+      console.log('Manually refreshing dashboard stats...');
+      loadDashboardStats();
+    });
   }
 }
 // Add this function to load real-time table data
@@ -1008,7 +1131,267 @@ function updateOrderStatusInStaff(orderId, newStatus) {
   return false;
 }
 
-// Helper function to format currency
+// Add this if it doesn't exist
 function formatCurrency(amount) {
-  return new Intl.NumberFormat('vi-VN').format(amount) + '₫';
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
+    .format(amount)
+    .replace('₫', '')
+    .trim() + '₫';
 }
+function loadActiveOrders() {
+  console.log('Loading all orders including completed...');
+
+  // Notice we're now fetching ALL statuses, including 'delivered'
+  fetch('/api/orders?status=pending,preparing,ready,delivered')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(allOrders => {
+      console.log(`Received ${allOrders.length} orders`);
+      const activeOrdersTableBody = document.querySelector('#admin-staff-view .data-table tbody');
+      
+      if (!activeOrdersTableBody) {
+        console.error('Table body not found');
+        return;
+      }
+      
+      // Clear existing rows
+      activeOrdersTableBody.innerHTML = '';
+      
+      // Check if we have any orders
+      if (allOrders.length === 0) {
+        activeOrdersTableBody.innerHTML = `
+          <tr>
+            <td colspan="6" style="text-align: center;">
+              No orders to display
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      // Sort orders: active first, then completed (newest to oldest)
+      allOrders.sort((a, b) => {
+        // First sort by status (active before completed)
+        if (a.status === 'delivered' && b.status !== 'delivered') return 1;
+        if (a.status !== 'delivered' && b.status === 'delivered') return -1;
+        
+        // Then sort by time (newest first)
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+      
+      // Populate table with all orders
+      allOrders.forEach(order => {
+        const row = document.createElement('tr');
+        
+        // Determine status badge class
+        let badgeClass = 'yellow';
+        if (order.status === 'preparing') {
+          badgeClass = 'blue';
+        } else if (order.status === 'ready') {
+          badgeClass = 'green';
+        } else if (order.status === 'delivered') {
+          badgeClass = 'gray';
+        }
+        
+        const statusText = order.status.charAt(0).toUpperCase() + order.status.slice(1);
+        
+        // Format the time
+        const orderTime = new Date(order.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        
+        row.innerHTML = `
+          <td style="text-align: center;">${order._id}</td>
+          <td style="text-align: center;">Table ${order.table_number}</td>
+          <td style="text-align: center;">${order.items.length} items</td>
+          <td style="text-align: center;"><span class="badge ${badgeClass}">${statusText}</span></td>
+          <td style="text-align: center;">${formatCurrency(order.total_amount)}</td>
+          <td style="text-align: center;">
+            <button class="small secondary" onclick="showOrderDetails('${order._id}')">View</button>
+            ${order.status === 'delivered' ? 
+              `<span class="delivered-time">at ${new Date(order.delivered_at || order.updatedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>` : 
+              ''}
+          </td>
+        `;
+        
+        activeOrdersTableBody.appendChild(row);
+      });
+      
+      // Update active orders count (excluding delivered)
+      const activeCount = allOrders.filter(order => order.status !== 'delivered').length;
+      const activeOrdersCountElement = document.getElementById('active-orders-count');
+      if (activeOrdersCountElement) {
+        activeOrdersCountElement.textContent = activeCount;
+      }
+    })
+    .catch(error => {
+      console.error('Error loading orders:', error);
+      
+      const activeOrdersTableBody = document.querySelector('#admin-staff-view .data-table tbody');
+      if (activeOrdersTableBody) {
+        activeOrdersTableBody.innerHTML = `
+          <tr>
+            <td colspan="6" style="text-align: center; color: red;">
+              Unable to load orders. Please try again later.
+            </td>
+          </tr>
+        `;
+      }
+    });
+}
+
+
+// Helper function to show order details modal
+function showOrderDetails(orderId) {
+  console.log(`Showing details for order: ${orderId}`);
+  
+  // Prevent issues with 'events' as an order ID
+  if (orderId === 'events') {
+    console.error('Invalid order ID: events');
+    return;
+  }
+
+  fetch(`/api/orders/${orderId}`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Failed to fetch order details: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(orderDetails => {
+      console.log('Received order details:', orderDetails);
+      
+      // Create modal for order details
+      const modalBackdrop = document.getElementById('modal-backdrop');
+      if (!modalBackdrop) {
+        console.error('Modal backdrop element not found');
+        return;
+      }
+      
+      const orderModal = document.createElement('div');
+      orderModal.className = 'modal';
+      orderModal.innerHTML = `
+        <div class="modal-header">
+          <h3>Order Details #${orderDetails._id}</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="order-detail-row"><strong>Table:</strong> ${orderDetails.table_number}</div>
+          <div class="order-detail-row"><strong>Status:</strong> ${orderDetails.status}</div>
+          <div class="order-detail-row"><strong>Time:</strong> ${new Date(orderDetails.created_at).toLocaleTimeString()}</div>
+          <h4>Items:</h4>
+          <ul class="order-items-list">
+            ${orderDetails.items.map(item => `
+              <li>
+                <strong>${item.quantity}x</strong> ${item.menu_item_name} 
+                ${item.special_instructions ? `<span class="special-instruction">(${item.special_instructions})</span>` : ''}
+              </li>
+            `).join('')}
+          </ul>
+          <div class="order-detail-total"><strong>Total:</strong> ${formatCurrency(orderDetails.total_amount)}</div>
+        </div>
+      `;
+      
+      modalBackdrop.innerHTML = ''; // Clear previous content
+      modalBackdrop.appendChild(orderModal);
+      modalBackdrop.style.display = 'block';
+      orderModal.style.display = 'block';
+      
+      // Close button functionality
+      orderModal.querySelector('.modal-close').addEventListener('click', () => {
+        modalBackdrop.style.display = 'none';
+        modalBackdrop.innerHTML = '';
+      });
+    })
+    .catch(error => {
+      console.error('Error fetching order details:', error);
+      alert(`Could not fetch order details: ${error.message}`);
+    });
+}
+
+// Helper function to deliver an order
+function deliverOrder(orderId) {
+  console.log(`Marking order ${orderId} as delivered`);
+  
+  fetch(`/api/orders/${orderId}/status`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ status: 'delivered' })
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`Failed to update order status: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('Order successfully delivered:', data);
+    // Refresh orders immediately after delivery
+    loadActiveOrders();
+  })
+  .catch(error => {
+    console.error('Error delivering order:', error);
+    alert(`Could not deliver order: ${error.message}`);
+  });
+}
+
+// Setup periodic refresh
+function setupOrderRefresh() {
+  console.log('Setting up order refresh');
+  
+  // Initial load
+  loadActiveOrders();
+  
+  // Refresh every 10 seconds (slightly longer to reduce server load)
+  const refreshInterval = setInterval(loadActiveOrders, 10000);
+  
+  // Clear interval when navigating away from staff view
+  const staffBtn = document.getElementById('admin-staff-btn');
+  const otherBtns = document.querySelectorAll('#admin-kitchen-btn, #admin-analytics-btn, #admin-management-btn');
+  
+  if (staffBtn) {
+    staffBtn.addEventListener('click', function() {
+      // When returning to staff view, load immediately
+      loadActiveOrders();
+    });
+  }
+  
+  otherBtns.forEach(btn => {
+    if (btn) {
+      btn.addEventListener('click', function() {
+        // Pause refreshing when not on staff view
+        clearInterval(refreshInterval);
+      });
+    }
+  });
+  
+  // Setup Socket.IO event listeners if io is available
+  if (typeof io !== 'undefined') {
+    const socket = io();
+    
+    socket.on('connect', () => {
+      console.log('Socket connected, joining admin and staff rooms');
+      socket.emit('join', { role: 'admin' });
+      socket.emit('joinStaff');
+    });
+    
+    socket.on('orderStatusChanged', data => {
+      console.log('Order status changed via socket:', data);
+      loadActiveOrders();
+    });
+    
+    socket.on('newOrder', data => {
+      console.log('New order received via socket:', data);
+      loadActiveOrders();
+    });
+  } else {
+    console.warn('Socket.IO not available, real-time updates disabled');
+  }
+}
+
+// Start refreshing when page loads
+document.addEventListener('DOMContentLoaded', setupOrderRefresh);

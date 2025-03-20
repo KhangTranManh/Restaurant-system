@@ -26,10 +26,16 @@ exports.getOrders = async (req, res) => {
       }
     }
     
-    // Filter by status if provided
-    if (status) {
-      query.status = status;
-    }
+    // In your orderController.js getOrders function:
+// Modify the status filter part:
+if (status) {
+  const statusValues = typeof status === 'string' ? status.split(',') : [status];
+  if (statusValues.length > 1) {
+    query.status = { $in: statusValues };
+  } else {
+    query.status = status;
+  }
+}
     
     // Find orders and sort by created_at (newest first)
     const orders = await Order.find(query)
@@ -326,6 +332,48 @@ exports.getOrderStats = async (req, res) => {
   } catch (error) {
     console.error('Error getting order stats:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+// Get revenue statistics for dashboard
+exports.getRevenueStats = async (req, res) => {
+  try {
+    // Get start of today and this week
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const startOfWeek = new Date();
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Start from Sunday
+    startOfWeek.setHours(0, 0, 0, 0);
+    
+    // Get all delivered orders
+    const allOrders = await Order.find({ 
+      status: 'delivered'
+    });
+    
+    // Filter for today and this week
+    const todayOrders = allOrders.filter(order => {
+      const deliveredDate = order.delivered_at || order.updatedAt;
+      return new Date(deliveredDate) >= today;
+    });
+    
+    const weekOrders = allOrders.filter(order => {
+      const deliveredDate = order.delivered_at || order.updatedAt;
+      return new Date(deliveredDate) >= startOfWeek;
+    });
+    
+    // Calculate revenue
+    const todayRevenue = todayOrders.reduce((sum, order) => sum + (order.total_amount || 0), 0);
+    const weekRevenue = weekOrders.reduce((sum, order) => sum + (order.total_amount || 0), 0);
+    
+    console.log("Revenue stats calculated:", { today: todayRevenue, week: weekRevenue });
+    
+    res.json({
+      today: todayRevenue,
+      week: weekRevenue
+    });
+  } catch (error) {
+    console.error('Error calculating revenue stats:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
