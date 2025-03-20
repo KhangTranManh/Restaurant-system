@@ -82,105 +82,38 @@
 
         <div id="pending-orders" class="tab-content active">
           <div id="kitchen-pending-orders" class="kitchen-grid">
-            <!-- Pending orders -->
+            <!-- Pending orders template -->
             <div class="kitchen-order-card pending">
               <div class="kitchen-order-header pending">
                 <div class="kitchen-order-title">
-                  <span>Order #1001</span>
+                  <span>Order #</span>
                   <span class="badge yellow">New Order</span>
                 </div>
                 <div class="kitchen-order-subtitle">
-                  <span>Table 3</span>
-                  <span>12:45 PM</span>
+                  <span>Table </span>
+                  <span></span>
                 </div>
               </div>
               <div class="kitchen-order-content">
                 <div class="kitchen-order-items">
-                  <div class="kitchen-order-item">
-                    <div class="kitchen-order-item-name">2x Phở Bò</div>
-                    <div class="kitchen-order-item-notes">Extra bean sprouts</div>
-                  </div>
-                  <div class="kitchen-order-item">
-                    <div class="kitchen-order-item-name">1x Bún Chả</div>
-                  </div>
-                  <div class="kitchen-order-item">
-                    <div class="kitchen-order-item-name">3x Cà Phê Sữa Đá</div>
-                  </div>
+                  <!-- Items will be populated by JavaScript -->
                 </div>
+                
+                <!-- Order-level special instructions -->
+                <div class="kitchen-order-special-instructions">
+                  <div class="special-instructions-label">
+                    <strong>Order Instructions:</strong>
+                  </div>
+                  <div class="special-instructions-text"></div>
+                </div>
+                
                 <div class="kitchen-order-timer">
                   <span>Waiting for:</span>
-                  <span>5 minutes</span>
+                  <span></span>
                 </div>
               </div>
               <div class="kitchen-order-footer">
-                <button class="primary start-cooking" data-id="1001">Start Preparing</button>
-              </div>
-            </div>
-            
-            <div class="kitchen-order-card pending">
-              <div class="kitchen-order-header pending">
-                <div class="kitchen-order-title">
-                  <span>Order #1004</span>
-                  <span class="badge yellow">New Order</span>
-                </div>
-                <div class="kitchen-order-subtitle">
-                  <span>Table 6</span>
-                  <span>12:50 PM</span>
-                </div>
-              </div>
-              <div class="kitchen-order-content">
-                <div class="kitchen-order-items">
-                  <div class="kitchen-order-item">
-                    <div class="kitchen-order-item-name">1x Gỏi Cuốn</div>
-                  </div>
-                  <div class="kitchen-order-item">
-                    <div class="kitchen-order-item-name">1x Bánh Xèo</div>
-                    <div class="kitchen-order-item-notes">No shrimp, extra vegetables</div>
-                  </div>
-                  <div class="kitchen-order-item">
-                    <div class="kitchen-order-item-name">2x Chanh Muối</div>
-                  </div>
-                </div>
-                <div class="kitchen-order-timer">
-                  <span>Waiting for:</span>
-                  <span>1 minute</span>
-                </div>
-              </div>
-              <div class="kitchen-order-footer">
-                <button class="primary start-cooking" data-id="1004">Start Preparing</button>
-              </div>
-            </div>
-            
-            <div class="kitchen-order-card pending">
-              <div class="kitchen-order-header pending">
-                <div class="kitchen-order-title">
-                  <span>Order #1005</span>
-                  <span class="badge yellow">New Order</span>
-                </div>
-                <div class="kitchen-order-subtitle">
-                  <span>Table 4</span>
-                  <span>12:55 PM</span>
-                </div>
-              </div>
-              <div class="kitchen-order-content">
-                <div class="kitchen-order-items">
-                  <div class="kitchen-order-item">
-                    <div class="kitchen-order-item-name">2x Chả Giò</div>
-                  </div>
-                  <div class="kitchen-order-item">
-                    <div class="kitchen-order-item-name">1x Cơm Tấm</div>
-                    <div class="kitchen-order-item-notes">Extra scallion oil</div>
-                  </div>
-                  <div class="kitchen-order-item">
-                    <div class="kitchen-order-item-name">1x Canh Chua</div>
-                  </div>
-                </div>
-                <div class="kitchen-order-timer">
-                  <span>Just arrived</span>
-                </div>
-              </div>
-              <div class="kitchen-order-footer">
-                <button class="primary start-cooking" data-id="1005">Start Preparing</button>
+                <button class="primary start-cooking" data-id="">Start Preparing</button>
               </div>
             </div>
           </div>
@@ -191,80 +124,41 @@
         
         <div id="preparing-orders" class="tab-content">
           <div id="kitchen-preparing-orders" class="kitchen-grid">
-            <!-- Preparing orders -->
+            <!-- Preparing orders template -->
             <div class="kitchen-order-card preparing">
               <div class="kitchen-order-header preparing">
                 <div class="kitchen-order-title">
-                  <span>Order #1002</span>
+                  <span>Order #</span>
                   <span class="badge blue">In Preparation</span>
                 </div>
                 <div class="kitchen-order-subtitle">
-                  <span>Table 5</span>
-                  <span>12:30 PM</span>
+                  <span>Table </span>
+                  <span></span>
                 </div>
               </div>
               <div class="kitchen-order-content">
                 <div class="kitchen-order-items">
-                  <div class="kitchen-order-item">
-                    <div class="kitchen-order-item-name">1x Gỏi Cuốn</div>
-                    <div class="status-label preparing">Preparing</div>
-                  </div>
-                  <div class="kitchen-order-item">
-                    <div class="kitchen-order-item-name">1x Bánh Xèo</div>
-                    <div class="kitchen-order-item-notes">No shrimp, extra vegetables</div>
-                    <div class="status-label preparing">Preparing</div>
-                  </div>
+                  <!-- Items will be populated by JavaScript -->
                 </div>
+                
+                <!-- Order-level special instructions -->
+                <div class="kitchen-order-special-instructions">
+                  <div class="special-instructions-label">
+                    <strong>Order Instructions:</strong>
+                  </div>
+                  <div class="special-instructions-text"></div>
+                </div>
+                
                 <div class="kitchen-order-timer">
                   <span>Preparing for:</span>
-                  <span>15 minutes</span>
+                  <span></span>
                 </div>
               </div>
               <div class="kitchen-order-footer">
                 <div>
-                  <span class="font-medium">Est. completion:</span> 12:50 PM
+                  <span class="font-medium">Est. completion:</span> 
                 </div>
-                <button class="primary complete-cooking" data-id="1002">Mark as Ready</button>
-              </div>
-            </div>
-            
-            <div class="kitchen-order-card preparing">
-              <div class="kitchen-order-header preparing">
-                <div class="kitchen-order-title">
-                  <span>Order #1003</span>
-                  <span class="badge blue">In Preparation</span>
-                </div>
-                <div class="kitchen-order-subtitle">
-                  <span>Table 2</span>
-                  <span>12:20 PM</span>
-                </div>
-              </div>
-              <div class="kitchen-order-content">
-                <div class="kitchen-order-items">
-                  <div class="kitchen-order-item">
-                    <div class="kitchen-order-item-name">1x Chả Giò</div>
-                    <div class="status-label completed">Ready</div>
-                  </div>
-                  <div class="kitchen-order-item">
-                    <div class="kitchen-order-item-name">1x Bún Bò Huế</div>
-                    <div class="kitchen-order-item-notes">Extra spicy</div>
-                    <div class="status-label preparing">Preparing</div>
-                  </div>
-                  <div class="kitchen-order-item">
-                    <div class="kitchen-order-item-name">1x Nước Chanh Muối</div>
-                    <div class="status-label completed">Ready</div>
-                  </div>
-                </div>
-                <div class="kitchen-order-timer urgent">
-                  <span>Preparing for:</span>
-                  <span>25 minutes</span>
-                </div>
-              </div>
-              <div class="kitchen-order-footer">
-                <div>
-                  <span class="font-medium">Est. completion:</span> 12:45 PM
-                </div>
-                <button class="primary complete-cooking" data-id="1003">Mark as Ready</button>
+                <button class="primary complete-cooking" data-id="">Mark as Ready</button>
               </div>
             </div>
           </div>
@@ -275,90 +169,34 @@
         
         <div id="completed-today" class="tab-content">
           <div id="kitchen-completed-orders" class="kitchen-grid">
-            <!-- Completed orders -->
+            <!-- Completed orders template -->
             <div class="kitchen-order-card completed">
               <div class="kitchen-order-header">
                 <div class="kitchen-order-title">
-                  <span>Order #1000</span>
+                  <span>Order #</span>
                   <span class="badge green">Completed</span>
                 </div>
                 <div class="kitchen-order-subtitle">
-                  <span>Table 7</span>
-                  <span>Delivered: 12:05 PM</span>
+                  <span>Table </span>
+                  <span>Delivered: </span>
                 </div>
               </div>
               <div class="kitchen-order-content">
                 <div class="kitchen-order-items">
-                  <div class="kitchen-order-item">
-                    <div class="kitchen-order-item-name">2x Cà Phê Sữa Đá</div>
-                  </div>
-                  <div class="kitchen-order-item">
-                    <div class="kitchen-order-item-name">1x Bánh Mì Thịt</div>
-                  </div>
+                  <!-- Items will be populated by JavaScript -->
                 </div>
+                
+                <!-- Order-level special instructions -->
+                <div class="kitchen-order-special-instructions">
+                  <div class="special-instructions-label">
+                    <strong>Order Instructions:</strong>
+                  </div>
+                  <div class="special-instructions-text"></div>
+                </div>
+                
                 <div class="kitchen-order-timer">
                   <span>Preparation time:</span>
-                  <span>15 minutes</span>
-                </div>
-              </div>
-            </div>
-            
-            <div class="kitchen-order-card completed">
-              <div class="kitchen-order-header">
-                <div class="kitchen-order-title">
-                  <span>Order #999</span>
-                  <span class="badge green">Completed</span>
-                </div>
-                <div class="kitchen-order-subtitle">
-                  <span>Table 1</span>
-                  <span>Delivered: 11:35 AM</span>
-                </div>
-              </div>
-              <div class="kitchen-order-content">
-                <div class="kitchen-order-items">
-                  <div class="kitchen-order-item">
-                    <div class="kitchen-order-item-name">1x Canh Chua Cá</div>
-                  </div>
-                  <div class="kitchen-order-item">
-                    <div class="kitchen-order-item-name">2x Gỏi Ngo Sen</div>
-                  </div>
-                  <div class="kitchen-order-item">
-                    <div class="kitchen-order-item-name">1x Cơm Chiên Hải Sản</div>
-                  </div>
-                </div>
-                <div class="kitchen-order-timer">
-                  <span>Preparation time:</span>
-                  <span>22 minutes</span>
-                </div>
-              </div>
-            </div>
-            
-            <div class="kitchen-order-card completed">
-              <div class="kitchen-order-header">
-                <div class="kitchen-order-title">
-                  <span>Order #998</span>
-                  <span class="badge green">Completed</span>
-                </div>
-                <div class="kitchen-order-subtitle">
-                  <span>Table 3</span>
-                  <span>Delivered: 11:20 AM</span>
-                </div>
-              </div>
-              <div class="kitchen-order-content">
-                <div class="kitchen-order-items">
-                  <div class="kitchen-order-item">
-                    <div class="kitchen-order-item-name">1x Phở Gà</div>
-                  </div>
-                  <div class="kitchen-order-item">
-                    <div class="kitchen-order-item-name">1x Phở Bò</div>
-                  </div>
-                  <div class="kitchen-order-item">
-                    <div class="kitchen-order-item-name">2x Trà Đá</div>
-                  </div>
-                </div>
-                <div class="kitchen-order-timer">
-                  <span>Preparation time:</span>
-                  <span>18 minutes</span>
+                  <span></span>
                 </div>
               </div>
             </div>
@@ -367,8 +205,6 @@
             No orders completed today
           </div>
         </div>
-      </div>
-    </div>
   </main>
   
   <div class="vietnamese-pattern"></div>

@@ -451,15 +451,23 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     try {
+      // Get special instructions
+      const specialInstructions = document.getElementById('order-special-instructions')?.value.trim() || '';
+      
       // Prepare order data for API
       const orderData = {
-        tableId: selectedTable,  // This should be the table number, e.g., 8
+        tableId: selectedTable,
         items: cart.map(item => ({
           menuItemId: item._id,
           quantity: item.quantity,
           specialInstructions: item.notes || ''
         }))
       };
+      
+      // Only add special instructions if they exist
+      if (specialInstructions) {
+        orderData.specialInstructions = specialInstructions;
+      }
       
       // Get authentication token
       const token = localStorage.getItem('token');
@@ -481,8 +489,12 @@ document.addEventListener('DOMContentLoaded', function() {
         throw new Error(data.message || 'Failed to place order');
       }
       
-      // Clear cart
+      // Clear cart and special instructions
       cart = [];
+      const specialInstructionsField = document.getElementById('order-special-instructions');
+      if (specialInstructionsField) {
+        specialInstructionsField.value = '';
+      }
       renderCart();
       
       // Refresh orders to show the new one
@@ -542,66 +554,69 @@ async function loadOrders() {
   }
 }
 
-  // Render an order card
-  function renderOrderCard(order) {
-    console.log("Rendering order card for order", order._id);
-    
-    let statusBadgeClass = '';
-    let statusText = '';
-    
-    switch(order.status) {
-      case 'pending':
-        statusBadgeClass = 'yellow';
-        statusText = 'Pending';
-        break;
-      case 'preparing':
-        statusBadgeClass = 'blue';
-        statusText = 'Preparing';
-        break;
-      case 'ready':
-        statusBadgeClass = 'green';
-        statusText = 'Ready';
-        break;
-      case 'delivered':
-        statusBadgeClass = 'gray';
-        statusText = 'Delivered';
-        break;
-      default:
-        statusBadgeClass = 'yellow';
-        statusText = 'Pending';
-    }
-    
-    const orderCard = document.createElement('div');
-    orderCard.className = 'customer-order-card';
-    orderCard.innerHTML = `
-      <div class="customer-order-header">
-        <div class="customer-order-title">
-          Order #${order._id}
-          <span class="badge ${statusBadgeClass}">${statusText}</span>
-        </div>
-        <div>${formatTime(order.created_at)}</div>
-      </div>
-      <div class="customer-order-items">
-        ${order.items.map(item => `
-          <div class="customer-order-item">
-            <strong>${item.quantity}x</strong> ${item.menu_item_name}
-            ${item.special_instructions ? ` - <em>${item.special_instructions}</em>` : ''}
-          </div>
-        `).join('')}
-      </div>
-      <div class="customer-order-status">
-        <div>
-          <strong>Total:</strong> ${formatCurrency(order.total_amount)}
-        </div>
-        <div>
-          <strong>Status:</strong> ${getStatusText(order.status)}
-        </div>
-      </div>
-    `;
-    
-    customerOrderCards.appendChild(orderCard);
+function renderOrderCard(order) {
+  console.log("Rendering order card for order", order._id);
+  
+  let statusBadgeClass = '';
+  let statusText = '';
+  
+  switch(order.status) {
+    case 'pending':
+      statusBadgeClass = 'yellow';
+      statusText = 'Pending';
+      break;
+    case 'preparing':
+      statusBadgeClass = 'blue';
+      statusText = 'Preparing';
+      break;
+    case 'ready':
+      statusBadgeClass = 'green';
+      statusText = 'Ready';
+      break;
+    case 'delivered':
+      statusBadgeClass = 'gray';
+      statusText = 'Delivered';
+      break;
+    default:
+      statusBadgeClass = 'yellow';
+      statusText = 'Pending';
   }
-
+  
+  const orderCard = document.createElement('div');
+  orderCard.className = 'customer-order-card';
+  orderCard.innerHTML = `
+    <div class="customer-order-header">
+      <div class="customer-order-title">
+        Order #${order._id}
+        <span class="badge ${statusBadgeClass}">${statusText}</span>
+      </div>
+      <div>${formatTime(order.created_at)}</div>
+    </div>
+    <div class="customer-order-items">
+      ${order.items.map(item => `
+        <div class="customer-order-item">
+          <strong>${item.quantity}x</strong> ${item.menu_item_name}
+          ${item.special_instructions ? ` - <em>${item.special_instructions}</em>` : ''}
+        </div>
+      `).join('')}
+    </div>
+    ${order.specialInstructions ? `
+    <div class="customer-order-special-instructions">
+      <strong>Special Instructions:</strong> <em>${order.specialInstructions}</em>
+    </div>
+    ` : ''}
+    <div class="customer-order-status">
+      <div>
+        <strong>Total:</strong> ${formatCurrency(order.total_amount)}
+      </div>
+      <div>
+        <strong>Status:</strong> ${getStatusText(order.status)}
+      </div>
+    </div>
+  `;
+  
+  customerOrderCards.appendChild(orderCard);
+}
   // Get status text for display
   function getStatusText(status) {
     switch(status) {

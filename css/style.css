@@ -1831,4 +1831,22 @@ input[type="password"]:focus {
     margin-top: 0.3rem;
 
   }
+  .kitchen-order-special-instructions {
+    margin: 10px 0;
+    padding: 8px 12px;
+    background-color: #fff3e6;
+    border-left: 3px solid #ff6d00;
+    border-radius: 4px;
+  }
+  
+  .special-instructions-label {
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+    color: #d84315;
+  }
+  
+  .special-instructions-text {
+    font-style: italic;
+    color: #e65100;
+  }
 }

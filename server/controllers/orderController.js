@@ -96,7 +96,7 @@ exports.getOrder = async (req, res) => {
 
 exports.createOrder = async (req, res) => {
   try {
-    const { tableId, items } = req.body;
+    const { tableId, items, specialInstructions } = req.body;
     
     if (!tableId || !items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ message: 'Table ID and items are required' });
@@ -115,7 +115,7 @@ exports.createOrder = async (req, res) => {
     for (const item of items) {
       const menuItemId = item.menuItemId;
       const quantity = item.quantity || 1;
-      const specialInstructions = item.specialInstructions || '';
+      const itemSpecialInstructions = item.specialInstructions || '';
       
       // Find menu item
       const menuItem = await MenuItem.findOne({
@@ -141,7 +141,7 @@ exports.createOrder = async (req, res) => {
         menu_item_name: menuItem.name,
         quantity,
         item_price: itemPrice,
-        special_instructions: specialInstructions
+        special_instructions: itemSpecialInstructions
       });
     }
     
@@ -151,6 +151,8 @@ exports.createOrder = async (req, res) => {
       table_number: table.table_number,
       status: 'pending',
       items: orderItems,
+      // Save special instructions at the order level if provided
+      specialInstructions: specialInstructions || '',
       total_amount,
       created_at: new Date()
     });
@@ -189,7 +191,6 @@ exports.createOrder = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
-
 // Get all active orders (pending, preparing, ready)
 exports.getAllOrders = async (req, res) => {
   try {

@@ -131,6 +131,11 @@ function setupRealTimeUpdates() {
       const data = JSON.parse(event.data);
       console.log('WebSocket message received:', data);
       
+      // Log special instructions for debugging
+      if (data.order && data.order.specialInstructions) {
+        console.log(`Special instructions for order #${data.order._id || data.order.order_id}: "${data.order.specialInstructions}"`);
+      }
+      
       // Handle different types of events
       if (data.type === 'newOrder' && data.order) {
         const newOrder = data.order;
@@ -174,6 +179,8 @@ function setupRealTimeUpdates() {
   
   socket.onerror = function(error) {
     console.error('WebSocket error:', error);
+    // Try a different approach if the standard WebSocket connection fails
+    tryAlternativeConnection();
   };
   
   socket.onclose = function() {
@@ -181,6 +188,162 @@ function setupRealTimeUpdates() {
     // Try to reconnect after a delay
     setTimeout(setupRealTimeUpdates, 5000);
   };
+}
+
+// Alternative connection method to try if the main one fails
+function tryAlternativeConnection() {
+  console.log("Trying alternative WebSocket connection method...");
+  const wsUrl = `ws://localhost:5000/api/socket`;
+  
+  try {
+    const altSocket = new WebSocket(wsUrl);
+    
+    altSocket.onopen = function() {
+      console.log('Alternative WebSocket connection established');
+    };
+    
+    altSocket.onerror = function(error) {
+      console.error('Alternative WebSocket connection also failed:', error);
+    };
+  } catch (error) {
+    console.error('Failed to create alternative WebSocket:', error);
+  }
+}
+// Helper function to calculate waiting time from a timestamp
+function getWaitingTime(timestamp) {
+  if (!timestamp) {
+    return "Just arrived";
+  }
+  
+  const created = new Date(timestamp);
+  const now = new Date();
+  
+  // Calculate difference in minutes
+  const diffMs = now - created;
+  const diffMinutes = Math.floor(diffMs / 60000);
+  
+  if (diffMinutes < 1) {
+    return "Just arrived";
+  } else if (diffMinutes === 1) {
+    return "1 minute";
+  } else {
+    return `${diffMinutes} minutes`;
+  }
+}
+
+
+// Make sure this function exists and properly displays special instructions
+function addOrderToKitchenView(order) {
+  // Create a new card for the order
+  const orderCard = document.createElement('div');
+  orderCard.className = 'kitchen-order-card pending';
+  orderCard.setAttribute('data-order-id', order._id || order.order_id);
+  
+  // Format the created time
+  const orderTime = new Date(order.created_at);
+  const formattedTime = orderTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  
+  // Calculate waiting time
+  const waitingTime = getWaitingTime(order.created_at);
+  
+  // Build the order card HTML
+  orderCard.innerHTML = `
+    <div class="kitchen-order-header pending">
+      <div class="kitchen-order-title">
+        <span>Order #${order._id || order.order_id}</span>
+        <span class="badge yellow">New Order</span>
+      </div>
+      <div class="kitchen-order-subtitle">
+        <span>Table ${order.table_number}</span>
+        <span>${formattedTime}</span>
+      </div>
+    </div>
+    <div class="kitchen-order-content">
+      <div class="kitchen-order-items">
+        ${order.items.map(item => `
+          <div class="kitchen-order-item">
+            <div class="kitchen-order-item-name">${item.quantity}x ${item.menu_item_name}</div>
+            ${item.special_instructions ? `<div class="kitchen-order-item-notes">${item.special_instructions}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+      
+      ${order.specialInstructions ? `
+      <div class="kitchen-order-special-instructions">
+        <div class="special-instructions-label">
+          <strong>Order Instructions:</strong>
+        </div>
+        <div class="special-instructions-text">${order.specialInstructions}</div>
+      </div>
+      ` : ''}
+      
+      <div class="kitchen-order-timer">
+        <span>Waiting for:</span>
+        <span>${waitingTime}</span>
+      </div>
+    </div>
+    <div class="kitchen-order-footer">
+      <button class="primary start-cooking" data-id="${order._id || order.order_id}">Start Preparing</button>
+    </div>
+  `;
+  
+  // Add event listener to the start cooking button
+  const startButton = orderCard.querySelector('.start-cooking');
+  if (startButton) {
+    startButton.addEventListener('click', () => {
+      startCookingOrder(order._id || order.order_id);
+    });
+  }
+  
+  // Append the new order card to the pending orders container
+  const pendingOrdersContainer = document.getElementById('kitchen-pending-orders');
+  if (pendingOrdersContainer) {
+    pendingOrdersContainer.appendChild(orderCard);
+    document.getElementById('no-pending-orders').classList.add('hidden');
+  }
+}
+// Function to start cooking an order
+async function startCookingOrder(orderId) {
+  try {
+    console.log(`Starting preparation for order ${orderId}`);
+    
+    // Show loading state
+    const button = document.querySelector(`.start-cooking[data-id="${orderId}"]`);
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Processing...";
+    }
+    
+    // Call the API to update the order status
+    const updatedOrder = await updateOrderStatus(orderId, 'preparing');
+    
+    if (updatedOrder) {
+      console.log("Order status updated to preparing:", updatedOrder);
+      
+      // Remove the order from the pending list
+      const orderCard = document.querySelector(`.kitchen-order-card[data-order-id="${orderId}"]`);
+      if (orderCard) {
+        orderCard.remove();
+      }
+      
+      // Check if there are any pending orders left
+      checkRemainingOrders('pending');
+      
+      // Update dashboard stats
+      updateDashboardStats();
+    }
+  } catch (error) {
+    console.error('Error starting order preparation:', error);
+    
+    // Reset button state
+    const button = document.querySelector(`.start-cooking[data-id="${orderId}"]`);
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Start Preparing";
+    }
+    
+    alert(`Failed to start preparation: ${error.message}`);
+  }
 }
 
 // Initialize kitchen functionality
@@ -473,110 +636,6 @@ function moveOrderToPreparation(order) {
       });
     }
   }
-}
-// In kitchen.js - Fix the Start Preparing button click handler
-
-// First, find where the event listeners are being attached to the buttons
-// Look for this section in the code
-function addOrderToKitchenView(order) {
-  console.log("Full order object:", order);
-  
-  const orderId = order._id || order.order_id;
-  console.log("Extracted Order ID:", orderId);
-  
-  if (!orderId) {
-    console.error("No valid order ID found for order:", order);
-    return;
-  }
-  
-  // Get the container for pending orders
-  const pendingOrdersContainer = document.getElementById('kitchen-pending-orders');
-  const noOrdersMessage = document.getElementById('no-pending-orders');
-  
-  if (!pendingOrdersContainer) {
-    console.error("Pending orders container not found");
-    return;
-  }
-  
-  // Hide "no orders" message if visible
-  if (noOrdersMessage) {
-    noOrdersMessage.classList.add('hidden');
-  }
-  
-  // Create new order card
-  const orderCard = document.createElement('div');
-  orderCard.className = 'kitchen-order-card pending';
-  
-  // Format order creation time
-  const orderTime = new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  
-  // Populate order card with order details
-  orderCard.innerHTML = `
-    <div class="kitchen-order-header pending">
-      <div class="kitchen-order-title">
-        <span>Order #${orderId}</span>
-        <span class="badge yellow">New Order</span>
-      </div>
-      <div class="kitchen-order-subtitle">
-        <span>Table ${order.table_number}</span>
-        <span>${orderTime}</span>
-      </div>
-    </div>
-    <div class="kitchen-order-content">
-      <div class="kitchen-order-items">
-        ${order.items.map(item => `
-          <div class="kitchen-order-item">
-            <div class="kitchen-order-item-name">${item.quantity}x ${item.menu_item_name}</div>
-            ${item.special_instructions ? `<div class="kitchen-order-item-notes">${item.special_instructions}</div>` : ''}
-          </div>
-        `).join('')}
-      </div>
-      <div class="kitchen-order-timer">
-        <span>Waiting for:</span>
-        <span>Just arrived</span>
-      </div>
-    </div>
-    <div class="kitchen-order-footer">
-      <button class="primary start-cooking" data-order-id="${orderId}">Start Preparing</button>
-    </div>
-  `;
-  
-  // Add order card to pending orders container
-  pendingOrdersContainer.appendChild(orderCard);
-  
-  // Add event listener to the new start cooking button
-  // Add event listener to the new start cooking button
-const startCookingBtn = orderCard.querySelector('.start-cooking');
-if (startCookingBtn) {
-  startCookingBtn.addEventListener('click', function() {
-    const clickedOrderId = this.dataset.orderId;
-    console.log("Start cooking button clicked for order:", clickedOrderId);
-    
-    if (!clickedOrderId) {
-      console.error("Order ID not found in button dataset");
-      return;
-    }
-    
-    // Remove the card immediately to prevent duplicate clicks
-    const orderCard = this.closest('.kitchen-order-card');
-    if (orderCard) {
-      orderCard.remove();
-    }
-    
-    updateOrderStatus(clickedOrderId, 'preparing')
-      .then(updatedOrder => {
-        if (updatedOrder) {
-          // No need to do anything else, the renderPreparingOrders function will handle it
-          updateDashboardStats();
-        }
-      })
-      .catch(error => {
-        console.error('Error starting preparation:', error);
-        // If there was an error, re-render the pending orders to show the card again
-        renderPendingOrders();
-      });
-  });
-}
 }
 
 function moveOrderToPreparation(order) {
@@ -1043,7 +1102,6 @@ function setupCharts() {
     console.log("Chart data prepared:", chartData);
   }
 }
-
 // Performance monitoring and logging
 function logPerformance() {
   if (window.performance) {

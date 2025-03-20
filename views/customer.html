@@ -75,53 +75,55 @@
             </div>
             
             <!-- Order Card -->
-            <div class="card">
-              <div class="card-header">
-                <div class="card-title">
-                  <i class="fas fa-shopping-cart"></i> Your Order
-                </div>
-                <div class="card-description">
-                  Table #<span id="customer-table-number">1</span>
-                </div>
-              </div>
-              <div class="card-content">
-                <div id="empty-cart-message" class="text-center">
-                  Your cart is empty
-                </div>
-                <div id="cart-items" class="cart-items hidden">
-                  <!-- Cart items will be populated by JavaScript -->
-                </div>
-              </div>
-              <div class="card-footer">
-                <div class="cart-total">
-                  <span>Total:</span>
-                  <span id="cart-total">0 ₫</span>
-                </div>
-                <button id="place-order-btn" class="primary" disabled>Place Order</button>
-              </div>
-            </div>
-            
-            <!-- Orders Card -->
-            <div id="customer-orders" class="customer-orders">
-              <div class="card">
-                <div class="card-header">
-                  <div class="card-title">Your Orders</div>
-                </div>
-                <div class="card-content">
-                  <div id="no-customer-orders" class="text-center">
-                    You have no orders yet
-                  </div>
-                  <div id="customer-order-cards" class="hidden">
-                    <!-- Order items will be populated by JavaScript -->
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <i class="fas fa-shopping-cart"></i> Your Order
+    </div>
+    <div class="card-description">
+      Table #<span id="customer-table-number">1</span>
+    </div>
+  </div>
+  <div class="card-content">
+    <div id="empty-cart-message" class="text-center">
+      Your cart is empty
+    </div>
+    <div id="cart-items" class="cart-items hidden">
+      <!-- Cart items will be populated by JavaScript -->
+    </div>
+    
+    <!-- Special Instructions Field - MOVED HERE -->
+      <div class="special-instructions-wrapper">
+        <label for="order-special-instructions">Special Instructions:</label>
+        <textarea id="order-special-instructions" placeholder="Enter any special requests here (allergies, spice level, etc.)"></textarea>
       </div>
     </div>
-  </main>
+  </div>
+  <div class="card-footer">
+    <div class="cart-total">
+      <span>Total:</span>
+      <span id="cart-total">0 ₫</span>
+    </div>
+    <button id="place-order-btn" class="primary" disabled>Place Order</button>
+  </div>
+</div>
+
+<!-- Orders Card -->
+<div id="customer-orders" class="customer-orders">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Your Orders</div>
+    </div>
+    <div class="card-content">
+      <div id="no-customer-orders" class="text-center">
+        You have no orders yet
+      </div>
+      <div id="customer-order-cards" class="hidden">
+        <!-- Order items will be populated by JavaScript -->
+      </div>
+    </div>
+  </div>
+</div>
   
   <div class="vietnamese-pattern"></div>
   

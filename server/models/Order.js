@@ -41,6 +41,11 @@ const OrderSchema = new mongoose.Schema({
     default: 'pending'
   },
   items: [OrderItemSchema],
+  // Add this field for order-level special instructions
+  specialInstructions: {
+    type: String,
+    default: ''
+  },
   total_amount: {
     type: Number,
     required: true,
@@ -58,7 +63,6 @@ const OrderSchema = new mongoose.Schema({
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });
-
 // Pre-save hook to calculate total amount
 OrderSchema.pre('save', function(next) {
   // Calculate total amount only if items have changed or total_amount is not set

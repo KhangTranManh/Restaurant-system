@@ -605,6 +605,13 @@ function renderActiveOrder(order, container) {
             </div>
           `).join('')}
         </div>
+        
+        ${order.specialInstructions ? `
+        <div class="staff-order-special-instructions">
+          <strong>Order Instructions:</strong> 
+          <span class="staff-order-notes">"${order.specialInstructions}"</span>
+        </div>
+        ` : ''}
       </div>
       <div class="staff-order-footer">
         <div class="staff-order-total">
@@ -695,6 +702,13 @@ function renderReadyOrder(order, container) {
             </div>
           `).join('')}
         </div>
+        
+        ${order.specialInstructions ? `
+        <div class="staff-order-special-instructions">
+          <strong>Order Instructions:</strong> 
+          <span class="staff-order-notes">"${order.specialInstructions}"</span>
+        </div>
+        ` : ''}
       </div>
       <div class="staff-order-footer">
         <div class="staff-order-total">
