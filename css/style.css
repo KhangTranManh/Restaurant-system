@@ -1849,4 +1849,159 @@ input[type="password"]:focus {
     font-style: italic;
     color: #e65100;
   }
+  /* Enhanced Revenue Analytics Styles */
+
+/* Stat number colors for growth/decline indicators */
+.stat-number.positive {
+  color: #16a34a !important; /* Green for positive growth */
+}
+
+.stat-number.negative {
+  color: #dc2626 !important; /* Red for negative growth */
+}
+
+.stat-number.neutral {
+  color: #4b5563 !important; /* Gray for no change */
+}
+
+/* Growth indicator styles */
+.growth-indicator {
+  display: inline-block;
+  font-size: 0.75rem;
+  margin-left: 8px;
+  font-weight: 500;
+  vertical-align: middle;
+}
+
+.growth-indicator.positive {
+  color: #16a34a;
+}
+
+.growth-indicator.negative {
+  color: #dc2626;
+}
+
+/* Loading animation */
+.stat-number.loading {
+  position: relative;
+  color: transparent !important;
+}
+
+.stat-number.loading::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #f0f0f0, #d4d4d4, #f0f0f0);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  transform: translateY(-50%);
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Refresh button styles */
+.refresh-btn {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0 16px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.refresh-btn:hover {
+  background-color: #f3f4f6;
+}
+
+.refresh-btn i {
+  margin-right: 6px;
+}
+
+.refresh-btn.rotating i {
+  animation: rotate 1s linear;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Revenue chart styles */
+.revenue-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.chart-controls {
+  display: flex;
+  background-color: #f3f4f6;
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.chart-btn {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.chart-btn.active {
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.revenue-chart {
+  height: 250px;
+  margin-bottom: 16px;
+  background-color: #f9fafb;
+  border-radius: 4px;
+}
+
+.chart-summary {
+  display: flex;
+  justify-content: space-between;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.summary-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.summary-value {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+/* Error notification */
+.error-notification {
+  background-color: #fee2e2;
+  border-left: 4px solid #ef4444;
+  color: #b91c1c;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
 }

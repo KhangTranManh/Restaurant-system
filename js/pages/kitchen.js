@@ -1130,3 +1130,4 @@ window.addEventListener('unhandledrejection', function(event) {
   // Optionally show a user-friendly error message
   alert('An unexpected error occurred. Please try again.');
 });
+document.addEventListener('DOMContentLoaded', setupOrderRefresh);

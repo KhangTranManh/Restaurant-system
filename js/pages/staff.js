@@ -928,3 +928,4 @@ window.seatGuests = seatGuests;
 window.makeReservation = makeReservation;
 window.cancelReservation = cancelReservation;
 });
+document.addEventListener('DOMContentLoaded', setupOrderRefresh);
