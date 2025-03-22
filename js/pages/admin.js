@@ -3226,5 +3226,170 @@ function initializePerformanceMetrics() {
     loadTopSellingItems();
   }
 }
+/**
+ * Loads and updates the Popular Dishes stats in the card view
+ */
+function updatePopularDishesCard() {
+  console.log("Updating Popular Dishes card...");
+  
+  // Find the Popular Dishes card using a more compatible selector
+  // Find all card titles first
+  const cardTitles = document.querySelectorAll('.card-title');
+  let popularDishesCard = null;
+  
+  // Look through all titles to find the one containing "Popular Dishes"
+  for (let i = 0; i < cardTitles.length; i++) {
+    if (cardTitles[i].textContent.includes('Popular Dishes')) {
+      // Found it - get the parent card
+      popularDishesCard = cardTitles[i].closest('.card');
+      break;
+    }
+  }
+  
+  // If we couldn't find it by title, try using positional selector (4th card in kitchen view)
+  if (!popularDishesCard) {
+    popularDishesCard = document.querySelector('#admin-kitchen-view .card:nth-child(4)');
+  }
+  
+  // Get the content container
+  const popularDishesContent = popularDishesCard ? popularDishesCard.querySelector('.card-content') : null;
+  
+  if (!popularDishesContent) {
+    console.error("Popular Dishes card content not found");
+    return;
+  }
+  
+  // Show loading state
+  popularDishesContent.innerHTML = '<div class="loading-spinner">Loading popular dishes...</div>';
+  
+  // Fetch order data
+  fetch('/api/orders?status=delivered')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Failed to fetch orders: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(orders => {
+      console.log(`Analyzing ${orders.length} orders for popular dishes`);
+      
+      // Process orders to count menu items
+      const menuItemCounts = {};
+      
+      // Go through all orders
+      orders.forEach(order => {
+        // Only process delivered orders
+        if (order.status === 'delivered' && Array.isArray(order.items)) {
+          // Go through each item in the order
+          order.items.forEach(item => {
+            const itemName = item.menu_item_name;
+            const quantity = item.quantity || 1;
+            
+            // Add to the count
+            if (itemName) {
+              if (!menuItemCounts[itemName]) {
+                menuItemCounts[itemName] = 0;
+              }
+              menuItemCounts[itemName] += quantity;
+            }
+          });
+        }
+      });
+      
+      // Convert to array for sorting
+      const menuItems = Object.keys(menuItemCounts).map(name => ({
+        name: name,
+        count: menuItemCounts[name]
+      }));
+      
+      // Sort by count (highest first)
+      menuItems.sort((a, b) => b.count - a.count);
+      
+      // Take top 2 for the card (or fewer if there aren't 2)
+      const topItems = menuItems.slice(0, 2);
+      
+      console.log("Top dishes for card:", topItems);
+      
+      // Check if we have any items
+      if (topItems.length === 0) {
+        popularDishesContent.innerHTML = `
+          <div style="text-align: center; padding: 10px;">
+            No sales data available
+          </div>
+        `;
+        return;
+      }
+      
+      // Create the stat grid with the top items
+      const statGrid = document.createElement('div');
+      statGrid.className = 'stat-grid';
+      
+      // Add each top item to the grid
+      topItems.forEach(item => {
+        const statItem = document.createElement('div');
+        statItem.className = 'stat-item';
+        
+        statItem.innerHTML = `
+          <div class="stat-number">${item.count}</div>
+          <div class="stat-label">${item.name}</div>
+        `;
+        
+        statGrid.appendChild(statItem);
+      });
+      
+      // Add the grid to the container
+      popularDishesContent.innerHTML = '';
+      popularDishesContent.appendChild(statGrid);
+    })
+    .catch(error => {
+      console.error("Error loading popular dishes for card:", error);
+      
+      // Show error state
+      popularDishesContent.innerHTML = `
+        <div style="color: #dc2626; text-align: center; padding: 5px; margin-bottom: 10px; font-size: 0.75rem;">
+          Failed to load data
+        </div>
+        
+        <!-- Fallback to sample data -->
+        <div class="stat-grid">
+          <div class="stat-item">
+            <div class="stat-number">24</div>
+            <div class="stat-label">Phở Bò</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">18</div>
+            <div class="stat-label">Bánh Xèo</div>
+          </div>
+        </div>
+      `;
+    });
+}
+// Update the initializeAnalyticsDashboard function to also update the Popular Dishes card
+const originalAnalyticsInit = window.initializeAnalyticsDashboard || function() {};
+window.initializeAnalyticsDashboard = function(showLoading) {
+  originalAnalyticsInit(showLoading);
+  
+  // Call both functions to update different popular dishes displays
+  setTimeout(() => {
+    loadTopSellingItems();      // For the performance metrics
+    updatePopularDishesCard();  // For the card view
+  }, 500);
+
+  const analyticsBtn = document.getElementById('admin-analytics-btn');
+if (analyticsBtn) {
+  const originalClickHandler = analyticsBtn.onclick;
+  analyticsBtn.onclick = function(event) {
+    // Call original handler if it exists
+    if (originalClickHandler) {
+      originalClickHandler.call(this, event);
+    }
+    
+    // Add our new functionality
+    setTimeout(() => {
+      updatePopularDishesCard();
+    }, 500);
+  };
+};
+}
 // Start refreshing when page loads
 document.addEventListener('DOMContentLoaded', setupOrderRefresh);
