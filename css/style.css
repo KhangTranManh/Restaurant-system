@@ -2004,4 +2004,18 @@ input[type="password"]:focus {
   border-radius: 4px;
   font-size: 0.875rem;
 }
+.staff-view-container {
+  display: flex;
+  flex-direction: row-reverse; /* Puts tables on the right */
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.tables-section {
+  flex: 0 0 300px; /* Fixed width for tables */
+}
+
+.orders-section {
+  flex: 1; /* Takes remaining space */
+}
 }

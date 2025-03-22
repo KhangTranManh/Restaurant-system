@@ -1,94 +1,96 @@
-  <!DOCTYPE html>
-  <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Viet Nam Cuisine - Staff Dashboard</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <script src="/js/pages/staff.js"></script>
-    <link href="/css/style.css" rel="stylesheet">
-  </head>
-  <body>
-    <!-- Header -->
-    <header>
-      <div class="container">
-        <div class="header-content">
-          <div class="header-brand">
-            <img src="/images/logo.jpg" alt="Viet Nam Cuisine Logo">
-            <h1>Viet Nam Cuisine</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Viet Nam Cuisine - Staff Dashboard</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <script src="/js/pages/staff.js"></script>
+  <link href="/css/style.css" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <div class="header-brand">
+          <img src="/images/logo.jpg" alt="Viet Nam Cuisine Logo">
+          <h1>Viet Nam Cuisine</h1>
+        </div>
+        <div class="header-controls">
+          <div class="user-controls">
+            <span id="user-info">Welcome, Staff</span>
+            <button id="logout-btn" class="secondary" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Logout</button>
           </div>
-          <div class="header-controls">
-            <div class="user-controls">
-              <span id="user-info">Welcome, Staff</span>
-              <button id="logout-btn" class="secondary" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Logout</button>
-            </div>
-            <div class="nav-controls">
-              <button id="customer-view-btn" class="new-order-button">
-                <i class="fas fa-utensils"></i> Customer Ordering View
-              </button>
-            </div>
+          <div class="nav-controls">
+            <button id="customer-view-btn" class="new-order-button">
+              <i class="fas fa-utensils"></i> Customer Ordering View
+            </button>
           </div>
         </div>
       </div>
-    </header>
-    
-    <main>
-      <div class="container">
-        <div class="staff-dashboard">
-          <div class="staff-view-container">
-            <div class="tables-section">
-              <h2>Tables</h2>
-              <div class="tables-grid">
-                <!-- Tables with data attributes and IDs for better targeting -->
-                <button id="table-1" class="secondary" data-table="1">1</button>
-                <button id="table-2" class="secondary occupied" data-table="2">2</button>
-                <button id="table-3" class="secondary" data-table="3">3</button>
-                <button id="table-4" class="secondary" data-table="4">4</button>
-                <button id="table-5" class="secondary reserved" data-table="5">5</button>
-                <button id="table-6" class="secondary" data-table="6">6</button>
-                <button id="table-7" class="secondary" data-table="7">7</button>
-                <button id="table-8" class="secondary" data-table="8">8</button>
-              </div>
+    </div>
+  </header>
+  
+  <main>
+    <div class="container">
+      <div class="staff-dashboard">
+        <div class="staff-view-container">
+          <!-- Tables section now on the right due to flex-direction: row-reverse -->
+          <div class="tables-section">
+            <h2>Tables</h2>
+            <div class="tables-grid">
+              <!-- Tables with data attributes and IDs for better targeting -->
+              <button id="table-1" class="secondary" data-table="1">1</button>
+              <button id="table-2" class="secondary occupied" data-table="2">2</button>
+              <button id="table-3" class="secondary" data-table="3">3</button>
+              <button id="table-4" class="secondary" data-table="4">4</button>
+              <button id="table-5" class="secondary reserved" data-table="5">5</button>
+              <button id="table-6" class="secondary" data-table="6">6</button>
+              <button id="table-7" class="secondary" data-table="7">7</button>
+              <button id="table-8" class="secondary" data-table="8">8</button>
+            </div>
+          </div>
 
-            <div class="orders-section">
-              <div class="tabs">
-                <div class="tab active" data-tab="active-orders">Active Orders</div>
-                <div class="tab" data-tab="ready-orders">Ready for Service</div>
-                <div class="tab" data-tab="completed-orders">Completed</div>
+          <div class="orders-section">
+            <div class="tabs">
+              <div class="tab active" data-tab="active-orders">Active Orders</div>
+              <div class="tab" data-tab="ready-orders">Ready for Service</div>
+              <div class="tab" data-tab="completed-orders">Completed</div>
+            </div>
+            
+            <div id="active-orders" class="tab-content active">
+              <div id="staff-active-orders" class="staff-order-cards">
+                <!-- Active orders will be populated by JavaScript -->
               </div>
-              
-              <div id="active-orders" class="tab-content active">
-                <div id="staff-active-orders" class="staff-order-cards">
-                  <!-- Active orders will be populated by JavaScript -->
-                </div>
-                <div id="no-active-orders" class="text-center hidden">
-                  No active orders
-                </div>
+              <div id="no-active-orders" class="text-center hidden">
+                No active orders
               </div>
-              
-              <div id="ready-orders" class="tab-content">
-                <div id="staff-ready-orders" class="staff-order-cards">
-                  <!-- Ready orders will be populated by JavaScript -->
-                </div>
-                <div id="no-ready-orders" class="text-center hidden">
-                  No orders ready for service
-                </div>
+            </div>
+            
+            <div id="ready-orders" class="tab-content">
+              <div id="staff-ready-orders" class="staff-order-cards">
+                <!-- Ready orders will be populated by JavaScript -->
               </div>
-              
-              <div id="completed-orders" class="tab-content">
-                <div id="staff-completed-orders" class="staff-order-cards">
-                  <!-- Completed orders will be populated by JavaScript -->
-                </div>
-                <div id="no-completed-orders" class="text-center hidden">
-                  No completed orders
-                </div>
+              <div id="no-ready-orders" class="text-center hidden">
+                No orders ready for service
+              </div>
+            </div>
+            
+            <div id="completed-orders" class="tab-content">
+              <div id="staff-completed-orders" class="staff-order-cards">
+                <!-- Completed orders will be populated by JavaScript -->
+              </div>
+              <div id="no-completed-orders" class="text-center hidden">
+                No completed orders
               </div>
             </div>
           </div>
         </div>
       </div>
-    </main>
-    
-    <div class="vietnamese-pattern"></div>
-  </body>
-  </html>
+    </div>
+  </main>
+  
+  <div class="vietnamese-pattern"></div>
+</body>
+</html>

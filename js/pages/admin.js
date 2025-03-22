@@ -731,87 +731,143 @@ async function showTableOrderPopup(tableNumber) {
     const orderData = activeOrders.length > 0 ? 
       activeOrders[activeOrders.length - 1] : null;
     
-    if (orderData) {
-      console.log("Using order data:", orderData);
-      
-      // Format the time
-      const orderTime = new Date(orderData.created_at);
-      const formattedTime = orderTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      
-      // Get status text with nice formatting
-      let statusText = '';
-      if (orderData.status === 'pending') {
-        statusText = '<span style="color: #f59e0b; font-weight: 500;">Pending</span>';
-      } else if (orderData.status === 'preparing') {
-        statusText = '<span style="color: #2563eb; font-weight: 500;">Preparing</span>';
-      } else if (orderData.status === 'ready') {
-        statusText = '<span style="color: #16a34a; font-weight: 500;">Ready</span>';
+      if (orderData) {
+        console.log("Using order data:", orderData);
+        
+        // Format the time
+        const orderTime = new Date(orderData.created_at);
+        const formattedTime = orderTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        // Get status text with nice formatting
+        let statusClass = '';
+        let statusText = '';
+        
+        if (orderData.status === 'pending') {
+          statusClass = 'yellow';
+          statusText = 'Pending';
+        } else if (orderData.status === 'preparing') {
+          statusClass = 'blue';
+          statusText = 'Preparing';
+        } else if (orderData.status === 'ready') {
+          statusClass = 'green';
+          statusText = 'Ready';
+        } else if (orderData.status === 'delivered') {
+          statusClass = 'gray';
+          statusText = 'Delivered';
+        }
+        
+        // Create a modal backdrop
+        const modalBackdrop = document.createElement('div');
+        modalBackdrop.id = 'table-popup-backdrop';
+        modalBackdrop.className = 'modal-backdrop';
+        modalBackdrop.style.display = 'flex'; // Important to activate the flexbox centering
+        
+        // Create the modal content
+        const modalContent = document.createElement('div');
+        modalContent.id = 'table-popup';
+        modalContent.className = 'modal';
+        modalContent.setAttribute('data-table', tableNumber);
+        
+        // Set the modal content
+        modalContent.innerHTML = `
+          <div class="modal-header">
+            <h3>Order #${orderData._id}</h3>
+            <button id="close-popup" class="modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="order-detail-row" style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+              <span><strong>Table:</strong> ${tableNumber}</span>
+              <span><strong>Time:</strong> ${formattedTime}</span>
+            </div>
+            
+            <div class="order-detail-row" style="display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
+              <span><strong>Status:</strong></span>
+              <span class="badge ${statusClass}">${statusText}</span>
+            </div>
+            
+            <div style="margin-bottom: 10px;">
+              <h4 style="margin: 0 0 10px 0; font-size: 1rem;">Order Items:</h4>
+              <div class="order-items-list">
+                ${orderData.items.map(item => {
+                  const specialInstructions = item.special_instructions 
+                    ? `<span class="note">${item.special_instructions}</span>` 
+                    : '';
+                  return `<div style="padding: 8px 0; border-bottom: 1px dashed #eee;">
+                    <strong>${item.quantity}x</strong> ${item.menu_item_name} ${specialInstructions}
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>
+            
+            <div class="order-detail-total" style="display: flex; justify-content: space-between; padding-top: 10px; font-weight: 600;">
+              <span>Total:</span>
+              <span>${formatCurrency(orderData.total_amount)}</span>
+            </div>
+          </div>
+        `;
+        
+        // Add the modal to the backdrop
+        modalBackdrop.appendChild(modalContent);
+        
+        // Add the backdrop to the document
+        document.body.appendChild(modalBackdrop);
+        
+        // Add event listener for close button
+        document.getElementById('close-popup').addEventListener('click', function() {
+          document.body.removeChild(modalBackdrop);
+        });
+        
+        // Also close when clicking outside the modal
+        modalBackdrop.addEventListener('click', function(event) {
+          if (event.target === modalBackdrop) {
+            document.body.removeChild(modalBackdrop);
+          }
+        });
+      } else {
+        // No order for this table, show a simple message
+        console.log("No active orders for table, showing empty state");
+        
+        // Create a modal backdrop
+        const modalBackdrop = document.createElement('div');
+        modalBackdrop.id = 'table-popup-backdrop';
+        modalBackdrop.className = 'modal-backdrop';
+        modalBackdrop.style.display = 'flex';
+        
+        // Create the modal content
+        const modalContent = document.createElement('div');
+        modalContent.id = 'table-popup';
+        modalContent.className = 'modal';
+        modalContent.setAttribute('data-table', tableNumber);
+        
+        // Set the modal content
+        modalContent.innerHTML = `
+          <div class="modal-header">
+            <h3>Table ${tableNumber}</h3>
+            <button id="close-popup" class="modal-close">&times;</button>
+          </div>
+          <div class="modal-body" style="text-align: center; padding: 30px 20px;">
+            <p>No active orders for this table.</p>
+          </div>
+        `;
+        
+        // Add the modal to the backdrop
+        modalBackdrop.appendChild(modalContent);
+        
+        // Add the backdrop to the document
+        document.body.appendChild(modalBackdrop);
+        
+        // Add event listener for close button
+        document.getElementById('close-popup').addEventListener('click', function() {
+          document.body.removeChild(modalBackdrop);
+        });
+        
+        // Also close when clicking outside the modal
+        modalBackdrop.addEventListener('click', function(event) {
+          if (event.target === modalBackdrop) {
+            document.body.removeChild(modalBackdrop);
+          }
+        });
       }
-      
-      // Create popup HTML without action buttons
-      const popupHTML = `
-      <div id="table-popup" data-table="${tableNumber}" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); width: 90%; max-width: 400px; z-index: 1000;">
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid #eee;">
-          <h3 style="margin: 0; font-size: 1.2rem;">Order #${orderData._id}</h3>
-          <button id="close-popup" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
-        </div>
-        
-        <div style="padding: 0.75rem 1rem; display: flex; justify-content: space-between; color: #666;">
-          <span>Table ${tableNumber}</span>
-          <span>${formattedTime}</span>
-        </div>
-        
-        <div style="padding: 0.75rem 1rem; display: flex; justify-content: space-between; border-bottom: 1px solid #eee;">
-          <span>Status:</span>
-          <span>${statusText}</span>
-        </div>
-        
-        <div style="padding: 0.75rem 1rem;">
-          <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem;">Order Items:</h4>
-        </div>
-        
-        <div style="padding: 0 1rem 1rem;">
-          ${orderData.items.map(item => {
-            const specialInstructions = item.special_instructions 
-              ? `<span style="background-color: #fff7ed; color: #f59e0b; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.75rem; font-weight: 500; display: inline-block; margin-left: 0.5rem;">${item.special_instructions}</span>` 
-              : '';
-            return `<div style="padding: 0.5rem 0; border-bottom: 1px dashed #eee;"><strong>${item.quantity}x</strong> ${item.menu_item_name} ${specialInstructions}</div>`;
-          }).join('')}
-        </div>
-      </div>
-      `;
-      
-      // Add popup to document
-      document.body.insertAdjacentHTML('beforeend', popupHTML);
-      
-      // Add event listener for close button
-      document.getElementById('close-popup').addEventListener('click', function() {
-        closePopup();
-      });
-    } else {
-      console.log("No active orders for table, showing empty state");
-      // No order for this table, show a simple message
-      const popupHTML = `
-        <div id="table-popup" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); width: 90%; max-width: 400px; z-index: 1000;">
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid #eee;">
-            <h3 style="margin: 0; font-size: 1.2rem;">Table ${tableNumber}</h3>
-            <button id="close-popup" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
-          </div>
-          
-          <div style="padding: 1.5rem; text-align: center;">
-            <p style="margin-bottom: 1rem;">No active orders for this table.</p>
-          </div>
-        </div>
-      `;
-      
-      // Add popup to document
-      document.body.insertAdjacentHTML('beforeend', popupHTML);
-      
-      // Add event listener for close button
-      document.getElementById('close-popup').addEventListener('click', function() {
-        closePopup();
-      });
-    }
   } catch (error) {
     console.error('Error fetching table orders:', error);
     // Show error popup
@@ -1003,14 +1059,9 @@ function setupAutoRefresh() {
 // Improved closePopup function for better reliability
 function closePopup() {
   console.log("Closing popup");
-  const popup = document.getElementById('table-popup');
+  const popup = document.getElementById('table-popup-backdrop');
   if (popup) {
-    // Remove all event listeners by cloning and replacing
-    const newPopup = popup.cloneNode(true);
-    popup.parentNode.replaceChild(newPopup, popup);
-    
-    // Now remove the element
-    newPopup.remove();
+    document.body.removeChild(popup);
   }
 }
 
@@ -1315,46 +1366,87 @@ function showOrderDetails(orderId) {
     .then(orderDetails => {
       console.log('Received order details:', orderDetails);
       
-      // Create modal for order details
-      const modalBackdrop = document.getElementById('modal-backdrop');
-      if (!modalBackdrop) {
-        console.error('Modal backdrop element not found');
-        return;
-      }
+      // Create a backdrop div that covers the whole screen
+      const backdrop = document.createElement('div');
+      backdrop.className = 'modal-backdrop';
+      backdrop.style.display = 'flex'; // Ensure flex is active to center the modal
+      backdrop.style.position = 'fixed';
+      backdrop.style.top = '0';
+      backdrop.style.left = '0';
+      backdrop.style.width = '100%';
+      backdrop.style.height = '100%';
+      backdrop.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+      backdrop.style.zIndex = '1000';
+      backdrop.style.alignItems = 'center';
+      backdrop.style.justifyContent = 'center';
       
-      const orderModal = document.createElement('div');
-      orderModal.className = 'modal';
-      orderModal.innerHTML = `
-        <div class="modal-header">
-          <h3>Order Details #${orderDetails._id}</h3>
-          <button class="modal-close">&times;</button>
+      // Create the modal
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.style.backgroundColor = 'white';
+      modal.style.borderRadius = '8px';
+      modal.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.2)';
+      modal.style.width = '90%';
+      modal.style.maxWidth = '500px';
+      modal.style.maxHeight = '90vh';
+      modal.style.overflow = 'auto';
+      
+      // Format date and time
+      const formattedTime = orderDetails.created_at ? 
+        new Date(orderDetails.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'N/A';
+      
+      // Generate modal content
+      modal.innerHTML = `
+        <div class="modal-header" style="padding: 1rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; background-color: #a83232; color: white;">
+          <h3 style="margin: 0; font-weight: 600; font-size: 1.2rem;">Order Details #${orderDetails._id}</h3>
+          <button class="modal-close" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: white;">&times;</button>
         </div>
-        <div class="modal-body">
-          <div class="order-detail-row"><strong>Table:</strong> ${orderDetails.table_number}</div>
-          <div class="order-detail-row"><strong>Status:</strong> ${orderDetails.status}</div>
-          <div class="order-detail-row"><strong>Time:</strong> ${new Date(orderDetails.created_at).toLocaleTimeString()}</div>
-          <h4>Items:</h4>
-          <ul class="order-items-list">
-            ${orderDetails.items.map(item => `
-              <li>
+        <div class="modal-body" style="padding: 1.5rem;">
+          <div style="margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+              <strong>Table:</strong> <span>${orderDetails.table_number}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+              <strong>Status:</strong> <span>${orderDetails.status}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+              <strong>Time:</strong> <span>${formattedTime}</span>
+            </div>
+          </div>
+          
+          <h4 style="margin: 20px 0 10px 0;">Items:</h4>
+          <ul style="list-style: none; padding: 0; margin: 0;">
+            ${orderDetails.items ? orderDetails.items.map(item => `
+              <li style="padding: 8px 0; border-bottom: 1px dashed #eee;">
                 <strong>${item.quantity}x</strong> ${item.menu_item_name} 
-                ${item.special_instructions ? `<span class="special-instruction">(${item.special_instructions})</span>` : ''}
+                ${item.special_instructions ? `<span style="background-color: #fff7ed; color: #f59e0b; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.75rem; font-weight: 500; display: inline-block; margin-left: 0.5rem;">${item.special_instructions}</span>` : ''}
               </li>
-            `).join('')}
+            `).join('') : '<li>No items found</li>'}
           </ul>
-          <div class="order-detail-total"><strong>Total:</strong> ${formatCurrency(orderDetails.total_amount)}</div>
+          
+          <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; font-weight: 600;">
+            <span>Total:</span>
+            <span>${formatCurrency(orderDetails.total_amount)}</span>
+          </div>
         </div>
       `;
       
-      modalBackdrop.innerHTML = ''; // Clear previous content
-      modalBackdrop.appendChild(orderModal);
-      modalBackdrop.style.display = 'block';
-      orderModal.style.display = 'block';
+      // Add the modal to the backdrop
+      backdrop.appendChild(modal);
+      
+      // Add the backdrop to the document body
+      document.body.appendChild(backdrop);
       
       // Close button functionality
-      orderModal.querySelector('.modal-close').addEventListener('click', () => {
-        modalBackdrop.style.display = 'none';
-        modalBackdrop.innerHTML = '';
+      modal.querySelector('.modal-close').addEventListener('click', () => {
+        document.body.removeChild(backdrop);
+      });
+      
+      // Also close when clicking outside the modal
+      backdrop.addEventListener('click', (event) => {
+        if (event.target === backdrop) {
+          document.body.removeChild(backdrop);
+        }
       });
     })
     .catch(error => {
