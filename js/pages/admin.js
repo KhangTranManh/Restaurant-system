@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Initialize the analytics dashboard
   initializeAnalyticsDashboard();
+  initializePerformanceMetrics();
+
   
   // Set up analytics refresh functionality
   setupAnalyticsRefresh();
@@ -3012,10 +3014,7 @@ async function fetchRevenueChartData() {
 
 // Fallback function to render chart with sample data
 function renderChartWithSampleData() {
-  const sampleData = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    values: [4.8, 5.2, 5.5, 4.9, 6.2, 7.8, 7.1]
-  };
+ 
   
   // Create the chart with sample data
   const chartContainer = document.getElementById('revenue-chart-container');
@@ -3056,6 +3055,176 @@ function renderChartWithSampleData() {
     // Draw value
     ctx.fillText(value + 'M₫', x + barWidth/2, y - 5);
   });
+}
+function loadTopSellingItems() {
+  console.log("Loading top-selling menu items...");
+  
+  // Find the performance metrics container
+  const metricsContainer = document.querySelector('.performance-metrics');
+  if (!metricsContainer) {
+    console.error("Performance metrics container not found");
+    return;
+  }
+  
+  // Show loading state
+  metricsContainer.innerHTML = `
+    <div class="loading-spinner">Loading top-selling items...</div>
+  `;
+  
+  // Fetch order data
+  fetch('/api/orders?status=delivered')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Failed to fetch orders: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(orders => {
+      console.log(`Analyzing ${orders.length} orders for top-selling items`);
+      
+      // Process orders to count menu items
+      const menuItemCounts = {};
+      
+      // Go through all orders
+      orders.forEach(order => {
+        // Only process delivered orders
+        if (order.status === 'delivered' && Array.isArray(order.items)) {
+          // Go through each item in the order
+          order.items.forEach(item => {
+            const itemName = item.menu_item_name;
+            const quantity = item.quantity || 1;
+            
+            // Add to the count
+            if (itemName) {
+              if (!menuItemCounts[itemName]) {
+                menuItemCounts[itemName] = 0;
+              }
+              menuItemCounts[itemName] += quantity;
+            }
+          });
+        }
+      });
+      
+      // Convert to array for sorting
+      const menuItems = Object.keys(menuItemCounts).map(name => ({
+        name: name,
+        count: menuItemCounts[name]
+      }));
+      
+      // Sort by count (highest first)
+      menuItems.sort((a, b) => b.count - a.count);
+      
+      // Take top 5 (or fewer if there aren't 5)
+      const topItems = menuItems.slice(0, 5);
+      
+      console.log("Top selling items:", topItems);
+      
+      // Clear the container
+      metricsContainer.innerHTML = '';
+      
+      // Check if we have any items
+      if (topItems.length === 0) {
+        metricsContainer.innerHTML = `
+          <div class="empty-state">
+            No sales data available
+          </div>
+        `;
+        return;
+      }
+      
+      // Add each top item to the container
+      topItems.forEach(item => {
+        const metricCard = document.createElement('div');
+        metricCard.className = 'metric-card';
+        
+        metricCard.innerHTML = `
+          <div class="metric-value">${item.count}</div>
+          <div class="metric-label">${item.name}</div>
+        `;
+        
+        metricsContainer.appendChild(metricCard);
+      });
+      
+      // Add some animation to make the cards pop in
+      const cards = metricsContainer.querySelectorAll('.metric-card');
+      cards.forEach((card, index) => {
+        // Stagger the animations
+        setTimeout(() => {
+          card.style.opacity = '0';
+          card.style.transform = 'translateY(20px)';
+          card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+          
+          // Force reflow
+          void card.offsetWidth;
+          
+          // Animate in
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0)';
+        }, index * 100);
+      });
+    })
+    .catch(error => {
+      console.error("Error loading top-selling items:", error);
+      
+      // Show error state
+      metricsContainer.innerHTML = `
+        <div class="error-notification">
+          Failed to load top-selling items. 
+          <button onclick="loadTopSellingItems()" class="retry-btn">Retry</button>
+        </div>
+        
+        <!-- Fallback to sample data -->
+        <div class="metric-card">
+          <div class="metric-value">24</div>
+          <div class="metric-label">Phở Bò</div>
+        </div>
+        
+        <div class="metric-card">
+          <div class="metric-value">18</div>
+          <div class="metric-label">Bánh Xèo</div>
+        </div>
+        
+        <div class="metric-card">
+          <div class="metric-value">17</div>
+          <div class="metric-label">Bún Chả</div>
+        </div>
+        
+        <div class="metric-card">
+          <div class="metric-value">15</div>
+          <div class="metric-label">Gỏi Cuốn</div>
+        </div>
+        
+        <div class="metric-card">
+          <div class="metric-value">14</div>
+          <div class="metric-label">Cà Phê Sữa Đá</div>
+        </div>
+      `;
+    });
+}
+
+// Call the function when the analytics view is shown
+function initializePerformanceMetrics() {
+  // Add event listener to analytics button
+  const analyticsBtn = document.getElementById('admin-analytics-btn');
+  if (analyticsBtn) {
+    analyticsBtn.addEventListener('click', function() {
+      // Load top-selling items with a slight delay to ensure the view is visible
+      setTimeout(loadTopSellingItems, 500);
+    });
+  }
+  
+  // Also add to the initializeAnalyticsDashboard function
+  const originalInitFunc = window.initializeAnalyticsDashboard || function() {};
+  window.initializeAnalyticsDashboard = function(showLoading) {
+    originalInitFunc(showLoading);
+    setTimeout(loadTopSellingItems, 500);
+  };
+  
+  // Initial load if analytics view is already visible
+  const analyticsView = document.getElementById('admin-analytics-view');
+  if (analyticsView && !analyticsView.classList.contains('hidden')) {
+    loadTopSellingItems();
+  }
 }
 // Start refreshing when page loads
 document.addEventListener('DOMContentLoaded', setupOrderRefresh);
