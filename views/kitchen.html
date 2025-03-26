@@ -78,7 +78,84 @@
           <div class="tab active" data-tab="pending-orders">New Orders</div>
           <div class="tab" data-tab="preparing-orders">In Preparation</div>
           <div class="tab" data-tab="completed-today">Completed Today</div>
+          <div class="tab" data-tab="menu-management">Menu Management</div>
         </div>
+
+        <!-- Add this new tab content section after your other tab-content divs -->
+        <div id="menu-management" class="tab-content hidden">
+          <div class="management-container">
+            <div class="management-section-header">
+              <h3>Menu Management</h3>
+              <button id="add-menu-item-btn" class="management-add-btn">
+                <i class="fas fa-plus"></i> Add Menu Item
+              </button>
+            </div>
+            
+            <table class="management-table" id="menu-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Description</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+      <tbody id="menu-table-body">
+        <!-- Menu items will be loaded dynamically from database -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Menu Item Modal - Add this near the end of your body tag -->
+<div id="modal-backdrop" class="modal-backdrop" style="display: none;">
+  <div id="menu-item-modal" class="modal" style="display: none;">
+    <div class="modal-header">
+      <h3 id="menu-item-modal-title">Add Menu Item</h3>
+      <button class="modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="menu-item-form">
+        <div class="form-group">
+          <label for="menu-item-name">Name</label>
+          <input type="text" id="menu-item-name" required>
+        </div>
+        <div class="form-group">
+          <label for="menu-item-category">Category</label>
+          <select id="menu-item-category" required>
+            <option value="">Select a category</option>
+            <!-- Categories will be loaded dynamically -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="menu-item-price">Price (₫)</label>
+          <input type="number" id="menu-item-price" required>
+        </div>
+        <div class="form-group">
+          <label for="menu-item-status">Status</label>
+          <select id="menu-item-status" required>
+            <option value="available">Available</option>
+            <option value="out-of-stock">Out of Stock</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="menu-item-description">Description</label>
+          <textarea id="menu-item-description" rows="3" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="menu-item-preparation-time">Preparation Time (min)</label>
+          <input type="number" id="menu-item-preparation-time" value="10">
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="secondary modal-cancel-btn">Cancel</button>
+      <button class="primary" id="save-menu-item-btn">Save</button>
+    </div>
+  </div>
+</div>
 
         <div id="pending-orders" class="tab-content active">
           <div id="kitchen-pending-orders" class="kitchen-grid">

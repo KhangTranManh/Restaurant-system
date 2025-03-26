@@ -345,8 +345,9 @@ async function startCookingOrder(orderId) {
     alert(`Failed to start preparation: ${error.message}`);
   }
 }
+// Update this function in kitchen.js
+// Update this part of kitchen.js to make all tabs work correctly
 
-// Initialize kitchen functionality
 function setupKitchenFunctionality() {
   // Tab switching
   document.querySelectorAll('.tab').forEach(tab => {
@@ -357,12 +358,29 @@ function setupKitchenFunctionality() {
       this.classList.add('active');
       
       // Hide all tab content
-      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+        // Make sure all tab content is hidden by default
+        if (!content.classList.contains('hidden')) {
+          content.classList.add('hidden');
+        }
+      });
+      
       // Show content for clicked tab
       const tabId = this.dataset.tab;
-      document.getElementById(tabId).classList.add('active');
+      const tabContent = document.getElementById(tabId);
+      if (tabContent) {
+        tabContent.classList.add('active');
+        tabContent.classList.remove('hidden');
+        
+        // If menu management tab is clicked, load menu items
+        if (tabId === 'menu-management') {
+          displayMenuItems();
+        }
+      }
     });
   });
+
   
   // Start cooking functionality
   document.querySelectorAll('.start-cooking').forEach(button => {
@@ -463,25 +481,24 @@ function setupKitchenFunctionality() {
   });
   
   // Logout button
-const logoutBtn = document.getElementById('logout-btn');
-if (logoutBtn) {
-  logoutBtn.addEventListener('click', function() {
-    // Clear user session data from localStorage
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('token');
-    localStorage.removeItem('selectedTable');
-    
-    // Redirect to login page
-    window.location.href = 'login.html';
-    
-    console.log("User logged out");
-  });
-}
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', function() {
+      // Clear user session data from localStorage
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('token');
+      localStorage.removeItem('selectedTable');
+      
+      // Redirect to login page
+      window.location.href = 'login.html';
+      
+      console.log("User logged out");
+    });
+  }
   
   // Set up order timer updating
   setupTimerUpdates();
 }
-
 // Setup order timer updates
 function setupTimerUpdates() {
   // Update order timer every minute
@@ -1130,4 +1147,383 @@ window.addEventListener('unhandledrejection', function(event) {
   // Optionally show a user-friendly error message
   alert('An unexpected error occurred. Please try again.');
 });
+// Add this code to kitchen.js to enable Menu Management functionality
+
+// Additional initialization for the menu management tab
+document.addEventListener('DOMContentLoaded', function() {
+  // Add to the existing kitchen.js initialization
+  setupMenuManagement();
+});
+
+// Initialize menu management functionality
+function setupMenuManagement() {
+  // Add menu item button
+  const addMenuItemBtn = document.getElementById('add-menu-item-btn');
+  if (addMenuItemBtn) {
+    addMenuItemBtn.addEventListener('click', function() {
+      openMenuItemModal();
+    });
+  }
+  
+  // Save menu item button
+  const saveMenuItemBtn = document.getElementById('save-menu-item-btn');
+  if (saveMenuItemBtn) {
+    saveMenuItemBtn.addEventListener('click', function() {
+      saveMenuItemData();
+    });
+  }
+  
+  // Setup modal controls if not already done
+  setupModalControls();
+  
+  // Load menu items when tab becomes active
+  document.querySelector('.tab[data-tab="menu-management"]').addEventListener('click', function() {
+    displayMenuItems();
+  });
+}
+
+// Display menu items in the table
+function displayMenuItems() {
+  const menuTableBody = document.getElementById('menu-table-body');
+  if (!menuTableBody) return;
+  
+  // Clear the table
+  menuTableBody.innerHTML = '';
+  
+  // Fetch menu data from server
+  fetch('/api/menu/items')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(menuItems => {
+      // Add each menu item to the table
+      menuItems.forEach(item => {
+        const row = document.createElement('tr');
+        
+        // Format price
+        const formattedPrice = new Intl.NumberFormat('vi-VN').format(item.price) + '₫';
+        
+        // Status badge
+        const statusBadge = item.status === 'available' ? 
+          '<span class="badge green small">Available</span>' : 
+          '<span class="badge red small">Out of Stock</span>';
+        
+        row.innerHTML = `
+          <td>${item.name}</td>
+          <td>${item.description || '-'}</td>
+          <td>${item.category ? item.category.name || item.category : '-'}</td>
+          <td>${formattedPrice}</td>
+          <td>${statusBadge}</td>
+          <td>
+            <button class="icon-button edit-menu-btn" data-id="${item._id}">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="icon-button delete-menu-btn" data-id="${item._id}">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        `;
+        
+        menuTableBody.appendChild(row);
+      });
+      
+      // Setup edit and delete buttons
+      setupMenuButtons();
+    })
+    .catch(error => {
+      console.error("Error fetching menu items:", error);
+      menuTableBody.innerHTML = '<tr><td colspan="6">Error loading menu data. Please try again.</td></tr>';
+    });
+}
+
+// Setup menu action buttons
+function setupMenuButtons() {
+  // Edit menu buttons
+  const editButtons = document.querySelectorAll('.edit-menu-btn');
+  editButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const itemId = this.getAttribute('data-id');
+      openMenuItemModal(itemId);
+    });
+  });
+  
+  // Delete menu buttons
+  const deleteButtons = document.querySelectorAll('.delete-menu-btn');
+  deleteButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const itemId = this.getAttribute('data-id');
+      if (confirm('Are you sure you want to delete this menu item?')) {
+        deleteMenuItem(itemId);
+      }
+    });
+  });
+}
+
+// Open menu item modal
+function openMenuItemModal(itemId = null) {
+  // Reset form
+  document.getElementById('menu-item-form').reset();
+  
+  const modalTitle = document.getElementById('menu-item-modal-title');
+  
+  // Load categories for dropdown
+  loadCategories();
+  
+  if (itemId) {
+    // Edit mode
+    modalTitle.textContent = 'Edit Menu Item';
+    
+    // Fetch menu item data from server
+    fetch(`/api/menu/items/${itemId}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(item => {
+        // Fill form with menu item data
+        document.getElementById('menu-item-name').value = item.name || '';
+        document.getElementById('menu-item-description').value = item.description || '';
+        
+        // Set category - wait for categories to load
+        const categorySelect = document.getElementById('menu-item-category');
+        const categoryInterval = setInterval(() => {
+          if (categorySelect.options.length > 1) {
+            clearInterval(categoryInterval);
+            
+            // Set category value - could be an ID or a string
+            const categoryId = item.category._id || item.category;
+            if (categorySelect.querySelector(`option[value="${categoryId}"]`)) {
+              categorySelect.value = categoryId;
+            } else {
+              // If the exact category isn't found, try to find by name
+              Array.from(categorySelect.options).forEach(option => {
+                if (option.text.toLowerCase() === (item.category.name || '').toLowerCase()) {
+                  categorySelect.value = option.value;
+                }
+              });
+            }
+          }
+        }, 100);
+        
+        document.getElementById('menu-item-price').value = item.price || '';
+        document.getElementById('menu-item-status').value = item.status || 'available';
+        
+        if (document.getElementById('menu-item-preparation-time')) {
+          document.getElementById('menu-item-preparation-time').value = item.preparation_time || '';
+        }
+        
+        // Store ID for later use
+        document.getElementById('menu-item-form').setAttribute('data-id', itemId);
+      })
+      .catch(error => {
+        console.error("Error loading menu item:", error);
+        alert('Failed to load menu item data. Please try again.');
+      });
+  } else {
+    // Add mode
+    modalTitle.textContent = 'Add Menu Item';
+    document.getElementById('menu-item-form').removeAttribute('data-id');
+  }
+  
+  // Show modal
+  showModal('menu-item-modal');
+}
+
+// Load categories for dropdown
+function loadCategories() {
+  const categorySelect = document.getElementById('menu-item-category');
+  if (!categorySelect) return;
+  
+  // Clear existing options except for the first one
+  while (categorySelect.options.length > 1) {
+    categorySelect.remove(1);
+  }
+  
+  // Fetch categories from server
+  fetch('/api/menu/categories')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(categories => {
+      // Add each category to the dropdown
+      categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category._id;
+        option.textContent = category.name;
+        categorySelect.appendChild(option);
+      });
+    })
+    .catch(error => {
+      console.error("Error loading categories:", error);
+      // Add some default categories as a fallback
+      const defaultCategories = ['Soups', 'Appetizers', 'Main Courses', 'Desserts', 'Beverages'];
+      defaultCategories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category.toLowerCase().replace(/\s+/g, '-');
+        option.textContent = category;
+        categorySelect.appendChild(option);
+      });
+    });
+}
+
+// Save menu item data to MongoDB
+function saveMenuItemData() {
+  console.log("Save menu item button clicked");
+  const form = document.getElementById('menu-item-form');
+  
+  // Basic validation
+  if (!form.checkValidity()) {
+    alert('Please fill all required fields.');
+    return;
+  }
+  
+  // Get form data
+  const name = document.getElementById('menu-item-name').value;
+  const categoryId = document.getElementById('menu-item-category').value;
+  const price = parseFloat(document.getElementById('menu-item-price').value);
+  const status = document.getElementById('menu-item-status').value;
+  const description = document.getElementById('menu-item-description').value;
+  const preparation_time = parseInt(document.getElementById('menu-item-preparation-time').value) || 0;
+  
+  // Prepare data for API call
+  const menuItemData = {
+    name,
+    category: categoryId,
+    price,
+    status,
+    description,
+    preparation_time
+  };
+  
+  const itemId = form.getAttribute('data-id');
+  
+  // API endpoint and method based on add/edit mode
+  const url = itemId ? `/api/menu/items/${itemId}` : '/api/menu/items';
+  const method = itemId ? 'PUT' : 'POST';
+  
+  console.log("Sending request to:", url);
+  console.log("Request data:", menuItemData);
+  
+  // Make API call to save data
+  fetch(url, {
+    method: method,
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(menuItemData)
+  })
+    .then(response => {
+      if (!response.ok) {
+        return response.text().then(text => {
+          throw new Error('Network response was not ok: ' + text);
+        });
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log("Success:", data);
+      // Close modal and refresh list
+      closeModal();
+      displayMenuItems();
+    })
+    .catch(error => {
+      console.error("Error saving menu item data:", error);
+      alert('An error occurred while saving the menu item: ' + error.message);
+    });
+}
+
+// Delete menu item from MongoDB
+function deleteMenuItem(itemId) {
+  // Make API call to delete menu item
+  fetch(`/api/menu/items/${itemId}`, {
+    method: 'DELETE'
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(data => {
+      // Refresh list
+      displayMenuItems();
+    })
+    .catch(error => {
+      console.error("Error deleting menu item:", error);
+      alert('An error occurred while deleting the menu item.');
+    });
+}
+
+// Modal functions
+function setupModalControls() {
+  // Only setup if not already initialized
+  if (document.querySelector('.modal-close.initialized')) {
+    return;
+  }
+
+  // Close buttons
+  const closeButtons = document.querySelectorAll('.modal-close, .modal-cancel-btn');
+  closeButtons.forEach(button => {
+    button.classList.add('initialized');
+    button.addEventListener('click', function() {
+      closeModal();
+    });
+  });
+  
+  // Close when clicking backdrop
+  const modalBackdrop = document.getElementById('modal-backdrop');
+  if (modalBackdrop) {
+    modalBackdrop.addEventListener('click', function(event) {
+      if (event.target === modalBackdrop) {
+        closeModal();
+      }
+    });
+  }
+  
+  // Close on Escape key
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+      closeModal();
+    }
+  });
+}
+
+// Show a specific modal
+function showModal(modalId) {
+  const modalBackdrop = document.getElementById('modal-backdrop');
+  const modal = document.getElementById(modalId);
+  
+  if (modalBackdrop && modal) {
+    // Hide all modals first
+    document.querySelectorAll('.modal').forEach(m => {
+      m.style.display = 'none';
+    });
+    
+    // Show backdrop and specific modal
+    modalBackdrop.style.display = 'flex';
+    modal.style.display = 'block';
+  }
+}
+
+// Close all modals
+function closeModal() {
+  const modalBackdrop = document.getElementById('modal-backdrop');
+  
+  if (modalBackdrop) {
+    modalBackdrop.style.display = 'none';
+    
+    // Hide all modals
+    document.querySelectorAll('.modal').forEach(modal => {
+      modal.style.display = 'none';
+    });
+  }
+}
 document.addEventListener('DOMContentLoaded', setupOrderRefresh);

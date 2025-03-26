@@ -2018,4 +2018,185 @@ input[type="password"]:focus {
 .orders-section {
   flex: 1; /* Takes remaining space */
 }
+/* Add these styles to your CSS file */
+
+/* Management container for the kitchen interface */
+#menu-management .management-container {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+#menu-management .management-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+#menu-management .management-section-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+#menu-management .management-add-btn {
+  background-color: #4B6F44;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#menu-management .management-add-btn:hover {
+  background-color: #3d5a38;
+}
+
+#menu-management .management-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+#menu-management .management-table th,
+#menu-management .management-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+#menu-management .management-table th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+  color: #333;
+}
+
+#menu-management .management-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+/* Icon buttons */
+.icon-button {
+  background-color: transparent;
+  border: none;
+  color: #555;
+  padding: 5px;
+  cursor: pointer;
+  margin-right: 8px;
+}
+
+.icon-button:hover {
+  color: #B32821;
+}
+
+.icon-button.edit-menu-btn:hover {
+  color: #4B6F44;
+}
+
+/* Badge styles */
+.badge.small {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.badge.green {
+  background-color: #4B6F44;
+  color: white;
+}
+
+.badge.red {
+  background-color: #B32821;
+  color: white;
+}
+
+/* Modal styles if not already defined */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background-color: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #777;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 15px 20px;
+  border-top: 1px solid #e0e0e0;
+  gap: 10px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.form-group textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
 }
