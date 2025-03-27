@@ -15,6 +15,8 @@ const tableRoutes = require('./server/routes/tables');
 const orderRoutes = require('./server/routes/orders');
 const userRoutes = require('./server/routes/users');
 const settingsRoutes = require('./server/routes/settings');
+const connectionRoutes = require('./server/routes/connections');
+
 
 // Initialize express app
 const app = express();
@@ -46,6 +48,7 @@ app.use('/api/tables', tableRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/connections', connectionRoutes);
 
 // Serve the main HTML file for all other routes
 app.get('*', (req, res) => {

@@ -70,6 +70,9 @@ function initializeManagementSections() {
   
   // Set up settings management
   initSettingsManagement();
+
+  initConnectionMonitoring();
+
   
   // Load initial data
   loadDashboardStats();
@@ -124,6 +127,18 @@ function loadDashboardStats() {
   } catch (error) {
     console.error("Error loading dashboard stats:", error);
   }
+  // Add this to your loadDashboardStats function
+fetch('/api/connections/stats')
+.then(response => response.json())
+.then(stats => {
+  // Update connection stats
+  document.getElementById('total-connections-count').textContent = stats.total || 0;
+  document.getElementById('admin-connections-count').textContent = stats.admin || 0;
+})
+.catch(error => {
+  console.error("Error loading connection stats:", error);
+});
+  loadConnectionStats();
 }
 // Function to set up management navigation
 function setupManagementNavigation() {
@@ -268,15 +283,13 @@ function displayMenuSection() {
     displayMenuItems();
   }
 }
-
-// Display user management section
 function displayUserSection() {
   const userSection = document.getElementById('user-management-section');
   if (userSection) {
     userSection.classList.remove('hidden');
     
-    // Refresh user list
-    displayUsers();
+    // Refresh connection logs instead of users
+    loadConnectionLogs();
   }
 }
 
@@ -1475,3 +1488,138 @@ function closeModal() {
 function formatCurrency(amount) {
   return new Intl.NumberFormat('vi-VN').format(amount) + '₫';
 }
+// ------------ CONNECTION MONITORING ------------
+
+function initConnectionMonitoring() {
+  // Add connection monitoring button to the management dashboard
+  const manageConnectionsBtn = document.getElementById('manage-connections-btn');
+  if (manageConnectionsBtn) {
+    manageConnectionsBtn.addEventListener('click', function() {
+      hideAllSections();
+      displayConnectionSection();
+    });
+  }
+  
+  // Setup the refresh button
+  const refreshConnectionsBtn = document.getElementById('refresh-connections-btn');
+  if (refreshConnectionsBtn) {
+    refreshConnectionsBtn.addEventListener('click', function() {
+      loadConnectionLogs();
+    });
+  }
+  
+  // Initial load of connection data
+  loadConnectionLogs();
+}
+
+// Display connection monitoring section
+function displayConnectionSection() {
+  const connectionSection = document.getElementById('connection-monitoring-section');
+  if (connectionSection) {
+    connectionSection.classList.remove('hidden');
+    
+    // Refresh connection logs
+    loadConnectionLogs();
+  }
+}
+// Load connection logs from MongoDB
+function loadConnectionLogs() {
+  const connectionTableBody = document.getElementById('connection-table-body');
+  if (!connectionTableBody) return;
+  
+  // Clear the table
+  connectionTableBody.innerHTML = '';
+  
+  // Show loading indicator
+  connectionTableBody.innerHTML = '<tr><td colspan="4" class="text-center">Loading connection logs...</td></tr>';
+  
+  // Fetch connection logs from the server
+  fetch('/api/connections/logs')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(logs => {
+      // Clear loading indicator
+      connectionTableBody.innerHTML = '';
+      
+      // If no logs, show message
+      if (logs.length === 0) {
+        connectionTableBody.innerHTML = '<tr><td colspan="4" class="text-center">No connection logs found</td></tr>';
+        return;
+      }
+      
+      // Add each log to the table
+      logs.slice().reverse().forEach(log => {
+        const row = document.createElement('tr');
+        
+        // Format timestamp
+        const date = new Date(log.timestamp);
+        const formattedTime = date.toLocaleTimeString();
+        
+        // Status badge based on event type
+        let statusBadge, details;
+        
+        if (log.type === 'connect') {
+          statusBadge = '<span class="badge green small">Connected</span>';
+          details = 'Client connected';
+        } else if (log.type === 'join') {
+          statusBadge = '<span class="badge blue small">Joined</span>';
+          details = `Joined ${log.room} room`;
+        } else if (log.type === 'disconnect') {
+          statusBadge = '<span class="badge red small">Disconnected</span>';
+          details = 'Client disconnected';
+        }
+        
+        row.innerHTML = `
+          <td>${formattedTime}</td>
+          <td>${log.clientId}</td>
+          <td>${statusBadge}</td>
+          <td>${details}</td>
+        `;
+        
+        connectionTableBody.appendChild(row);
+      });
+      
+      // Update last refreshed time
+      const lastRefreshed = document.getElementById('last-refreshed');
+      if (lastRefreshed) {
+        lastRefreshed.textContent = new Date().toLocaleTimeString();
+      }
+    })
+    .catch(error => {
+      console.error("Error fetching connection logs:", error);
+      connectionTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-red">Error loading connection logs. Please try again.</td></tr>';
+    });
+}
+
+// Setup refresh button
+const refreshConnectionsBtn = document.getElementById('refresh-connections-btn');
+if (refreshConnectionsBtn) {
+  refreshConnectionsBtn.addEventListener('click', function() {
+    loadConnectionLogs();
+  });
+}
+// Count active connections by room
+function loadConnectionStats() {
+  fetch('/api/connections/stats')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(stats => {
+      // Update connection stats on the dashboard
+      document.getElementById('total-connections-count').textContent = stats.total || 0;
+      document.getElementById('admin-connections-count').textContent = stats.admin || 0;
+      document.getElementById('staff-connections-count').textContent = stats.staff || 0;
+      document.getElementById('kitchen-connections-count').textContent = stats.kitchen || 0;
+    })
+    .catch(error => {
+      console.error("Error loading connection stats:", error);
+    });
+}
+ 

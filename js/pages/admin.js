@@ -3483,5 +3483,6 @@ if (analyticsBtn) {
   };
 };
 }
+
 // Start refreshing when page loads
 document.addEventListener('DOMContentLoaded', setupOrderRefresh);

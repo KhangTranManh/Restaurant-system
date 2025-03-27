@@ -480,31 +480,53 @@
     <button id="back-to-management-from-menu-btn" class="management-back-btn">Back to Management</button>
   </div>
 </div>
-
-<!-- User Management Section -->
+<!-- Connection Monitoring Section (Replaces User Management) -->
 <div id="user-management-section" class="management-section hidden">
   <div class="management-container">
     <div class="management-section-header">
-      <h3>User Management</h3>
-      <button id="add-user-btn" class="management-add-btn">
-        <i class="fas fa-plus"></i> Add User
+      <h3>Connection Monitoring</h3>
+      <button id="refresh-connections-btn" class="management-add-btn">
+        <i class="fas fa-sync"></i> Refresh
       </button>
     </div>
     
-    <table class="management-table" id="user-table">
+    <!-- Connection Stats -->
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-title">Total Active</div>
+        <div class="stat-value" id="total-connections-count">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">Admin Room</div>
+        <div class="stat-value" id="admin-connections-count">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">Staff Room</div>
+        <div class="stat-value" id="staff-connections-count">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">Kitchen Room</div>
+        <div class="stat-value" id="kitchen-connections-count">0</div>
+      </div>
+    </div>
+    
+    <table class="management-table" id="connection-table">
       <thead>
         <tr>
-          <th>Username</th>
-          <th>Name</th>
-          <th>Role</th>
-          <th>Status</th>
-          <th>Actions</th>
+          <th>Time</th>
+          <th>Client ID</th>
+          <th>Event</th>
+          <th>Details</th>
         </tr>
       </thead>
-      <tbody id="user-table-body">
-        <!-- Users will be loaded dynamically from database -->
+      <tbody id="connection-table-body">
+        <!-- Connection logs will be loaded dynamically -->
       </tbody>
     </table>
+    
+    <div class="table-footer">
+      <span>Last refreshed: <span id="last-refreshed">Never</span></span>
+    </div>
     
     <button id="back-to-management-from-users-btn" class="management-back-btn">Back to Management</button>
   </div>
@@ -678,8 +700,7 @@
       <button class="secondary modal-cancel-btn">Cancel</button>
       <button class="primary" id="save-menu-item-btn">Save</button>
     </div>
-  </div>
-  
+
   <!-- User Modal -->
   <div id="user-modal" class="modal" style="display: none;">
     <div class="modal-header">
