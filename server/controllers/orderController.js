@@ -308,7 +308,6 @@ exports.updateOrderStatus = async (req, res) => {
     });
   }
 };
-// Add this to your orderController.js
 exports.getOrderStats = async (req, res) => {
   try {
     // Get today's date (start of day)
@@ -377,5 +376,3 @@ exports.getRevenueStats = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
-
-// Add this route to your orders router
