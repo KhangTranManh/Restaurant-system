@@ -1240,16 +1240,6 @@ function setupMenuButtons() {
     });
   });
   
-  // Delete menu buttons
-  const deleteButtons = document.querySelectorAll('.delete-menu-btn');
-  deleteButtons.forEach(button => {
-    button.addEventListener('click', function() {
-      const itemId = this.getAttribute('data-id');
-      if (confirm('Are you sure you want to delete this menu item?')) {
-        deleteMenuItem(itemId);
-      }
-    });
-  });
 }
 
 // Open menu item modal
@@ -1427,28 +1417,6 @@ function saveMenuItemData() {
     .catch(error => {
       console.error("Error saving menu item data:", error);
       alert('An error occurred while saving the menu item: ' + error.message);
-    });
-}
-
-// Delete menu item from MongoDB
-function deleteMenuItem(itemId) {
-  // Make API call to delete menu item
-  fetch(`/api/menu/items/${itemId}`, {
-    method: 'DELETE'
-  })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return response.json();
-    })
-    .then(data => {
-      // Refresh list
-      displayMenuItems();
-    })
-    .catch(error => {
-      console.error("Error deleting menu item:", error);
-      alert('An error occurred while deleting the menu item.');
     });
 }
 
