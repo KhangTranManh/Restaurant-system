@@ -2198,5 +2198,20 @@ input[type="password"]:focus {
   min-height: 80px;
   resize: vertical;
 }
+.menu-item.out-of-stock {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.menu-item.out-of-stock .menu-item-title,
+.menu-item.out-of-stock .menu-item-description {
+  text-decoration: line-through;
+  color: #888;
+}
+
+.out-of-stock-label {
+  color: red;
+  font-weight: bold;
+}
 
 }

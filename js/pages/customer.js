@@ -296,8 +296,6 @@ document.addEventListener('DOMContentLoaded', function() {
       renderMenuItems();
     }
   }
-
-  // Render menu items
   function renderMenuItems() {
     console.log("Rendering menu items");
     
@@ -315,7 +313,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     menuItems.forEach(item => {
       const menuItem = document.createElement('div');
-      menuItem.className = 'card menu-item';
+      
+      // Add out-of-stock class if item is not available
+      menuItem.className = `card menu-item ${item.status === 'out-of-stock' ? 'out-of-stock' : ''}`;
+      
       menuItem.innerHTML = `
         <img src="${item.image_path || 'https://via.placeholder.com/250x150'}" alt="${item.name}">
         <span class="badge yellow">${formatCurrency(item.price)}</span>
@@ -326,17 +327,21 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="prep-time">
               <i class="far fa-clock"></i> ${item.preparation_time} min
             </div>
-            <button class="primary small add-to-cart" data-id="${item._id}">Add</button>
+            ${item.status === 'out-of-stock' 
+              ? '<span class="out-of-stock-label">Out of Stock</span>' 
+              : `<button class="primary small add-to-cart" data-id="${item._id}">Add</button>`
+            }
           </div>
         </div>
       `;
       
       menuGrid.appendChild(menuItem);
       
-      // Add event listener for add to cart button
-      const addBtn = menuItem.querySelector('.add-to-cart');
-      if (addBtn) {
-        addBtn.addEventListener('click', () => addToCart(item));
+      if (item.status === 'available') {
+        const addBtn = menuItem.querySelector('.add-to-cart');
+        if (addBtn) {
+          addBtn.addEventListener('click', () => addToCart(item));
+        }
       }
     });
     
