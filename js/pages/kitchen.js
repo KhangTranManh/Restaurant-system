@@ -1221,9 +1221,6 @@ function displayMenuItems() {
             <button class="icon-button edit-menu-btn" data-id="${item._id}">
               <i class="fas fa-edit"></i>
             </button>
-            <button class="icon-button delete-menu-btn" data-id="${item._id}">
-              <i class="fas fa-trash"></i>
-            </button>
           </td>
         `;
         
