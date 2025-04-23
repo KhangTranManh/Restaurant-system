@@ -1,3 +1,4 @@
+// server/config/socket.js
 const socketIO = require('socket.io');
 const axios = require('axios'); // You'll need to install axios if not already installed
 const ConnectionLog = require('../models/ConnectionLog'); // Import the model directly

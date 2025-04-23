@@ -1157,6 +1157,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Initialize menu management functionality
 function setupMenuManagement() {
+  // Add menu item button
+  const addMenuItemBtn = document.getElementById('add-menu-item-btn');
+  if (addMenuItemBtn) {
+    addMenuItemBtn.addEventListener('click', function() {
+      openMenuItemModal();
+    });
+  }
   
   // Save menu item button
   const saveMenuItemBtn = document.getElementById('save-menu-item-btn');

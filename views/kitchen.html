@@ -81,10 +81,14 @@
           <div class="tab" data-tab="menu-management">Menu Management</div>
         </div>
 
+        <!-- Add this new tab content section after your other tab-content divs -->
         <div id="menu-management" class="tab-content hidden">
           <div class="management-container">
             <div class="management-section-header">
               <h3>Menu Management</h3>
+              <button id="add-menu-item-btn" class="management-add-btn">
+                <i class="fas fa-plus"></i> Add Menu Item
+              </button>
             </div>
             
             <table class="management-table" id="menu-table">
@@ -108,6 +112,10 @@
 <!-- Menu Item Modal - Add this near the end of your body tag -->
 <div id="modal-backdrop" class="modal-backdrop" style="display: none;">
   <div id="menu-item-modal" class="modal" style="display: none;">
+    <div class="modal-header">
+      <h3 id="menu-item-modal-title">Add Menu Item</h3>
+      <button class="modal-close">&times;</button>
+    </div>
     <div class="modal-body">
       <form id="menu-item-form">
         <div class="form-group">
